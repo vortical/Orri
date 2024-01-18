@@ -83,11 +83,19 @@ interface BodyArguments {
     radius: number;
     position: Vec3D;
     speed: Vec3D;
+    orbitInclination?: number;
+    obliquityToOrbit?: number;
+    /**
+     * Period of rotation around axis in seconds
+     */
+    sideralRotationPeriod?: number; 
     lightProperties?: LightProperties;
     color?: string;
 }
 
 
+// https://nssdc.gsfc.nasa.gov/planetary/planetfact.html
+// https://en.wikipedia.org/wiki/Orbital_inclination
 
 class Body {
     name: string;
@@ -97,8 +105,11 @@ class Body {
     // speed would be based off have orbital plane
     speed: Vec3D;
     // color: string;
-  
+    orbitInclination: number;
+    obliquityToOrbit: number; 
+    sideralRotationPeriod: number;
     acceleration: number;
+
     lightProperties?: LightProperties;
     color: string;
 
@@ -106,12 +117,15 @@ class Body {
   
 
 
-    constructor({name, mass, radius, position, speed, color="lightgrey", lightProperties}: BodyArguments) {
+    constructor({name, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod=0, lightProperties}: BodyArguments) {
       this.name = name;
       this.mass = mass;
       this.radius = radius;
       this.position = position;
       this.speed = speed;
+      this.orbitInclination = orbitInclination;
+      this.obliquityToOrbit = obliquityToOrbit;
+      this.sideralRotationPeriod = sideralRotationPeriod;
     //   this.color = color;
       this.acceleration = 0;
       this.lightProperties = lightProperties;

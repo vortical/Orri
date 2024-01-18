@@ -1,4 +1,4 @@
-import { AmbientLight, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -60,6 +60,9 @@ class BodySystem {
         this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
         this.controls.update();
         this.scene.add(...this.bodyMeshes);
+
+        const axesHelper = new AxesHelper( 5000000000 );
+        this.scene.add( axesHelper );
 
         // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
         this.setSize(canvasSize);
@@ -165,7 +168,9 @@ class BodySystem {
         const that = this
         return new Promise(function(resolve){
             that.bodySystemUpdater.update(that.bodies, that.timeStep).forEach((body: Body, i: string | number ) => {
-                BodyMesh.updateMesh(body, that.bodyMeshes[i])
+                BodyMesh.updateMesh(body, that.bodyMeshes[i]);
+
+                
             });
             resolve(null);
     

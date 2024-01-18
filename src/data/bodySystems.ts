@@ -100,7 +100,7 @@ const bodySets = {
       mass: 3.3022e23, 
       radius: 2.44e6,  
       position: {x:57900000e3, y:0, z:0} as Vec3D,
-      speed: {x:0, y:47400,z:0} as Vec3D, 
+      speed: {x:0, y:0,z:-47400} as Vec3D, 
       color: "green"
     }),
     
@@ -108,16 +108,22 @@ const bodySets = {
       name: "Venus",   
       mass: 4.869e24,  
       radius: 6.05e6,  
-      position: {x:0, y:108200000e3, z:0} as Vec3D, 
-      speed: {x:-35020, y:0,z:0} as Vec3D, 
+      position: {x:0, y:0, z:108200000e3} as Vec3D, 
+      speed: {x:35020, y:0, z:0} as Vec3D, 
       color: "red"
     }),
+
+    // maybe use the semi-major axis and the the minimum speed...
+    // position: 149598000e3, speed: 29290	
+
     new Body({
       name:"Earth", 
       mass: 5.9736e24, 
       radius: 6.378e6, 
-      position: {x:-149597871e3, y:0, z:0} as Vec3D, 
-      speed: {x:0, y:-29800, z:0} as Vec3D
+      position: {x:-149597871e3, y:0, z:0} as Vec3D,       
+      speed: {x:0, y: 0, z: 29780} as Vec3D,
+      orbitInclination: 0,
+      obliquityToOrbit: 23.44,
     }),
     // new Body("ISS", 4.19e5, 108, {x: -149597871e3+12756000/2+410e3, y:0} as Vec3D, {x:0, y: -29800+7679} as Vec3D ),
     new Body({
@@ -125,29 +131,30 @@ const bodySets = {
       mass: 7.3477e22, 
       radius: 1.737400e6, 
       position: {x: -149597871e3+384.400e6, y:0, z:0} as Vec3D, 
-      speed: {x:0, y: -29800+1023.16, z:0} as Vec3D
+      //moon revolves counterclockwise around Earth.
+      speed: {x:0, y: 0, z: 29780 - 1023.16} as Vec3D
     }),
     new Body({
       name: "Mars", 
       mass: 6.4185e23, 
       radius: 3.185500e6, 
-      position: {x:0, y:-227900000000, z:0} as Vec3D, 
-      speed: {x:24100, y:0, z:0} as Vec3D, 
+      position: {x:0, y:0, z:-227900000000} as Vec3D, 
+      speed: {x:-24100, y:0, z:0} as Vec3D, 
       // color: "purple"
     }),
     new Body({
       name: "Jupiter", 
       mass: 1898e24, 
       radius: 142.984e6/2, 
-      position: {x:0, y:-778500000000, z:0} as Vec3D, 
-      speed: {x:13100, y:0, z:0} as Vec3D, 
+      position: {x:-778500000000, y:0, z:0} as Vec3D, 
+      speed: {x:0, y:0, z:13100} as Vec3D, 
     }),      
     new Body({
       name:"Io", 
       mass: 8.932e22,
       radius:1.8213e6, 
-      position: {x:0, y:-778500000000 - 421700000,z:0} as Vec3D, 
-      speed: {x:13100+17340, y:0, z:0} as Vec3D
+      position: {x:-778500000000 - 421700000, y:0, z:0} as Vec3D, 
+      speed: {x:0, y:0, z:13100+17340} as Vec3D
     }),
 
 
@@ -155,29 +162,29 @@ const bodySets = {
       name: "Saturn", 
       mass: 568e24, 
       radius: 120.536e6/2, 
-      position: {x:0, y:-1432000000000, z:0} as Vec3D, 
-      speed: {x:9700, y:0, z:0} as Vec3D, 
+      position: {x:0, y:0, z:-1432000000000} as Vec3D, 
+      speed: {x:-9700, y:0, z:0} as Vec3D, 
     }),
     new Body({
       name: "Uranus", 
       mass: 86.8e24, 
       radius: 51.118e6/2,
-      position: {x:0, y:-2867000000000, z:0} as Vec3D, 
-      speed: {x:6800, y:0, z:0} as Vec3D
+      position: {x:-2867000000000, y:0, z:0} as Vec3D, 
+      speed: {x:0, y:0, z:6800} as Vec3D
     }),
     new Body({
       name:"Neptune", 
       mass:102e24, 
       radius: 49.528e6/2, 
-      position:{x:0, y:  -4515000000000, z:0} as Vec3D, 
+      position:{x:0, y:0, z: 4515000000000} as Vec3D, 
       speed:{x:5400, y:0,z:0} as Vec3D
     }),
     new Body({
       name: "Pluto", 
       mass: 0.0130e24, 
       radius: 2.376e6/2, 
-      position:{x:0, y:-5906400000000, z:0} as Vec3D, 
-      speed:{x:4700, y:0, z:0} as Vec3D
+      position:{x:5906400000000, y:0, z:0} as Vec3D, 
+      speed:{x:0, y:0, z:- 4700} as Vec3D
     }),        
                                 
     // new Body("Jupiter", 1898e24, 142984000/2, {x:0, y:-778500000000} as Vec3D, {x:13100, y:0} as Vec3D, "orange"),

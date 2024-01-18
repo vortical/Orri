@@ -38,7 +38,7 @@ function createStarMesh(body: Body,  materialProperties: MaterialProperties): Me
     surfacemesh.name = name;
     surfacemesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
 
-    const { color = "white", intensity = 1, distance = 0, decay = 0.01 } = body.lightProperties!;
+    const { color = "white", intensity = 0.8, distance = 0, decay = 0.05 } = body.lightProperties!;
     const light = new PointLight(color, intensity, distance, decay);
 
     surfacemesh.add(light);

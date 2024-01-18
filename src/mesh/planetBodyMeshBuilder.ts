@@ -3,6 +3,7 @@ import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial } from "three";
 import { MeshBuilder } from "./MeshBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
+import { rotationForObliquityToOrbit } from '../system/geometry.ts';
 
 
 const textureLoader = new TextureLoader();
@@ -74,7 +75,11 @@ function createPlanetMesh(body: Body, materialProperties: MaterialProperties): M
     surfacemesh.name = name;
 
     surfacemesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
-    // mesh.rotation.set(rotation.x, rotation.y, rotation.z); to do, this is the axis tilt on the orbital plane.
+
+    // we will have to calculate rotation/tilt also, but this is easy as its constant.
+    const rotation = rotationForObliquityToOrbit(body.obliquityToOrbit);
+    
+    surfacemesh.rotation.set(rotation.x, rotation.y, rotation.z); //to do, this is the axis tilt on the orbital plane.
     return surfacemesh;
 }
     
