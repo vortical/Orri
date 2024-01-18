@@ -1,3 +1,4 @@
+import { Mesh } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vec3D } from '../system/vecs.ts';
 
@@ -57,6 +58,37 @@ function rotationFromAxialTilt(angleDeg: number): Vec3D{
     
 }
 
+interface MaterialProperties {
+    name: string;
+    textureUri?: string;
+    bumpMapUri?: string;
+    normalUri?: string;
+    atmosphereUri?: string;
+    alphaUri?: string;
+    color?: string;
+
+}
+
+interface LightProperties {
+    color?:  string;
+    intensity?: number;
+    distance?: number;
+    decay?: number ;  
+
+}
+
+interface BodyArguments {
+    name: string;
+    mass: number;
+    radius: number;
+    position: Vec3D;
+    speed: Vec3D;
+    lightProperties?: LightProperties;
+    color?: string;
+}
+
+
+
 class Body {
     name: string;
     mass: number;
@@ -67,21 +99,24 @@ class Body {
     // color: string;
   
     acceleration: number;
+    lightProperties?: LightProperties;
+    color: string;
 
-    
     mesh: Mesh; 
   
 
 
-    constructor(name: string, mass: number, radius: number, position: Vec3D, speed: Vec3D) {
+    constructor({name, mass, radius, position, speed, color="lightgrey", lightProperties}: BodyArguments) {
       this.name = name;
       this.mass = mass;
       this.radius = radius;
       this.position = position;
-      // 
       this.speed = speed;
     //   this.color = color;
       this.acceleration = 0;
+      this.lightProperties = lightProperties;
+      this.color = color;
+
     }
 
     /**
@@ -172,3 +207,4 @@ class Body {
 }
 
 export { Body, G };
+export type { MaterialProperties };

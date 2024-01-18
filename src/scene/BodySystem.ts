@@ -1,10 +1,18 @@
-import { AmbientLight, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
 import { BodyMesh } from '../mesh/BodyMesh.ts';
+import { throttle } from '../system/throttler.ts';
 // import { Vec3D } from '../system/vecs.ts';
+
+import { ViewTransitions } from './ViewTransitions.ts';
+
+import Stats from 'three/addons/libs/stats.module.js';
+
 
 type Animator = (time: number) => boolean;
 
@@ -18,9 +26,15 @@ class BodySystem {
     renderer: WebGLRenderer;
     controls: OrbitControls;
     bodyMeshes: Mesh[];
+    stats: Stats;
+    target: Body
+    timeStep: number = 1.0;
+    viewTransitions: ViewTransitions;
     
     constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater){
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
+        this.stats = new Stats();
+        parentElement.appendChild(this.stats.dom);
 
         this.bodySystemUpdater = bodySystemUpdater;
         this.bodies = bodies;
@@ -29,53 +43,149 @@ class BodySystem {
 
         this.camera = createCamera();
         this.scene = createScene();
+        // this.scene.add(this.camera);
         this.renderer = createRenderer();
         parentElement.append(this.renderer.domElement);
 
         this.controls = createControls(this.camera, this.renderer.domElement);
         
+        this.viewTransitions = new ViewTransitions(this.camera, this.controls);
+        
         // create bodies from here (just earth now)
         this.bodyMeshes = createBodyMeshes(this.bodies);
 
-        createLights({position: new Vector3(0,0,10)}).forEach((l) => this.scene.add(l));
-        //696340000
-        //696340 km
+        createAmbiantLights().forEach((l) => this.scene.add(l));
 
-        this.camera.position.set(-249597870, 0, 0);
+        this.setTarget(this.bodies[0]);        
+        this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
         this.controls.update();
         this.scene.add(...this.bodyMeshes);
 
-        this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
+        // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
         this.setSize(canvasSize);
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size))
-
+        
         
     }
 
 
+    getBody(name: string): Body {
+        name = name.toLowerCase();
+        return this.bodies.find((b)=> b.name.toLowerCase() === name)!;
+    }
+
+
+    setTimeStep(timeStep: number){
+        this.timeStep = timeStep;
+    }
+
+    setScale(scale: number){
+        this.bodyMeshes.forEach((m) => {
+            m.scale.set(scale, scale, scale);
+        });
+
+    }
+
     
+    /**
+     * WIP
+     * 
+     * We trigger a transition towards a body within an amount of time. The body
+     * may be moving, so each step will need to be adjusted. In the case of a fast moving
+     * object, we might need to estimate the position of the body after the transition time.
+     * 
+     * @param body 
+     */
+    setTargetAnimated(body: Body|string,) {
+        
+        if (typeof body === "string") {
+            body = this.getBody(body);
+
+        }
+        this.target = body;
+
+        this.viewTransitions.moveToTarget(body, undefined, 20, 100);
+    }
+
+    // setDistanceToTarget(distance: number){
+        // todo...
+
+    //     const body = this.target;
+
+    //     // keep same distance...
+    //     const cameraPosition = this.camera.position.clone();
+    //     const target = this.controls.target.clone();
+
+    //     const targetTranslation = cameraPosition.sub(target).normalize();
+
+        
+    //     this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
+    // }
+
+    setTarget(body: Body|string){
+        
+        
+        if (typeof body === "string") {
+            body = this.getBody(body);
+
+        }
+        this.target = body;
+
+        // keep same distance...
+        const cameraPosition = this.camera.position.clone();
+        const target = this.controls.target.clone();
+        const targetTranslation = cameraPosition.sub(target);
+
+        
+        
+        this.controls.target.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);        
+        this.camera.position.set(this.controls.target.x+targetTranslation.x, this.controls.target.y+targetTranslation.y, this.controls.target.z+targetTranslation.z);
+        
+
+        // this.camera.lookAt(body.position.x/1000, body.position.y/1000, body.position.z/1000);
+    }
+    
+    followTarget(body: Body|string) {
+        if (typeof body === "string") {
+            body = this.getBody(body);
+        }
+        
+        this.setTarget(body);
+    }
     
     setSize(size: Dim){
         this.camera.aspect = size.ratio();
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(size.w, size.h);
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderFrame();   
+        this.render();   
+    }
+
+     tick(t: number) {
+        const that = this
+        return new Promise(function(resolve){
+            that.bodySystemUpdater.update(that.bodies, that.timeStep).forEach((body: Body, i: string | number ) => {
+                BodyMesh.updateMesh(body, that.bodyMeshes[i])
+            });
+            resolve(null);
+    
+        });
     }
 
     start() {
-        this.renderFrame();
+        this.render();
 
-        this.renderer.setAnimationLoop( (time) => {
+        this.renderer.setAnimationLoop( async(time) => {
             time = Math.floor(time/1000);
-            this.controls.update();
 
+            await this.tick(time);
+            this.tick(time);
+            this.followTarget(this.target);
+            this.controls.update();
+            
             console.log(`tick: ${time}`)
-            // 100
-            this.bodySystemUpdater.update(this.bodies, 500);
-            if(this.updatePositions(500)){
-                this.renderFrame();
-            }
+            this.render();
+            this.stats.update();
         });
     }
 
@@ -83,50 +193,57 @@ class BodySystem {
         this.renderer.setAnimationLoop(null);
     }
 
-    renderFrame() {
+    render() {
         this.renderer.render(this.scene, this.camera);
-    }
-
-    updatePositions(time: number): boolean {
-        // we 'could' merge the meshes and the bodies so that 
-        // they share common position and rotation vectors...but we don't. copying those properties
-        // has no real performance hit.
-  //      this.bodySystemUpdater.update(this.bodies, time);
-
-        // the meshes need to get the values from the bodies,
-        // this assumes they have same indexes. Doing .ts is turning out to be
-        // pita.
-        this.bodies.forEach((body, i ) => {
-            BodyMesh.updateMesh(body, this.bodyMeshes[i])
-        });
-        
-        return true;
-    }
-        
+    }        
 }
 
 
-function createLights({position = new Vector3(0,0,0), hemispheric = true} = {}) {
+// // point lights...
+// //https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_pointlights.html
 
-    const ambientLight = hemispheric? new HemisphereLight("white", "darkgrey", 1.0): new AmbientLight("white", 0.3);
-    const light = new DirectionalLight('white', 2);
-    light.position.set(position.x, position.y, position.z);
-    // return [ambientLight];
+function createAmbiantLights() {
+    const ambientLight = new AmbientLight("white", 0.02);
+    // const light = new PointLight(color, intensity, 0, 0.001);
     // return [light, ambientLight];
-    return [light];
+    return [ambientLight];
 }
+// }
 
+// function createLights({color="white", intensity=40000, position = new Vector3(0,0,0)} = {}) {
+
+//     const light = new PointLight(color, intensity);
+
+//     light.position.set(position.x, position.y, position.z);
+//     // return [ambientLight];
+//     return [light, ambientLight];
+//     return [light];
+// }
+
+// function createLights({position = new Vector3(0,0,0), hemispheric = true} = {}) {
+
+//     const ambientLight = hemispheric? new HemisphereLight("white", "darkgrey", 1.0): new AmbientLight("white", 0.6);
+//     const light = new DirectionalLight('white', 8);
+//     light.position.set(position.x, position.y, position.z);
+//     // return [ambientLight];
+//     return [light, ambientLight];
+//     return [light];
+// }
 
 function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObserver) {
-    window.addEventListener("resize", (event: UIEvent) => {
-        console.log(`event: ${event}`);
-        sizeObserver(new Dim(container.clientWidth, container.clientHeight));
-    });    
+    window.addEventListener("resize", 
+    throttle(1000/30, undefined, 
+        (event: UIEvent) => {
+            console.log(`event: ${event}`);
+            sizeObserver(new Dim(container.clientWidth, container.clientHeight));
+        }
+
+    ));    
 }
 
 
 function createBodyMeshes(bodies: Body[]): Mesh[] {
-    const meshes = bodies.map((body) => BodyMesh.createBodyMesh(body));
+    const meshes = bodies.map((body) => BodyMesh.createMesh(body));
     return meshes;
 }
 
@@ -136,7 +253,7 @@ function createScene(): Scene {
     return scene;
 }
 
-function createCamera({fov=35, aspectRatio=1.0, near=100, far=10000000000}={}): PerspectiveCamera {
+function createCamera({fov=55, aspectRatio=1.0, near=100, far=10000000000}={}): PerspectiveCamera {
     const camera = new PerspectiveCamera(
         fov, 
         aspectRatio, 

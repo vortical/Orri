@@ -4,7 +4,7 @@ class Vec3D {
     y: number;
     z: number;
 
-    constructor(x: number, y: number, z: number) {
+    constructor(x: number, y: number, z: number=0) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -23,6 +23,8 @@ class Vec3D {
     static substract(pos1: Vec3D, pos2: Vec3D): Vec3D {
         return new Vec3D(pos2.x - pos1.x, pos2.y - pos1.y, pos2.z - pos1.z);
     }
+
+    scalarMultiplication(value)
     
 }
 
