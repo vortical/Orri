@@ -54,7 +54,7 @@ function buildGui(bodySystem: BodySystem){
     const loadButton = gui.add(options, "loadSettings");
     loadButton.disable();
 
-    showAxesController.onFinishChange((v: boolean) => {
+    showAxesController.onChange((v: boolean) => {
         bodySystem.setAxesHelper(v);
     });
 

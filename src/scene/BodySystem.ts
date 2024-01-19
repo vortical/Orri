@@ -87,6 +87,7 @@ class BodySystem {
             this.axesHelper = new AxesHelper( 5000000000 );        
             this.scene.add( this.axesHelper  );
         }else if(value == false && this.axesHelper){
+            this.axesHelper.removeFromParent();
             this.axesHelper.dispose();
             this.axesHelper = undefined;
         }
