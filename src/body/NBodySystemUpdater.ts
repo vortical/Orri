@@ -14,8 +14,24 @@ import { zipCombine } from '../system/arrays.ts';
  */
 class NBodySystemUpdater implements BodySystemUpdater{
 
+
+  // TODO: consider making this a single managed class once we get further along
+  // that way we can just do:
+  // NBodySystem.update(timestep): Object3D[] and we won't care about anything else.
+
     update(bodies: Body[], timeStep: number): Body[] {
-        return this.updateBodyProperties(bodies, timeStep);
+      // each update can handle a step of about 600 seconds (todo: able to configure a stability param, we handle 
+      // orbital steps of planets at 30 days per second on one pass...)
+      // so if a timestep is 6000, then we loop 10 times for each 600.
+      //
+      const maxStableTimestep = 200; // make this adjustable 
+      const iterations = Math.ceil(timeStep/maxStableTimestep);
+      const stableTimeStep = timeStep/iterations;
+
+      for(let i = 0; i < iterations; i++){
+        this.updateBodyProperties(bodies, stableTimeStep);
+      }
+      return bodies;
     }
 
 

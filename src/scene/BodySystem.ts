@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Clock, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver, toRad } from '../system/geometry.ts';
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -17,6 +17,42 @@ import Stats from 'three/addons/libs/stats.module.js';
 type Animator = (time: number) => boolean;
 
 
+class ClockTimer {
+    
+    scale: number = 1;
+    startTime: number;
+    previous: number;
+    units: number;
+
+    /**
+     * 
+     * @param msToUnit units based on ms. So 1000 msToUnit is a second.
+     */
+    constructor(msToUnit: number=1000){
+        this.units = msToUnit;
+        this.start();
+    }
+    
+    setScale(scale: number){
+        this.scale = scale;
+    }
+    
+    start(){
+        this.startTime = performance.now();
+        this.previous = this.startTime;
+    }
+    
+    /**
+     * 
+     * @returns time in units
+     */
+    getDelta(): number {        
+        const now = performance.now();
+        const deltaSeconds =  (now - this.previous)/this.units;
+        this.previous = now;
+        return deltaSeconds * this.scale;
+    }
+}
 class BodySystem {
 
     bodySystemUpdater: BodySystemUpdater;
@@ -29,7 +65,9 @@ class BodySystem {
     ambiantLight: AmbientLight;
     stats: Stats;
     target: Body
-    timeStep: number = 1.0;
+    clockTimer: ClockTimer;
+    
+    // timeStep: number = 1.0;
     viewTransitions: ViewTransitions;
     axesHelper?: AxesHelper;
     
@@ -67,6 +105,7 @@ class BodySystem {
 
         // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
         this.setSize(canvasSize);
+        this.clockTimer = new ClockTimer();
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size))
         
         
@@ -93,8 +132,22 @@ class BodySystem {
         }
     }
 
+    getTimeStep(){
+        this.clockTimer.scale;
+    }
+
+    /**
+     * Timestep represents how much delta time (in seconds) to use in calculating 
+     * the positions/speeds of objects in the system for each loop frame.
+     * 
+     * Real time value for 60fps would be each frame is for (1/60 or 0.0167) of a second.
+     *        
+     * This should probably be called timescale from 1 second to 3600?
+     *      
+     * @param timeStep 
+     */
     setTimeStep(timeStep: number){
-        this.timeStep = timeStep;
+        this.clockTimer.setScale(timeStep)
     }
 
     setScale(scale: number){
@@ -187,10 +240,11 @@ class BodySystem {
         this.render();   
     }
 
-     tick(t: number) {
+     tick(deltaTime: number) {
         const that = this
         return new Promise(function(resolve){
-            that.bodySystemUpdater.update(that.bodies, that.timeStep).forEach((body: Body, i: string | number ) => {
+
+            that.bodySystemUpdater.update(that.bodies, deltaTime).forEach((body: Body, i: string | number ) => {
                 BodyObject3D.updateObject3D(body, that.objects3D[i]);
             });
 
@@ -212,17 +266,24 @@ class BodySystem {
     }
 
     start() {
+        
+        
         this.render();
 
+        /**
+         * The clock has a delta, which says how much time the previous frame took.
+         * 
+         * Real time is 60 fps (depends on monitor).
+         * 
+         * Each tick in my update expect a delta time in second.
+         * 
+         * 
+         */
         this.renderer.setAnimationLoop( async(time) => {
-            time = Math.floor(time/1000);
-
-            await this.tick(time);
-            this.tick(time);
+            const delta = this.clockTimer.getDelta();
+            await this.tick(delta);
             this.followTarget(this.target);
             this.controls.update();
-            
-            console.log(`tick: ${time}`)
             this.render();
             this.stats.update();
         });

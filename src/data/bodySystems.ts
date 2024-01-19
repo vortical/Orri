@@ -82,6 +82,7 @@ const meshProperties = {
 // 2 sets of bodies:
 // solarsystem: includes all planets (+ earth's moon)
 // earth: just earth and satellites (just ISS for now)
+//https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html
 
 // todo: convert this json and fetch it...
 const bodySets = {
@@ -112,9 +113,6 @@ const bodySets = {
       speed: {x:35020, y:0, z:0} as Vec3D, 
       color: "red"
     }),
-
-    // maybe use the semi-major axis and the the minimum speed...
-    // position: 149598000e3, speed: 29290	
 
     new Body({
       name:"Earth", 

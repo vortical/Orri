@@ -84,6 +84,17 @@ interface BodyArguments {
     position: Vec3D;
     speed: Vec3D;
     orbitInclination?: number;
+    /**
+     * Obliquity to Orbit (degrees) - The angle in degrees the axis of a planet
+     *(the imaginary line running through the center of the planet from the north
+     * to south poles) is tilted relative to a line perpendicular to the planet's 
+     * orbit around the Sun, north pole defined by right hand rule.
+     * Venus rotates in a retrograde direction, opposite the other planets, so the
+     * tilt is almost 180 degrees, it is considered to be spinning with its
+     * "top", or north pole pointing "downward" (southward). Uranus rotates almost
+     * on its side relative to the orbit, Pluto is pointing slightly "down". The 
+     * ratios with Earth refer to the axis without reference to north or south.
+     */
     obliquityToOrbit?: number;
     /**
      * Period of rotation around axis in seconds

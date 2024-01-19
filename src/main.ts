@@ -26,8 +26,8 @@ function buildGui(bodySystem: BodySystem){
     const options = {
         distance: 100000,
         target: "Earth",
-        time: 1.0,
-        scale: 1.0,
+        timeScale: 1.0,
+        sizeScale: 1.0,
         fov: bodySystem.camera.fov,
         backgroudLightLevel: bodySystem.ambiantLight.intensity,
         showAxes: bodySystem.hasAxesHelper(),
@@ -43,10 +43,10 @@ function buildGui(bodySystem: BodySystem){
     
     
     const targetController = gui.add(options, 'target', bodyNames).listen();
-    const scaleController = gui.add(options, "scale", 1.0, 20.0, 0.1);
-    const fovController = gui.add(options, "fov", 10, 70, 0.5)
+    const scaleController = gui.add(options, "sizeScale", 1.0, 40.0, 0.1).name( 'Scale celestial objects sizes');
+    const fovController = gui.add(options, "fov", 10, 70, 0.5).name( 'Field Of Vue (degrees)')
     const backgroundLightLevelController = gui.add(options, "backgroudLightLevel", 0, 0.5, 0.01)
-    const timeController = gui.add(options, "time", 0.1, 3600, 1); // 60 hours per second.
+    const timeController = gui.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name( 'Time multiplier'); // 3600 * 24 * 30 is 30 days per second.
     const showAxesController = gui.add(options, "showAxes");
 
 
