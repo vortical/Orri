@@ -12,7 +12,7 @@ function createAtmosphereMateriel(textureUri: string) {
 
     // we could offer the option to  load cloud imagery generated from somewhere.
     // and we'd draw it on a canvas. This would be useful when animating in real time.
-    
+
     const material = new MeshPhongMaterial({
         map: textureLoader.load(textureUri),
         transparent: true,
@@ -71,7 +71,7 @@ const createObject3D: Object3DBuilder = (body: Body) => {
     const surfacemesh = new Mesh(geometry, material);
 
     if (materialProperties.atmosphereUri) {
-        const altitude = 20; //  km
+        const altitude = 15; //  km
         const atmosphereMesh = new Mesh(
             new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR + altitude, widthSegements, heightSegments),
             createAtmosphereMateriel(materialProperties.atmosphereUri)

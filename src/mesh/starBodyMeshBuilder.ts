@@ -1,7 +1,7 @@
 
 import { Body, MaterialProperties } from '../body/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D } from "three";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, MeshBasicMaterial } from "three";
 import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 
@@ -11,15 +11,20 @@ function createSunMaterial(materialProperties: MaterialProperties): Material {
 
     const texture = materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined;
 
-    const materiel = new MeshPhongMaterial({
+    const material = new MeshBasicMaterial( { 
         map: texture,
-        lightMap: texture,
-        // alphaMap: materialProperties.alphaUri? textureLoader.load(materialProperties.alphaUri) : undefined,
-        transparent: true,
-        opacity: 0.9
-      });
+        color: "white",
+         
+    }  );
+    // const material = new MeshPhongMaterial({
+    //     map: texture,
+    //     lightMap: texture,
+    //     // alphaMap: materialProperties.alphaUri? textureLoader.load(materialProperties.alphaUri) : undefined,
+    //     transparent: true,
+    //     opacity: 0.9
+    //   });
 
-    return materiel;
+    return material;
 
 }
 
@@ -37,15 +42,16 @@ const createObject3D: Object3DBuilder = (body: Body): Object3D => {
     
     surfacemesh.name = name;
     
-    const { color = "white", intensity = 0.8, distance = 0, decay = 0.05 } = body.lightProperties!;
+    const { color = "white", intensity = 0.9, distance = 0, decay = 0.06 } = body.lightProperties!;
     const light = new PointLight(color, intensity, distance, decay);
     
     
-    surfacemesh.add(light);
-    
+    //surfacemesh.add(light);
+    light.add(surfacemesh);
+
     const worldmesh = new Object3D();
     worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
-    worldmesh.add(surfacemesh);
+    worldmesh.add(light);
 
     return worldmesh;
 }

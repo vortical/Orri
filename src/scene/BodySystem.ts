@@ -26,10 +26,12 @@ class BodySystem {
     renderer: WebGLRenderer;
     controls: OrbitControls;
     objects3D: Object3D[];
+    ambiantLight: AmbientLight;
     stats: Stats;
     target: Body
     timeStep: number = 1.0;
     viewTransitions: ViewTransitions;
+    axesHelper?: AxesHelper;
     
     constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater){
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
@@ -54,15 +56,14 @@ class BodySystem {
         // create bodies from here (just earth now)
         this.objects3D = createObjects3D(this.bodies);
 
-        createAmbiantLights().forEach((l) => this.scene.add(l));
+        this.ambiantLight = createAmbiantLight();
+        this.scene.add(this.ambiantLight);
 
         this.setTarget(this.bodies[0]);        
         this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
         this.controls.update();
         this.scene.add(...this.objects3D);
-
-        const axesHelper = new AxesHelper( 5000000000 );
-        this.scene.add( axesHelper );
+        this.setAxesHelper(false);
 
         // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
         this.setSize(canvasSize);
@@ -77,6 +78,19 @@ class BodySystem {
         return this.bodies.find((b)=> b.name.toLowerCase() === name)!;
     }
 
+    hasAxesHelper(): boolean {
+        return this.axesHelper != undefined;
+    }
+
+    setAxesHelper(value: boolean){
+        if(value && this.axesHelper == undefined){
+            this.axesHelper = new AxesHelper( 5000000000 );        
+            this.scene.add( this.axesHelper  );
+        }else if(value == false && this.axesHelper){
+            this.axesHelper.dispose();
+            this.axesHelper = undefined;
+        }
+    }
 
     setTimeStep(timeStep: number){
         this.timeStep = timeStep;
@@ -87,6 +101,14 @@ class BodySystem {
             m.scale.set(scale, scale, scale);
         });
 
+    }
+
+    setAmbiantLightLevel(level: number){
+        this.ambiantLight.intensity = level;
+    }
+    setFOV(fov: number){
+        this.camera.fov = fov;        
+        this.camera.updateProjectionMatrix();
     }
 
     
@@ -215,9 +237,9 @@ class BodySystem {
 }
 
 
-function createAmbiantLights() {
+function createAmbiantLight() {
     const ambientLight = new AmbientLight("white", 0.01);
-    return [ambientLight];
+    return ambientLight;
 }
 
 
@@ -242,7 +264,7 @@ function createScene(): Scene {
     return scene;
 }
 
-function createCamera({fov=55, aspectRatio=1.0, near=100, far=10000000000}={}): PerspectiveCamera {
+function createCamera({fov=35, aspectRatio=1.0, near=1000, far=10000000000}={}): PerspectiveCamera {
     const camera = new PerspectiveCamera(
         fov, 
         aspectRatio, 
