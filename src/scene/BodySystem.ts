@@ -172,7 +172,9 @@ class BodySystem {
             });
 
             // fake rotation upon y axis (in the object's )
-
+            // todo: move this rotation as a property of the body so that 
+            // it knows the position of the rotation (time of day )
+            // we also have to do same with the tilt.
             that.objects3D.forEach((m)=> {
                 const child = m.children[0].rotateY(toRad(0.01));
                 if(child.children && child.children.length==1){
@@ -214,7 +216,7 @@ class BodySystem {
 
 
 function createAmbiantLights() {
-    const ambientLight = new AmbientLight("white", 0.02);
+    const ambientLight = new AmbientLight("white", 0.01);
     return [ambientLight];
 }
 

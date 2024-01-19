@@ -10,6 +10,9 @@ const textureLoader = new TextureLoader();
 
 function createAtmosphereMateriel(textureUri: string) {
 
+    // we could offer the option to  load cloud imagery generated from somewhere.
+    // and we'd draw it on a canvas. This would be useful when animating in real time.
+    
     const material = new MeshPhongMaterial({
         map: textureLoader.load(textureUri),
         transparent: true,
