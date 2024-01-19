@@ -1,11 +1,11 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
-import { Dim, WindowSizeObserver } from '../system/geometry.ts';
+import { Dim, WindowSizeObserver, toRad } from '../system/geometry.ts';
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
-import { BodyMesh } from '../mesh/BodyMesh.ts';
+import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { throttle } from '../system/throttler.ts';
 // import { Vec3D } from '../system/vecs.ts';
 
@@ -25,7 +25,7 @@ class BodySystem {
     scene: Scene;
     renderer: WebGLRenderer;
     controls: OrbitControls;
-    bodyMeshes: Mesh[];
+    objects3D: Object3D[];
     stats: Stats;
     target: Body
     timeStep: number = 1.0;
@@ -52,14 +52,14 @@ class BodySystem {
         this.viewTransitions = new ViewTransitions(this.camera, this.controls);
         
         // create bodies from here (just earth now)
-        this.bodyMeshes = createBodyMeshes(this.bodies);
+        this.objects3D = createObjects3D(this.bodies);
 
         createAmbiantLights().forEach((l) => this.scene.add(l));
 
         this.setTarget(this.bodies[0]);        
         this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
         this.controls.update();
-        this.scene.add(...this.bodyMeshes);
+        this.scene.add(...this.objects3D);
 
         const axesHelper = new AxesHelper( 5000000000 );
         this.scene.add( axesHelper );
@@ -83,7 +83,7 @@ class BodySystem {
     }
 
     setScale(scale: number){
-        this.bodyMeshes.forEach((m) => {
+        this.objects3D.forEach((m) => {
             m.scale.set(scale, scale, scale);
         });
 
@@ -168,10 +168,19 @@ class BodySystem {
         const that = this
         return new Promise(function(resolve){
             that.bodySystemUpdater.update(that.bodies, that.timeStep).forEach((body: Body, i: string | number ) => {
-                BodyMesh.updateMesh(body, that.bodyMeshes[i]);
-
-                
+                BodyObject3D.updateObject3D(body, that.objects3D[i]);
             });
+
+            // fake rotation upon y axis (in the object's )
+
+            that.objects3D.forEach((m)=> {
+                const child = m.children[0].rotateY(toRad(0.01));
+                if(child.children && child.children.length==1){
+                    child.children[0].rotateY(toRad(0.005));
+                }
+
+            })
+
             resolve(null);
     
         });
@@ -204,36 +213,11 @@ class BodySystem {
 }
 
 
-// // point lights...
-// //https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_pointlights.html
-
 function createAmbiantLights() {
     const ambientLight = new AmbientLight("white", 0.02);
-    // const light = new PointLight(color, intensity, 0, 0.001);
-    // return [light, ambientLight];
     return [ambientLight];
 }
-// }
 
-// function createLights({color="white", intensity=40000, position = new Vector3(0,0,0)} = {}) {
-
-//     const light = new PointLight(color, intensity);
-
-//     light.position.set(position.x, position.y, position.z);
-//     // return [ambientLight];
-//     return [light, ambientLight];
-//     return [light];
-// }
-
-// function createLights({position = new Vector3(0,0,0), hemispheric = true} = {}) {
-
-//     const ambientLight = hemispheric? new HemisphereLight("white", "darkgrey", 1.0): new AmbientLight("white", 0.6);
-//     const light = new DirectionalLight('white', 8);
-//     light.position.set(position.x, position.y, position.z);
-//     // return [ambientLight];
-//     return [light, ambientLight];
-//     return [light];
-// }
 
 function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObserver) {
     window.addEventListener("resize", 
@@ -246,10 +230,8 @@ function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObs
     ));    
 }
 
-
-function createBodyMeshes(bodies: Body[]): Mesh[] {
-    const meshes = bodies.map((body) => BodyMesh.createMesh(body));
-    return meshes;
+function createObjects3D(bodies: Body[]): Object3D[] {
+    return bodies.map((body) => BodyObject3D.createObject3D(body));
 }
 
 function createScene(): Scene {

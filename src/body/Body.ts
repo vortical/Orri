@@ -1,4 +1,4 @@
-import { Mesh } from 'three';
+import { Mesh, Object3D } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vec3D } from '../system/vecs.ts';
 
@@ -113,7 +113,8 @@ class Body {
     lightProperties?: LightProperties;
     color: string;
 
-    mesh: Mesh; 
+    // todo: don't need this...don't want it.
+    object3D: Object3D; 
   
 
 

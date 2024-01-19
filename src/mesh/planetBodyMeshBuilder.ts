@@ -1,7 +1,7 @@
 import { Body, MaterialProperties } from '../body/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial } from "three";
-import { MeshBuilder } from "./MeshBuilder.ts";
+import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D } from "three";
+import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { rotationForObliquityToOrbit } from '../system/geometry.ts';
 
@@ -51,9 +51,13 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
     return material;
 }
 
-function createPlanetMesh(body: Body, materialProperties: MaterialProperties): Mesh {
+
+
+const createObject3D: Object3DBuilder = (body: Body) => {
 
     const { name, radius, position } = body;
+
+    const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
 
     // could use LOD...
     const widthSegements = 64;
@@ -74,25 +78,18 @@ function createPlanetMesh(body: Body, materialProperties: MaterialProperties): M
 
     surfacemesh.name = name;
 
-    surfacemesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
+    const worldmesh = new Object3D();
+
+
+    worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
 
     // we will have to calculate rotation/tilt also, but this is easy as its constant.
     const rotation = rotationForObliquityToOrbit(body.obliquityToOrbit);
     
-    surfacemesh.rotation.set(rotation.x, rotation.y, rotation.z); //to do, this is the axis tilt on the orbital plane.
-    return surfacemesh;
-}
-    
+    worldmesh.rotation.set(rotation.x, rotation.y, rotation.z); //to do, this is the axis tilt on the orbital plane.
+    worldmesh.add(surfacemesh);
 
+    return worldmesh;
+}    
 
-const createMesh: MeshBuilder = (body: Body) => {
-    const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == body.name.toLowerCase())!;
-    const mesh = createPlanetMesh(body, materialProperties)
-    return mesh;
-}
-
-
-export { createMesh as createPlanetMesh };
-
-
-// export { createMesh };
+export { createObject3D as createPlanetObject3D };

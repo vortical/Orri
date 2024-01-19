@@ -1,8 +1,8 @@
 
 import { Body, MaterialProperties } from '../body/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight } from "three";
-import { MeshBuilder } from "./MeshBuilder.ts";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D } from "three";
+import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 
 const textureLoader = new TextureLoader();
@@ -23,9 +23,9 @@ function createSunMaterial(materialProperties: MaterialProperties): Material {
 
 }
 
-function createStarMesh(body: Body,  materialProperties: MaterialProperties): Mesh {
-
+const createObject3D: Object3DBuilder = (body: Body): Object3D => {
     const { name, radius, position } = body;
+    const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
 
     const widthSegements = 64;
     const heightSegments = 32;
@@ -36,21 +36,18 @@ function createStarMesh(body: Body,  materialProperties: MaterialProperties): Me
 
     
     surfacemesh.name = name;
-    surfacemesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
-
+    
     const { color = "white", intensity = 0.8, distance = 0, decay = 0.05 } = body.lightProperties!;
     const light = new PointLight(color, intensity, distance, decay);
-
+    
+    
     surfacemesh.add(light);
-    return surfacemesh;
+    
+    const worldmesh = new Object3D();
+    worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
+    worldmesh.add(surfacemesh);
+
+    return worldmesh;
 }
 
-const createMesh: MeshBuilder = (body: Body) => {
-    const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == body.name.toLowerCase())!;
-    const mesh = createStarMesh(body, materialProperties)
-    return mesh;
-}
-
-
-
-export { createMesh as createStarMesh };
+export { createObject3D as createStarObject3D };

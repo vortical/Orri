@@ -1,35 +1,35 @@
 
-import { Mesh } from 'three';
+import { Mesh, Object3D } from 'three';
 import { Body } from '../body/Body.ts';
-import { MeshBuilder } from './MeshBuilder.ts';
-import { createPlanetMesh } from './planetBodyMeshBuilder.ts';
-import { createStarMesh } from './starBodyMeshjBuilder.ts';
+import { Object3DBuilder } from './Object3DBuilder.ts';
+import { createPlanetObject3D } from './planetBodyMeshBuilder.ts';
+import { createStarObject3D } from './starBodyMeshBuilder.ts';
 
-function getMeshBuilder(body: Body): MeshBuilder {
+function getObject3DBuilder(body: Body): Object3DBuilder {
 
     if(body.lightProperties){
-        return createStarMesh;
+        return createStarObject3D;
     }else{
-        return createPlanetMesh;        
+        return createPlanetObject3D;        
     }
 }
 
-class BodyMesh {
+class BodyObject3D {
 
-    static createMesh(body: Body): Mesh {
-        const meshBuilder = getMeshBuilder(body);
-        const mesh = meshBuilder(body);        
-        body.mesh = mesh; // todo: side effect...
-        return mesh;
+    static createObject3D(body: Body): Object3D {
+        const meshBuilder = getObject3DBuilder(body);
+        const object3D = meshBuilder(body);        
+        body.object3D = object3D; // todo: side effect...
+        return object3D;
     }
     
-    static updateMesh(body: Body, mesh: Mesh): Mesh {
-        mesh.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);
-        return mesh;
+    static updateObject3D(body: Body, object3D: Object3D): Object3D {
+        object3D.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);
+        return object3D;
     }    
 }
 
-export { BodyMesh };
+export { BodyObject3D };
 
 
 
