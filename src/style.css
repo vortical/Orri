@@ -13,6 +13,7 @@ html, body {
  width: 100%;
  height: 100%;
  display: block;
+ position: relative;
 
 /*
   Set the container's background color to the same as the scene's
@@ -21,3 +22,20 @@ html, body {
 background-color: black;   
 
 }
+
+
+#date-picker {
+  position: absolute;
+  bottom: 0; 
+  left:0;
+  
+}
+
+#system-time {
+  opacity: 0.3;
+  color: white; 
+  border-width: 0;           /* Set text color to black */
+  background-color:rgb(51, 50, 48)   /* Set background color to gray */
+}
+
+

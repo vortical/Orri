@@ -8,17 +8,18 @@
  *   }
  *   
  *   const context = {
- *       value: "Boom!"
+ *       value: "Some property value."
  *   };
  *
- *   const f = throttle(200, context, function(v: number, x: number){
- *       console.log("Bang!"+new Date()+ ", "+ this.value+" args:"+v+","+x);
+ *   const someThrottledFunction = throttle(200, context, function(v: number, x: number){
+ *       console.log(this.value+" args:"+v+","+x);
  *   })
  *
- *   // fire calls to f() every millisecond. 
+ *  // Call someThrottledFunction() every ms, but its throttled for invocations
+ *  // at a rate of no more 5 per second. (1000ms/200ms)
  * 
  *   for(let i=0; i< 10000; i++){
- *       f(i, i+100);
+ *       someThrottledFunction(i, i+100);
  *       await delay(1);
  *   }
 * }

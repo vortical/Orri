@@ -1,3 +1,4 @@
+import { Vector3 } from "three";
 
 class Vec3D {
     x: number;
@@ -24,7 +25,17 @@ class Vec3D {
         return new Vec3D(pos2.x - pos1.x, pos2.y - pos1.y, pos2.z - pos1.z);
     }
 
-    scalarMultiplication(value)
+    toVector3(): Vector3 {
+        return new Vector3(this.x, this.y, this.z);
+    }
+
+    static fromVector3(v: Vector3): Vec3D {
+        return new Vec3D(v.x, v.y, v.z);
+    }
+
+
+
+//    scalarMultiplication(value)
     
 }
 

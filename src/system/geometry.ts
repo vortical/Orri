@@ -4,6 +4,8 @@ function toRad(degrees:number): number{
     return degrees * Math.PI / 180;
 }
 
+
+
 class Dim {
     w: number;
     h: number;
@@ -26,6 +28,7 @@ class Dim {
 function rotationForObliquityToOrbit(angleDeg: number): Vec3D{
     return new Vec3D(toRad(angleDeg),0 , 0);    
 }
+
 
 
 type WindowSizeObserver = (size: Dim) => void;

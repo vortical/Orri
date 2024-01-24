@@ -87,7 +87,7 @@ const createObject3D: Object3DBuilder = (body: Body) => {
     worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
 
     // we will have to calculate rotation/tilt also, but this is easy as its constant.
-    const rotation = rotationForObliquityToOrbit(body.obliquityToOrbit);
+    const rotation =body.obliquityOrientation();
     
     worldmesh.rotation.set(rotation.x, rotation.y, rotation.z); //to do, this is the axis tilt on the orbital plane.
     worldmesh.add(surfacemesh);

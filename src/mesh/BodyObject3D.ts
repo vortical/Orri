@@ -24,7 +24,29 @@ class BodyObject3D {
     }
     
     static updateObject3D(body: Body, object3D: Object3D): Object3D {
+        // position of the body's locality:
         object3D.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);
+
+                //    // move the body on its axis.
+                //    const child = m.children[0];
+                //    // move children suchjjj as clouds on its axis
+                //    if(child.children && child.children.length==1){
+                //        child.children[0].rotateY(toRad(0.005));
+                //    }
+
+        // local rotation around axis - make this a real concept such as body.surface?
+
+
+        object3D.children?.forEach((c => {
+            c.rotation.set(body.sideralRotation.x, body.sideralRotation.y, body.sideralRotation.z);
+            // each surface itself may have animations (e.g. atmosphere), so we should
+            // call an update on those.
+
+            // this would be a hierachical thing like:
+            // object3D.update(time) which would walk down the tree and update children.
+        }))
+
+
         return object3D;
     }    
 }

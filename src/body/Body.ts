@@ -1,4 +1,4 @@
-import { Mesh, Object3D } from 'three';
+import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vec3D } from '../system/vecs.ts';
 
@@ -92,8 +92,7 @@ interface BodyArguments {
      * Venus rotates in a retrograde direction, opposite the other planets, so the
      * tilt is almost 180 degrees, it is considered to be spinning with its
      * "top", or north pole pointing "downward" (southward). Uranus rotates almost
-     * on its side relative to the orbit, Pluto is pointing slightly "down". The 
-     * ratios with Earth refer to the axis without reference to north or south.
+     * on its side relative to the orbit, Pluto is pointing slightly "down". 
      */
     obliquityToOrbit?: number;
     /**
@@ -111,25 +110,46 @@ interface BodyArguments {
 class Body {
     name: string;
     mass: number;
+    /**
+     * in meters
+     */
     radius: number;
+
+    /** in meters
+     * 
+     */
     position: Vec3D;
     // speed would be based off have orbital plane
+    /**
+     * in meters/s
+     */
     speed: Vec3D;
     // color: string;
+
+    // rotation angle along its obliquity axis.
+    sideralRotation = new Vec3D(0,0,0);
+    
+    // rotationQuaternion!: Quaternion; // using euler 
+
+
     orbitInclination: number;
+
     obliquityToOrbit: number; 
-    sideralRotationPeriod: number;
+    
+    /** time for a rotation upon axis in seconds */
+    sideralRotationPeriod: number = Number.MAX_VALUE;
     acceleration: number;
 
     lightProperties?: LightProperties;
     color: string;
 
     // todo: don't need this...don't want it.
-    object3D: Object3D; 
+    object3D!: Object3D; 
   
 
 
-    constructor({name, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod=0, lightProperties}: BodyArguments) {
+    
+    constructor({name, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod=Number.MAX_VALUE , lightProperties}: BodyArguments) {
       this.name = name;
       this.mass = mass;
       this.radius = radius;
@@ -144,6 +164,44 @@ class Body {
       this.color = color;
 
     }
+
+        // when we start, 
+        // we need to have the time of the start of the simulation. Given we have the period of a body's
+        // orbit
+        //
+
+        // when:
+        // *  during an object' orbit around its parent body does it
+        // experience northern (right hand rule) winter solstice? This is to help us 
+        // This should be a modulus time (e.g 358/365). It helps us establish the orientation
+        // of the axis (i.e.: around what axis to we apply the obliquityToOrbit property?). 
+        // Also of note is that we need to calculate that axis based on the body's orbital plane
+        // which is the same as the speed vectors.
+        // 
+        //* during an object's orbit does it experience apoapsis/periaps... unless we have
+        //  exact speed figures for the time we start simulation.
+
+    obliquityOrientation(): Vec3D{ 
+        // this is the sumer solstice for earth cause its at (-1, 0, 0)
+        return {x: 0, y: 0, z: toRad(-this.obliquityToOrbit )};       
+    }
+
+    /**
+     * 
+     * @param time in seconds
+     * @returns 
+     */
+    nextRotation(time: number): Vec3D {
+        // todo: just use three.js vectors...
+        // todo: all internal angles are to be in rads
+        // we consider the rotation to be local to the body's axis
+
+        // if()
+        const yAngleIncrement = 2 * Math.PI * time / this.sideralRotationPeriod;
+        return new Vec3D(this.sideralRotation.x,  (this.sideralRotation.y+yAngleIncrement) % (2 * Math.PI), this.sideralRotation.z);
+        
+    }
+    
 
     /**
      * 
@@ -229,6 +287,11 @@ class Body {
             z: this.position.z + (this.speed.z * time) + (acc.z * time * time) / 2,              
         }
     }
+
+
+    
+
+
 
 }
 

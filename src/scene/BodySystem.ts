@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Clock, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver, toRad } from '../system/geometry.ts';
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -13,46 +13,20 @@ import { ViewTransitions } from './ViewTransitions.ts';
 
 import Stats from 'three/addons/libs/stats.module.js';
 
+import PubSub from 'pubsub-js';
+
+import { SYSTEM_TIME_TOPIC } from '../system/event-types.ts';
+
+import { Clock, Timer } from '../system/timing.ts';
+
 
 type Animator = (time: number) => boolean;
 
 
-class ClockTimer {
-    
-    scale: number = 1;
-    startTime: number;
-    previous: number;
-    units: number;
+//https://sahadar.github.io/pubsub/#installation
+//https://www.npmjs.com/package/pubsub-js
 
-    /**
-     * 
-     * @param msToUnit units based on ms. So 1000 msToUnit is a second.
-     */
-    constructor(msToUnit: number=1000){
-        this.units = msToUnit;
-        this.start();
-    }
-    
-    setScale(scale: number){
-        this.scale = scale;
-    }
-    
-    start(){
-        this.startTime = performance.now();
-        this.previous = this.startTime;
-    }
-    
-    /**
-     * 
-     * @returns time in units
-     */
-    getDelta(): number {        
-        const now = performance.now();
-        const deltaSeconds =  (now - this.previous)/this.units;
-        this.previous = now;
-        return deltaSeconds * this.scale;
-    }
-}
+
 class BodySystem {
 
     bodySystemUpdater: BodySystemUpdater;
@@ -65,7 +39,7 @@ class BodySystem {
     ambiantLight: AmbientLight;
     stats: Stats;
     target: Body
-    clockTimer: ClockTimer;
+    clock: Clock;
     
     // timeStep: number = 1.0;
     viewTransitions: ViewTransitions;
@@ -73,6 +47,9 @@ class BodySystem {
     
     constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater){
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
+        this.clock = new Clock();
+    
+        
         this.stats = new Stats();
         parentElement.appendChild(this.stats.dom);
 
@@ -98,16 +75,16 @@ class BodySystem {
         this.scene.add(this.ambiantLight);
 
         this.setTarget(this.bodies[0]);        
-        this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
+        this.camera.position.set(0,0,1.5*this.bodies[0].radius/1000)
         this.controls.update();
         this.scene.add(...this.objects3D);
         this.setAxesHelper(false);
 
         // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
         this.setSize(canvasSize);
-        this.clockTimer = new ClockTimer();
-        setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size))
         
+        setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size))
+            
         
     }
 
@@ -133,21 +110,22 @@ class BodySystem {
     }
 
     getTimeStep(){
-        this.clockTimer.scale;
+        this.clock.scale;
     }
 
     /**
-     * Timestep represents how much delta time (in seconds) to use in calculating 
-     * the positions/speeds of objects in the system for each loop frame.
-     * 
-     * Real time value for 60fps would be each frame is for (1/60 or 0.0167) of a second.
      *        
-     * This should probably be called timescale from 1 second to 3600?
      *      
-     * @param timeStep 
+     * @param timeScale 
      */
-    setTimeStep(timeStep: number){
-        this.clockTimer.setScale(timeStep)
+    setTimeScale(timesScale: number){
+        this.clock.setScale(timesScale)
+    }
+
+    setDatetime(isoString: string){
+        // TO: this will also require us to rebuild the model from
+        // a service that gives us positions/speeds at that time
+        this.clock.setTime(new Date(isoString).getTime());
     }
 
     setScale(scale: number){
@@ -186,20 +164,6 @@ class BodySystem {
         this.viewTransitions.moveToTarget(body, undefined, 20, 100);
     }
 
-    // setDistanceToTarget(distance: number){
-        // todo...
-
-    //     const body = this.target;
-
-    //     // keep same distance...
-    //     const cameraPosition = this.camera.position.clone();
-    //     const target = this.controls.target.clone();
-
-    //     const targetTranslation = cameraPosition.sub(target).normalize();
-
-        
-    //     this.camera.position.set(0,0,100*this.bodies[0].radius/1000)
-    // }
 
     setTarget(body: Body|string){
         
@@ -220,8 +184,6 @@ class BodySystem {
         this.controls.target.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);        
         this.camera.position.set(this.controls.target.x+targetTranslation.x, this.controls.target.y+targetTranslation.y, this.controls.target.z+targetTranslation.z);
         
-
-        // this.camera.lookAt(body.position.x/1000, body.position.y/1000, body.position.z/1000);
     }
     
     followTarget(body: Body|string) {
@@ -253,7 +215,13 @@ class BodySystem {
             // it knows the position of the rotation (time of day )
             // we also have to do same with the tilt.
             that.objects3D.forEach((m)=> {
-                const child = m.children[0].rotateY(toRad(0.01));
+                
+                // so based on time delta, determine the angle of rotation
+                
+                
+                // move the body on its axis.
+                const child = m.children[0];
+                // move children suchjjj as clouds on its axis
                 if(child.children && child.children.length==1){
                     child.children[0].rotateY(toRad(0.005));
                 }
@@ -267,8 +235,11 @@ class BodySystem {
 
     start() {
         
+        this.clock.enableTimePublisher(true);
         
         this.render();
+
+        const timer = this.clock.startTimer("AnimationTimer");
 
         /**
          * The clock has a delta, which says how much time the previous frame took.
@@ -279,8 +250,8 @@ class BodySystem {
          * 
          * 
          */
-        this.renderer.setAnimationLoop( async(time) => {
-            const delta = this.clockTimer.getDelta();
+        this.renderer.setAnimationLoop( async() => {
+            const delta = timer.getDelta()!;
             await this.tick(delta);
             this.followTarget(this.target);
             this.controls.update();
@@ -290,6 +261,7 @@ class BodySystem {
     }
 
     stop() {
+        this.clock.enableTimePublisher(false);
         this.renderer.setAnimationLoop(null);
     }
 

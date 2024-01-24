@@ -51,6 +51,13 @@ const createObject3D: Object3DBuilder = (body: Body): Object3D => {
 
     const worldmesh = new Object3D();
     worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
+
+    const rotation =body.obliquityOrientation();
+    
+    worldmesh.rotation.set(rotation.x, rotation.y, rotation.z); //to do, this is the axis tilt on the orbital plane.
+    
+
+
     worldmesh.add(light);
 
     return worldmesh;
