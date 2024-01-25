@@ -1,6 +1,8 @@
     
+import { Quaternion, Vector3 } from 'three';
 import { Body }  from '../body/Body';
 import { Vec3D } from '../system/vecs';
+import { toRad } from '../system/geometry';
 
 
 // {
@@ -148,6 +150,7 @@ const bodySets = {
 
     new Body({
       name: "Moon", 
+      parent: "Earth",
       mass: 7.3477e22, 
       radius: 1.737400e6, 
       position: {x: -149597871e3+384.400e6, y:0, z:0} as Vec3D, 
@@ -242,7 +245,68 @@ const bodySets = {
 
 
 
-export { bodySets, meshProperties};
+function postProcessLoad(body: Body){
+  // speeds are given in 2D, but they should be aligned along the orbit plane of the body.
+  
+
+  function getBody(name: string): Body {
+    name = name.toLocaleLowerCase();
+    return bodySets.solarSystem.find((b) => b.name.toLocaleLowerCase() == name)!;    
+  }
+
+
+  function transposeSpeedToOrbitalPlane(){
+
+    if(body.orbitInclination && body.orbitInclination != 0){
+
+
+      // Determine an axis that is 90 degrees rotated around y axis of speed vector, 
+      // the oribital tilt will be applied from that axis.
+      const q = new Quaternion().setFromAxisAngle( new Vector3(0,1,0), Math.PI/2);
+
+      const childLocalSpeed = new Vec3D(0,0, - 1023.16).toVector3();
+
+      const parent = getBody("earth");
+    
+
+      const parentSpeed = new Vector3(parent.speed.x, parent.speed.y, parent.speed.z);
+
+      const axisAngle = childLocalSpeed.clone().applyQuaternion(q);
+
+      // Quaternion of the orbital plane
+      const quaternion = new Quaternion().setFromAxisAngle( axisAngle.normalize(), toRad(body.orbitInclination));
+//29780 - 1023.16
+      // we only calculate the orbital speed around earth:
+
+      // Transform the 2D speed of the child onto the orbital plane and add to parent vector...oooff!
+      body.speed = Vec3D.fromVector3(parentSpeed.add(childLocalSpeed.applyQuaternion(quaternion)));
+      
+    }
+    return body;
+  }
+  return transposeSpeedToOrbitalPlane();
+
+
+}
+
+class DataService {
+
+  
+  static loadSolarSystem(): Body[]{
+    return bodySets.solarSystem.map((b) => postProcessLoad(b));
+  }
+
+  static loadEarthSystem(){
+    return [];
+
+  }
+
+
+}
+
+
+
+export { bodySets, meshProperties, DataService};
 
 //   export default function build (systemIndex: number): Body[] {
 //     // return new GravityAnimator(systems[systemIndex]);

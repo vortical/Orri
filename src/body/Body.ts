@@ -134,6 +134,7 @@ class Body {
 
     orbitInclination: number;
 
+    // tilt
     obliquityToOrbit: number; 
     
     /** time for a rotation upon axis in seconds */
@@ -191,7 +192,7 @@ class Body {
      * @param time in seconds
      * @returns 
      */
-    nextRotation(time: number): Vec3D {
+    nextSideralRotation(time: number): Vec3D {
         // todo: just use three.js vectors...
         // todo: all internal angles are to be in rads
         // we consider the rotation to be local to the body's axis

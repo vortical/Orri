@@ -3,7 +3,27 @@ import { expect, test } from 'vitest';
 
 import { Quaternion, Vector3, Euler } from 'three';
 import { zipCombine } from '../src/system/arrays'
+import { toRad } from '../src/system/geometry';
 import { Body } from '../src/body/Body';
+import { Vec3D } from '../src/system/vecs';
+
+test('adjust speed', () => {
+
+    const q = new Quaternion().setFromAxisAngle( new Vector3(0,1,0), Math.PI/2);
+    // const speed = new Vec3D(0, 0, 29780 - 1023.16);
+    const speed = new Vector3(0, 0, 1);
+
+    const axisAngle = speed.clone().applyQuaternion(q);
+    const a = toRad(90);
+  
+    const quaternion = new Quaternion().setFromAxisAngle( axisAngle, a);
+  
+    const result = speed.clone().applyQuaternion(quaternion);
+    console.log(result);
+    expect(result).toEqual(3);
+
+})
+
 
 
 
@@ -42,4 +62,4 @@ test('some other test', () => {
     const r = zipCombine([1,2,3], [4,5,6], (a,b) => a * b);
     expect(r.length).to.equal(3);
     expect(r).toEqual([1*4, 2 * 5, 3 * 6]);
-})
+});

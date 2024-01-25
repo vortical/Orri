@@ -38,7 +38,7 @@ class NBodySystemUpdater implements BodySystemUpdater{
       // assume rotation along axis is constant
 
       bodies.forEach((body) => {
-        body.sideralRotation = body.nextRotation(timeStep);
+        body.sideralRotation = body.nextSideralRotation(timeStep);
       });      
 
 

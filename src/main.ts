@@ -1,7 +1,7 @@
 import './style.css'
 
 import { BodySystem } from './scene/BodySystem.ts'
-import { bodySets } from './data/bodySystems.ts';
+import { DataService } from './data/bodySystems.ts';
 import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
 import  GUI  from 'lil-gui';
 import PubSub from 'pubsub-js';
@@ -90,7 +90,7 @@ function buildGui(bodySystem: BodySystem){
 }
         
 const bodySystemUpdater = new NBodySystemUpdater();
-const bodySystem = new BodySystem(mainElement, bodySets.solarSystem, bodySystemUpdater);
+const bodySystem = new BodySystem(mainElement, DataService.loadSolarSystem(), bodySystemUpdater);
 
 
 buildGui(bodySystem);
