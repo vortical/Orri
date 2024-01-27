@@ -5,15 +5,25 @@ import { Quaternion, Vector3, Euler } from 'three';
 import { zipCombine } from '../src/system/arrays'
 import { toRad } from '../src/system/geometry';
 import { Body } from '../src/body/Body';
-import { Vec3D } from '../src/system/vecs';
+import { Vec3D, Vector } from '../src/system/vecs';
 
+
+
+test('vector test', () => {
+    const a = new Vec3D(1, 0, 0);
+    const b = a.toVector3();
+    console.log(b);
+    
+
+});
 test('adjust speed', () => {
 
     const q = new Quaternion().setFromAxisAngle( new Vector3(0,1,0), Math.PI/2);
     // const speed = new Vec3D(0, 0, 29780 - 1023.16);
-    const speed = new Vector3(0, 0, 1);
+    const speed = new Vector3(0, 0, - 1023.16);
 
-    const axisAngle = speed.clone().applyQuaternion(q);
+
+    const axisAngle = speed.clone().applyQuaternion(q).normalize();
     const a = toRad(90);
   
     const quaternion = new Quaternion().setFromAxisAngle( axisAngle, a);
@@ -22,7 +32,7 @@ test('adjust speed', () => {
     console.log(result);
     expect(result).toEqual(3);
 
-})
+});
 
 
 

@@ -1,6 +1,7 @@
 import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
-import { Vec3D } from '../system/vecs.ts';
+import { Vec3D, Vector } from '../system/vecs.ts';
+import { BodyProperties, LightProperties, TimePeriod } from './models.ts';
 
 /**
  * G is the universal gravitational constant 
@@ -8,31 +9,6 @@ import { Vec3D } from '../system/vecs.ts';
  */
 const G: number = 6.674e-11;
 
-
-
-// {
-//     "id": 3,
-//     "name": "Earth",
-//     "diameter": 12756,
-//     "mass": 5.97,
-//     "gravity": 9.8,
-//     "density": 5514,
-//     "rotationPeriod": 23.9,
-//     "lengthOfDay": 24,
-//     "distanceFromParent": 149600000,
-//     "orbitalPeriod": 365.2,
-//     "orbitalVelocity": 29.8,
-//     "orbitalInclination": 0,
-//     "axialTilt": 23.4,
-//     "orbitPositionOffset": 0,
-//     "meanTemperature": 15,
-//     "surfaceTemps": {
-//         "min": 185,
-//         "mean": 288,
-//         "max": 331
-//     },
-//     "rings": false,
-//     "satellites": [
 
 /**
  * 
@@ -58,57 +34,115 @@ function rotationFromAxialTilt(angleDeg: number): Vec3D{
     
 }
 
-interface MaterialProperties {
-    name: string;
-    textureUri?: string;
-    bumpMapUri?: string;
-    normalUri?: string;
-    atmosphereUri?: string;
-    alphaUri?: string;
-    color?: string;
+// type TimePeriod = {
+//     days:number,
+//     hours: number,
+//     minutes: number,
+//     seconds: number
+// };
 
-}
+// type MaterialProperties = {
+//     name: string;
+//     textureUri?: string;
+//     bumpMapUri?: string;
+//     normalUri?: string;
+//     atmosphereUri?: string;
+//     alphaUri?: string;
+//     color?: string;
 
-interface LightProperties {
-    color?:  string;
-    intensity?: number;
-    distance?: number;
-    decay?: number ;  
+// }
 
-}
+// type LightProperties = {
+//     color?:  string;
+//     intensity?: number;
+//     distance?: number;
+//     decay?: number ;  
 
-interface BodyArguments {
-    name: string;
-    mass: number;
-    radius: number;
-    position: Vec3D;
-    speed: Vec3D;
-    orbitInclination?: number;
-    /**
-     * Obliquity to Orbit (degrees) - The angle in degrees the axis of a planet
-     *(the imaginary line running through the center of the planet from the north
-     * to south poles) is tilted relative to a line perpendicular to the planet's 
-     * orbit around the Sun, north pole defined by right hand rule.
-     * Venus rotates in a retrograde direction, opposite the other planets, so the
-     * tilt is almost 180 degrees, it is considered to be spinning with its
-     * "top", or north pole pointing "downward" (southward). Uranus rotates almost
-     * on its side relative to the orbit, Pluto is pointing slightly "down". 
-     */
-    obliquityToOrbit?: number;
-    /**
-     * Period of rotation around axis in seconds
-     */
-    sideralRotationPeriod?: number; 
-    lightProperties?: LightProperties;
-    color?: string;
-}
+// }
+
+
+
+
+
+
+// type BodyPayload = {
+//     name: string;
+//     parent?: Body;
+//     mass: number;
+//     radius: number;
+    
+//     /**
+//      * position in 2D relative to parent and local to this body's orbital plane.
+//      */
+//     position: Vector;
+
+//     /**
+//      * position in 2D relative to parent and local to this body's oribital plane.
+//      */
+
+//     speed: Vector;
+//     /**
+//      * The orbital plane of this body in degrees. 
+//      * 
+//      * TODO: Note that this should be a quaternion in
+//      * order to establish precise initial position (especially the y component) and speed vectors. For now the initial
+//      * position will be at a position intersecting the parent's plane at y=0 (i.e. one of two points, depending on
+//      * orientation of inclination (i.e. negative or position))
+//      *  
+//      */
+//     orbitInclination?: number;
+
+//     /**
+//      * 
+//      * TODO: This should be a euler vector (or a quaternion) to establish initial axis 
+//      * direction (not just scalar angle, which leads us to establish an arbitrary axis direction). 
+//      * 
+//      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body
+//      * (the imaginary line running through the center of the planet from the north
+//      * to south poles) is tilted relative to a line perpendicular to the planet's 
+//      * orbit around its parent, with north pole defined by right hand rule.
+//      * 
+//      * Thus, given this right hand rule, Venus rotates in a retrograde direction, opposite
+//      * the other planets, so the obliquity is almost 180 degrees and spinning with a north pole
+//      * pointing "downward" (southward). 
+//      * 
+//      * 
+//      * Uranus rotates almost on its side relative to the orbit.
+//      * 
+//      * Pluto is pointing slightly "down". 
+//      */
+//     obliquityToOrbit?: number;
+
+
+//     /**
+//      * Period of rotation around axis in seconds
+//      * 
+//      * TODO: Note this should be a quaternion or euler vector in order to determine an
+//      * initial rotation value.
+//      */
+//     sideralRotationPeriod?: number; 
+//     lightProperties?: LightProperties;
+//     color?: string;
+// }
 
 
 // https://nssdc.gsfc.nasa.gov/planetary/planetfact.html
 // https://en.wikipedia.org/wiki/Orbital_inclination
 
+function timePeriodToMs(timePeriod: TimePeriod): number {
+    const daysToMillis = (days?: number) => days? days * hoursToMillis(24) : 0
+    const hoursToMillis = (hours?: number) => hours? hours * minutesToMillis(60) : 0;
+    const minutesToMillis = (minutes?: number) => minutes? minutes * secondsToMillis(60): 0;
+    const secondsToMillis = (seconds?: number) => seconds? seconds * 1000: 0;
+
+    return daysToMillis(timePeriod.days) + hoursToMillis(timePeriod.hours)+minutesToMillis(timePeriod.minutes)+secondsToMillis(timePeriod.seconds);
+}
+
+
 class Body {
     name: string;
+    parentName: string;
+    parent?: Body;
     mass: number;
     /**
      * in meters
@@ -124,7 +158,7 @@ class Body {
      * in meters/s
      */
     speed: Vec3D;
-    // color: string;
+    acceleration!: Vec3D;
 
     // rotation angle along its obliquity axis.
     sideralRotation = new Vec3D(0,0,0);
@@ -139,7 +173,6 @@ class Body {
     
     /** time for a rotation upon axis in seconds */
     sideralRotationPeriod: number = Number.MAX_VALUE;
-    acceleration: number;
 
     lightProperties?: LightProperties;
     color: string;
@@ -150,17 +183,18 @@ class Body {
 
 
     
-    constructor({name, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod=Number.MAX_VALUE , lightProperties}: BodyArguments) {
+    constructor({name, parent, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE} , lightProperties}: BodyProperties) {
       this.name = name;
+      this.parentName = parent;
+
       this.mass = mass;
       this.radius = radius;
-      this.position = position;
-      this.speed = speed;
+      this.position = Vec3D.fromVector(position);
+      this.speed = Vec3D.fromVector(speed);
       this.orbitInclination = orbitInclination;
       this.obliquityToOrbit = obliquityToOrbit;
-      this.sideralRotationPeriod = sideralRotationPeriod;
-    //   this.color = color;
-      this.acceleration = 0;
+      // this is seconds...
+      this.sideralRotationPeriod = timePeriodToMs(sideralRotationPeriod)/1000;
       this.lightProperties = lightProperties;
       this.color = color;
 

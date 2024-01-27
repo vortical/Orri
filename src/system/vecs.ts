@@ -1,5 +1,14 @@
 import { Vector3 } from "three";
 
+
+type Vector = {
+    x: number,
+    y: number,
+    z: number
+}
+
+type EulerVector = Vector;
+
 class Vec3D {
     x: number;
     y: number;
@@ -25,43 +34,19 @@ class Vec3D {
         return new Vec3D(pos2.x - pos1.x, pos2.y - pos1.y, pos2.z - pos1.z);
     }
 
+    static add(pos1: Vec3D, pos2: Vec3D): Vec3D {
+        return new Vec3D(pos2.x + pos1.x, pos2.y + pos1.y, pos2.z + pos1.z);
+    }
+
     toVector3(): Vector3 {
         return new Vector3(this.x, this.y, this.z);
     }
 
-    static fromVector3(v: Vector3): Vec3D {
+    static fromVector(v: Vector): Vec3D {
         return new Vec3D(v.x, v.y, v.z);
     }
-
-
-
-//    scalarMultiplication(value)
-    
 }
 
-class Vec2D {
-    x: number;
-    y: number;
 
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-
-    static magnitude(vec: Vec2D): number {
-        return Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-    }
-
-    /**
-     * 
-     * @param pos1 
-     * @param pos2 
-     * @returns (pos2 - pos1) vector
-     */
-    static substract(pos1: Vec2D, pos2: Vec2D): Vec2D {
-        return new Vec2D(pos2.x - pos1.x, pos2.y - pos1.y);
-    }
-
-}
-
-export { Vec2D, Vec3D };
+export type {Vector, EulerVector};
+export { Vec3D };

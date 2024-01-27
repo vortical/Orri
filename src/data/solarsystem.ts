@@ -1,110 +1,82 @@
-    
-import { Quaternion, Vector3 } from 'three';
-import { Body }  from '../body/Body';
-import { Vec3D } from '../system/vecs';
-import { toRad } from '../system/geometry';
-import { createBodies } from "./builders.ts";
-import { BodyPayload } from '../body/models.ts';
-
-// todo: convert this json and fetch it...
-
-// {
-  //   name: "",
-  //   textureUri: "",
-//   bumpMapUri: "",
-//   normalUri: "",
-//   atmosphereUri: ""
-
-// }
+import { Body } from "../body/Body";
+import { Vec3D } from "../system/vecs";
 
 
-//https://planet-texture-maps.fandom.com/wiki/Callisto
-const meshProperties = {
-  solarSystem: [
+const meshProperties = [
     {
-      name: "Sun",
-      textureUri: "/assets/textures/planets/sun.png",
-      alphaUri:"/assets/textures/planets/sun_alpha.jpg"
+        name: "Sun",
+        textureUri: "/assets/textures/planets/sun.png",
+        alphaUri: "/assets/textures/planets/sun_alpha.jpg"
     },
     {
-      name: "Earth",
-      textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
-      normalUri: "/assets/textures/planets/earth_normal_2048.jpg",
-      atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png"
+        name: "Earth",
+        textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
+        normalUri: "/assets/textures/planets/earth_normal_2048.jpg",
+        atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png"
     },
     {
-      name: "moon",
-      textureUri: "/assets/textures/planets/moon_1k.jpg",
-      bumpMapUri: "/assets/textures/planets/moon_topo_1k.jpg",
+        name: "moon",
+        textureUri: "/assets/textures/planets/moon_1k.jpg",
+        bumpMapUri: "/assets/textures/planets/moon_topo_1k.jpg",
     },
     {
-      name: "Mercury",
-      textureUri: "/assets/textures/planets/mercury.jpg",
-      bumpMapUri: "/assets/textures/planets/moon_topo.jpg",
-    
+        name: "Mercury",
+        textureUri: "/assets/textures/planets/mercury.jpg",
+        bumpMapUri: "/assets/textures/planets/moon_topo.jpg",
+
     },
     {
-      name: "Venus",
-      textureUri: "/assets/textures/planets/venus.jpg",
-      bumpMapUri: "/assets/textures/planets/venus_topo.jpg",
-    
+        name: "Venus",
+        textureUri: "/assets/textures/planets/venus.jpg",
+        bumpMapUri: "/assets/textures/planets/venus_topo.jpg",
+
     },
     {
-      name: "Mars",
-      textureUri: "/assets/textures/planets/mars_1k.jpg",
-      bumpMapUri: "/assets/textures/planets/mars_topo_1k.jpg",
+        name: "Mars",
+        textureUri: "/assets/textures/planets/mars_1k.jpg",
+        bumpMapUri: "/assets/textures/planets/mars_topo_1k.jpg",
     },
     {
-      name: "Jupiter",
-      textureUri: "/assets/textures/planets/jupiter_4k.jpg",
-    },    
+        name: "Jupiter",
+        textureUri: "/assets/textures/planets/jupiter_4k.jpg",
+    },
     {
-      name: "Io",
-      textureUri: "/assets/textures/planets/io.jpg",
-    },        
+        name: "Io",
+        textureUri: "/assets/textures/planets/io.jpg",
+    },
     {
-      name: "Saturn",
-      textureUri: "/assets/textures/planets/saturn_2k.jpg",
-    },    
+        name: "Saturn",
+        textureUri: "/assets/textures/planets/saturn_2k.jpg",
+    },
     {
-      name: "Uranus",
-      textureUri: "/assets/textures/planets/uranus.jpg",
-    },    
+        name: "Uranus",
+        textureUri: "/assets/textures/planets/uranus.jpg",
+    },
     {
-      name: "Neptune",
-      textureUri: "/assets/textures/planets/neptune.jpg",
-    },        
+        name: "Neptune",
+        textureUri: "/assets/textures/planets/neptune.jpg",
+    },
     {
-      name: "Pluto",
-      textureUri: "/assets/textures/planets/pluto_2k.jpg",
-      bumpMapUri: "/assets/textures/planets/pluto_topo_2k.jpg",      
-    },        
+        name: "Pluto",
+        textureUri: "/assets/textures/planets/pluto_2k.jpg",
+        bumpMapUri: "/assets/textures/planets/pluto_topo_2k.jpg",
+    },
+];
+
+const sun = new Body({
+    name:"Sun", 
+    mass: 1.989e30, 
+    radius: 696.34e6, 
+    position: {x:0, y:0, z:0}), 
+    speed: Vec3D.fromVector({x:0, y:0, z:0}),
+
+    obliquityToOrbit: 7.25,
+    sideralRotationPeriod: 25 * (24*3600),
+    lightProperties:{}
+});
 
 
-  ]
-
-}
-
-
-
-
-
-const bodySets = {
-
-    solarSystem:
-   [
-    new Body({ 
-      parent: null,
-      name:"Sun", 
-      mass: 1.989e30, 
-      radius: 696.34e6, 
-      position: {x:0, y:0, z:0} as Vec3D, 
-      speed: {x:0, y:0, z:0} as Vec3D, 
-      obliquityToOrbit: 7.25,
-      // sun has 'differential rotation'; 25 days at equator, 35 days at highter latitudes
-      sideralRotationPeriod: 25 * (24*3600),
-      lightProperties:{}
-    }),
+  
 /*    new Body({
       parent: ""
       name: "Mercury", 
@@ -124,7 +96,7 @@ const bodySets = {
       color: "red"
     }),
  */
-    new Body({
+const earth =    new Body({
       name:"Earth", 
       mass: 5.9736e24, 
       radius: 6.378e6, 
@@ -247,99 +219,3 @@ const bodySets = {
 };
 
 // todo: make this a datasource...
-
-
-
-function postProcessLoad(body: Body){
-  // speeds are given in 2D, but they should be aligned along the orbit plane of the body.
-  
-
-  function getBody(name: string): Body {
-    name = name.toLocaleLowerCase();
-    return bodySets.solarSystem.find((b) => b.name.toLocaleLowerCase() == name)!;    
-  }
-
-
-  function transposeSpeedToOrbitalPlane(){
-
-    if(body.orbitInclination && body.orbitInclination != 0){
-
-
-      // Determine an axis that is 90 degrees rotated around y axis of speed vector, 
-      // the oribital tilt will be applied from that axis.
-      const q = new Quaternion().setFromAxisAngle( new Vector3(0,1,0), Math.PI/2);
-
-      const childLocalSpeed = new Vec3D(0,0, - 1023.16).toVector3();
-
-      const parent = getBody("earth");
-    
-
-      const parentSpeed = new Vector3(parent.speed.x, parent.speed.y, parent.speed.z);
-
-      const axisAngle = childLocalSpeed.clone().applyQuaternion(q);
-
-      // Quaternion of the orbital plane
-      const quaternion = new Quaternion().setFromAxisAngle( axisAngle.normalize(), toRad(body.orbitInclination));
-
-      // we only calculate the orbital speed around earth:
-
-      // Transform the 2D speed of the child onto the orbital plane and add to parent vector...oooff!
-      body.speed = Vec3D.fromVector(parentSpeed.add(childLocalSpeed.applyQuaternion(quaternion)));
-      
-    }
-    return body;
-  }
-  return transposeSpeedToOrbitalPlane();
-
-
-}
-
-class DataService {
-
-  
-
-  static async ff() {
-
-    console.log("making request")
-    const response = await fetch("/assets/data.json");
-    console.log("got response:"+response.ok);
-    const data = await response.json();
-    console.log("got data:"+data);
-
-    return data;
-    
-  
-  }
-
-  static loadSolarSystem(): Promise<BodyPayload[]> {
-
-    return fetch("/assets/data.json")
-    .then((response) => response.json())
-    .then( (json) => createBodies(json));
-
-    // return bodySets.solarSystem.map((b) => postProcessLoad(b));
-  }
-
-
-  static xloadSolarSystem(): Body[]{
-    return bodySets.solarSystem.map((b) => postProcessLoad(b));
-  }
-
-  static loadEarthSystem(){
-    return [];
-
-  }
-
-
-}
-
-
-
-export { bodySets, meshProperties, DataService};
-
-//   export default function build (systemIndex: number): Body[] {
-//     // return new GravityAnimator(systems[systemIndex]);
-//     return systems[systemIndex];
-//   };
-
-

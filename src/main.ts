@@ -6,6 +6,7 @@ import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
 import  GUI  from 'lil-gui';
 import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC } from './system/event-types.ts';
+import { BodyPayload } from './body/models.ts';
 
 
 
@@ -90,7 +91,13 @@ function buildGui(bodySystem: BodySystem){
 }
         
 const bodySystemUpdater = new NBodySystemUpdater();
-const bodySystem = new BodySystem(mainElement, DataService.loadSolarSystem(), bodySystemUpdater);
+
+const bodies: BodyPayload[] = await DataService.loadSolarSystem();
+console.log(bodies.length);
+
+
+
+const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater);
 
 
 buildGui(bodySystem);
