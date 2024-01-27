@@ -26,7 +26,7 @@ function postCreate(body: Body){
      */
     function transposeSpeedToOrbitalPlane(body: Body){
   
-      if(body.orbitInclination && body.orbitInclination != 0){
+      if(body.orbitInclination != 0){
   
         // Determine an axis that is 90 degrees rotated around y axis of speed vector, 
         // the oribital tilt will be applied from that axis.

@@ -313,6 +313,12 @@ class DataService {
 
   static loadSolarSystem(): Promise<BodyPayload[]> {
 
+    // notes: I have not considered planets beyound mars for max speed at perihelion. they use averages
+
+    // so jupiter and saturn
+    
+    // uranus is ok
+
     return fetch("/assets/data.json")
     .then((response) => response.json())
     .then( (json) => createBodies(json));

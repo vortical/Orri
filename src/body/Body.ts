@@ -217,7 +217,6 @@ class Body {
         //  exact speed figures for the time we start simulation.
 
     obliquityOrientation(): Vec3D{ 
-        // this is the sumer solstice for earth cause its at (-1, 0, 0)
         return {x: 0, y: 0, z: toRad(-this.obliquityToOrbit )};       
     }
 
@@ -227,16 +226,13 @@ class Body {
      * @returns 
      */
     nextSideralRotation(time: number): Vec3D {
-        // todo: just use three.js vectors...
-        // todo: all internal angles are to be in rads
-        // we consider the rotation to be local to the body's axis
+        // note: assuming sideral rotation has a constant period then no need to use delta time, just a start time and
+        // current time (i.e.: pass in the clock's time). This would avoid cumulative errors on long runs.
 
-        // if()
+        // The sideral rotation is local and thus based on the body's axis (on y axis)
         const yAngleIncrement = 2 * Math.PI * time / this.sideralRotationPeriod;
         return new Vec3D(this.sideralRotation.x,  (this.sideralRotation.y+yAngleIncrement) % (2 * Math.PI), this.sideralRotation.z);
-        
     }
-    
 
     /**
      * 
@@ -322,13 +318,7 @@ class Body {
             z: this.position.z + (this.speed.z * time) + (acc.z * time * time) / 2,              
         }
     }
-
-
-    
-
-
-
 }
 
 export { Body, G };
-export type { MaterialProperties };
+// export type { MaterialProperties };
