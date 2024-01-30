@@ -18,6 +18,30 @@ import { BodyPayload } from '../body/models.ts';
 // }
 
 
+
+
+
+// {
+//   "name": "Callisto", 
+//   "parent": "Jupiter",
+//   "mass": , 
+//   "radius": 2.41e6, 
+//   "notes": "Using Average distance and speed.",
+//   "position": {"x": -1882.709e6, "y":0, "z":0}, 
+//   "speed": {"x":0, "y": 0, "z": 8204},
+
+//   "orbitInclination": 2.02, 
+//   "obliquityToOrbit": 0,
+//   "sideralRotationPeriod": {"day": 16.689}
+// },    
+
+
+
+
+
+
+
+
 //https://planet-texture-maps.fandom.com/wiki/Callisto
 const meshProperties = {
   solarSystem: [
@@ -39,8 +63,8 @@ const meshProperties = {
     },
     {
       name: "Mercury",
-      textureUri: "/assets/textures/planets/mercury.jpg",
-      bumpMapUri: "/assets/textures/planets/moon_topo.jpg",
+      textureUri: "/assets/textures/planets/mercurymap.jpg",
+      bumpMapUri: "/assets/textures/planets/mercurybump.jpg",
     
     },
     {
@@ -61,10 +85,30 @@ const meshProperties = {
     {
       name: "Io",
       textureUri: "/assets/textures/planets/io.jpg",
+      normalUri: "/assets/textures/planets/io_1_normal.jpg",
+    },        
+
+    {
+      name: "Europa",
+      textureUri: "/assets/textures/planets/europa.jpg",
+      bumpMapUri: "/assets/textures/planets/europa_topo.jpg",
     },        
     {
+      name: "Ganymede",
+      textureUri: "/assets/textures/planets/ganymede.jpg",
+    },        
+
+    {
+      name: "Callisto",
+      textureUri: "/assets/textures/planets/callisto.jpg",
+    },        
+
+
+    {
       name: "Saturn",
-      textureUri: "/assets/textures/planets/saturn_2k.jpg",
+      textureUri: "/assets/textures/planets/saturn_cassini_2011_texture_map.jpg"
+      
+      
     },    
     {
       name: "Uranus",
@@ -316,12 +360,13 @@ class DataService {
     // notes: I have not considered planets beyound mars for max speed at perihelion. they use averages
 
     // so jupiter and saturn
-    
+
     // uranus is ok
 
+    // return fetch("/assets/datasaturn.json")
     return fetch("/assets/data.json")
     .then((response) => response.json())
-    .then( (json) => createBodies(json));
+    .then( (json) => createBodies(json))
 
     // return bodySets.solarSystem.map((b) => postProcessLoad(b));
   }

@@ -44,9 +44,8 @@ const createObject3D: Object3DBuilder = (body: Body): Object3D => {
     
     const { color = "white", intensity = 0.9, distance = 0, decay = 0.06 } = body.lightProperties!;
     const light = new PointLight(color, intensity, distance, decay);
+
     
-    
-    //surfacemesh.add(light);
     light.add(surfacemesh);
 
     const worldmesh = new Object3D();

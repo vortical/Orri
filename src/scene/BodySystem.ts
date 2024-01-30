@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver, toRad } from '../system/geometry.ts';
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -18,8 +18,10 @@ import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC } from '../system/event-types.ts';
 
 import { Clock, Timer } from '../system/timing.ts';
+import { Vec3D, Vector } from '../system/vecs.ts';
+import { vec3 } from 'three/examples/jsm/nodes/Nodes.js';
 
-
+type PickerHandler = (c: Vector) => Body|null;
 type Animator = (time: number) => boolean;
 
 
@@ -27,7 +29,22 @@ type Animator = (time: number) => boolean;
 //https://www.npmjs.com/package/pubsub-js
 
 
-class BodySystem {
+
+export type BodySystemOptionsState = {
+    // viewer position,
+    pos: Vector
+    // target or direction
+    targetName: string,
+    sizeScale: number,
+    timeScale: number,
+    fov: number,
+    backgroudLightLevel: number,
+    showAxes: boolean
+}
+
+
+
+export class BodySystem {
 
     bodySystemUpdater: BodySystemUpdater;
     bodies: Body[];
@@ -37,21 +54,26 @@ class BodySystem {
     controls: OrbitControls;
     objects3D: Object3D[];
     ambiantLight: AmbientLight;
-    stats: Stats;
-    target: Body
+    stats?: Stats;
+    target?: Body
     clock: Clock;
-    
+    raycaster = new Raycaster();
+
     // timeStep: number = 1.0;
     viewTransitions: ViewTransitions;
     axesHelper?: AxesHelper;
+    parentElement:HTMLElement;
     
+
+    // constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater, optionState: OptionsState){
     constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater){
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
+        this.parentElement = parentElement;        
         this.clock = new Clock();
     
         
-        this.stats = new Stats();
-        parentElement.appendChild(this.stats.dom);
+        // this.stats = new Stats();
+        // parentElement.appendChild(this.stats.dom);
 
         this.bodySystemUpdater = bodySystemUpdater;
         this.bodies = bodies;
@@ -83,7 +105,9 @@ class BodySystem {
         // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
         this.setSize(canvasSize);
         
-        setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size))
+        setupPickerHandlers((pointer: Vector) => this.pick(pointer));
+        setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
+        // this.setTarget("Saturn");
             
         
     }
@@ -92,6 +116,26 @@ class BodySystem {
     getBody(name: string): Body {
         name = name.toLowerCase();
         return this.bodies.find((b)=> b.name.toLowerCase() === name)!;
+    }
+
+    hasStats(): boolean  {
+        return this.stats != undefined && this.stats.dom.style.display !== "none";
+    }
+
+    updateStats() {
+        this.stats && this.stats.update();        
+    }
+
+    showStats(value: boolean){
+
+        if(value && this.stats == undefined){
+            this.stats = new Stats();        
+            this.parentElement.appendChild(this.stats.dom);
+        }else if (value && this.stats){
+            this.stats.dom.style.display = "block"; 
+        }else if(value == false && this.stats){
+            this.stats.dom.style.display = "none";
+        }         
     }
 
     hasAxesHelper(): boolean {
@@ -193,6 +237,16 @@ class BodySystem {
         
         this.setTarget(body);
     }
+
+    pick(v: Vector): Body | null {
+        this.raycaster.setFromCamera(new Vector2(v.x, v.y), this.camera);
+        
+        const intersects = this.raycaster.intersectObjects(this.scene.children);
+        const names = intersects.map((intersected) => intersected.object.name)
+        console.log(`pick: ${names}`);
+        return null;
+
+    }
     
     setSize(size: Dim){
         this.camera.aspect = size.ratio();
@@ -210,23 +264,20 @@ class BodySystem {
                 BodyObject3D.updateObject3D(body, that.objects3D[i]);
             });
 
-            // fake rotation upon y axis (in the object's )
-            // todo: move this rotation as a property of the body so that 
-            // it knows the position of the rotation (time of day )
-            // we also have to do same with the tilt.
-            that.objects3D.forEach((m)=> {
+            // APLLY special rotations to surface children (e.g. clouds)
+            // that.objects3D.forEach((m)=> {
                 
-                // so based on time delta, determine the angle of rotation
+            //     // so based on time delta, determine the angle of rotation
                 
                 
-                // move the body on its axis.
-                const child = m.children[0];
-                // move children suchjjj as clouds on its axis
-                if(child.children && child.children.length==1){
-                    child.children[0].rotateY(toRad(0.005));
-                }
+            //     // move the body on its axis.
+            //     const child = m.children[0];
+            //     // move children suchjjj as clouds on its axis
+            //     if(child.children && child.children.length==1){
+            //         child.children[0].rotateY(toRad(0.005));
+            //     }
 
-            })
+            // })
 
             resolve(null);
     
@@ -256,7 +307,7 @@ class BodySystem {
             this.followTarget(this.target);
             this.controls.update();
             this.render();
-            this.stats.update();
+            this.updateStats();
         });
     }
 
@@ -276,6 +327,22 @@ function createAmbiantLight() {
     return ambientLight;
 }
 
+
+function setupPickerHandlers(pickerHandler: PickerHandler) {
+    window.addEventListener( 'pointermove', throttle(500, undefined, 
+        (event: MouseEvent) => {
+           console.log(`move ${event}`);
+
+           // pointer position [-1, 1] for x and y 
+           return pickerHandler({
+                x: ( event.clientX / window.innerWidth ) * 2 - 1,
+                y: - ( event.clientY / window.innerHeight ) * 2 + 1
+            });
+
+}));
+
+
+}
 
 function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObserver) {
     window.addEventListener("resize", 
@@ -319,5 +386,3 @@ function createControls(camera: Camera, canvas: HTMLCanvasElement): OrbitControl
     controls.enableDamping = true;
     return controls;
 }
-
-export { BodySystem };

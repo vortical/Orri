@@ -26,6 +26,7 @@ type MaterialProperties = {
     alphaUri?: string;
     color?: string;
 
+
 }
 
 type LightProperties = {
@@ -34,7 +35,17 @@ type LightProperties = {
     distance?: number;
     decay?: number ;  
 
-}
+};
+
+
+type RingProperties = {
+    opacity: number;
+    minRadius: number;
+    maxRadius: number;
+
+    alphaMapUri?: string;
+    colorMapUri?: string;
+};
 
 
 
@@ -94,11 +105,16 @@ type BodyProperties = {
      * initial rotation value.
      */
     sideralRotationPeriod?: TimePeriod; 
+    sideralRotation?: Vector,    
     lightProperties?: LightProperties;
+    /**
+     * Rings may be partitioned/broken into sections with different oribital periods.
+     */
+    rings?: RingProperties[];
     color?: string;
 
 
 }
 
 
-export type { BodyProperties, LightProperties, MaterialProperties, TimePeriod};
+export type { RingProperties, BodyProperties, LightProperties, MaterialProperties, TimePeriod};

@@ -1,7 +1,7 @@
 import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vec3D, Vector } from '../system/vecs.ts';
-import { BodyProperties, LightProperties, TimePeriod } from './models.ts';
+import { RingProperties, BodyProperties, LightProperties, TimePeriod } from './models.ts';
 
 /**
  * G is the universal gravitational constant 
@@ -161,7 +161,7 @@ class Body {
     acceleration!: Vec3D;
 
     // rotation angle along its obliquity axis.
-    sideralRotation = new Vec3D(0,0,0);
+    sideralRotation: Vec3D;
     
     // rotationQuaternion!: Quaternion; // using euler 
 
@@ -175,6 +175,7 @@ class Body {
     sideralRotationPeriod: number = Number.MAX_VALUE;
 
     lightProperties?: LightProperties;
+    rings?: RingProperties[];
     color: string;
 
     // todo: don't need this...don't want it.
@@ -183,7 +184,7 @@ class Body {
 
 
     
-    constructor({name, parent, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE} , lightProperties}: BodyProperties) {
+    constructor({name, parent, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE}, sideralRotation = {x:0, y:0,z:0}, lightProperties, rings}: BodyProperties) {
       this.name = name;
       this.parentName = parent;
 
@@ -196,7 +197,9 @@ class Body {
       // this is seconds...
       this.sideralRotationPeriod = timePeriodToMs(sideralRotationPeriod)/1000;
       this.lightProperties = lightProperties;
+      this.rings = rings;
       this.color = color;
+      this.sideralRotation = Vec3D.toRad(sideralRotation);
 
     }
 
@@ -220,6 +223,8 @@ class Body {
         return {x: 0, y: 0, z: toRad(-this.obliquityToOrbit )};       
     }
 
+
+    
     /**
      * 
      * @param time in seconds

@@ -1,17 +1,25 @@
 import './style.css'
 
-import { BodySystem } from './scene/BodySystem.ts'
+import { BodySystem, BodySystemOptionsState } from './scene/BodySystem.ts'
 import { DataService } from './data/bodySystems.ts';
 import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
 import  GUI  from 'lil-gui';
 import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC } from './system/event-types.ts';
-import { BodyPayload } from './body/models.ts';
+import { Vector } from './system/vecs.ts';
+
+
+
+
+
+
 
 
 
 console.log("starting....");
+const location = window.location;
 
+const params = new URLSearchParams(location.search);
 
 const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const datetimePickerElement = document.querySelector<HTMLInputElement>("#system-time")!;
@@ -26,14 +34,14 @@ function buildGui(bodySystem: BodySystem){
 
     let savedSettings = {};
 
-    const options = {
-        distance: 100000,
+    const options  = {
         target: "Earth",
         timeScale: 1.0,
         sizeScale: 1.0,
         fov: bodySystem.camera.fov,
         backgroudLightLevel: bodySystem.ambiantLight.intensity,
         showAxes: bodySystem.hasAxesHelper(),
+        showStats: bodySystem.hasStats(),
         saveSettings() {
             savedSettings = gui.save();
 
@@ -43,6 +51,9 @@ function buildGui(bodySystem: BodySystem){
             gui.load(savedSettings);
         }
     };
+
+
+
     
 
 
@@ -52,11 +63,16 @@ function buildGui(bodySystem: BodySystem){
     const backgroundLightLevelController = gui.add(options, "backgroudLightLevel", 0, 0.5, 0.01)
     const timeController = gui.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name( 'Time multiplier'); // 3600 * 24 * 30 is 30 days per second.
     const showAxesController = gui.add(options, "showAxes");
-
+    const showStatsController = gui.add(options, "showStats");
 
     gui.add(options, "saveSettings")
     const loadButton = gui.add(options, "loadSettings");
     loadButton.disable();
+
+    showStatsController.onChange((v: boolean) => {
+        console.log("stats change");
+        bodySystem.showStats(v);
+    });
 
     showAxesController.onChange((v: boolean) => {
         bodySystem.setAxesHelper(v);
@@ -90,6 +106,7 @@ function buildGui(bodySystem: BodySystem){
     
 }
         
+
 const bodySystemUpdater = new NBodySystemUpdater();
 
 const bodies: BodyPayload[] = await DataService.loadSolarSystem();
@@ -113,6 +130,7 @@ function subscribeToTime(): string {
 }
 
 let timeSubscription = subscribeToTime();
+
 
 
 datetimePickerElement?.addEventListener("change", (event) => {

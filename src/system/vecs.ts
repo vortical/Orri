@@ -1,15 +1,18 @@
 import { Vector3 } from "three";
+import { toRad } from "./geometry";
 
 
 type Vector = {
     x: number,
     y: number,
-    z: number
+    z?: number
 }
 
-type EulerVector = Vector;
+type EulerVector = Vector | {
+    inDegrees?: boolean
+};
 
-class Vec3D {
+class Vec3D implements Vector {
     x: number;
     y: number;
     z: number;
@@ -44,6 +47,10 @@ class Vec3D {
 
     static fromVector(v: Vector): Vec3D {
         return new Vec3D(v.x, v.y, v.z);
+    }
+
+    static toRad(v: Vector): Vec3D {
+        return new Vec3D(toRad(v.x), toRad(v.y), toRad(v.z));
     }
 }
 
