@@ -355,7 +355,7 @@ class DataService {
   
   }
 
-  static loadSolarSystem(): Promise<BodyPayload[]> {
+  static loadSolarSystem(): Promise<Body[]> {
 
     // notes: I have not considered planets beyound mars for max speed at perihelion. they use averages
 

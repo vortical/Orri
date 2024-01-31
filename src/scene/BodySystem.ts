@@ -32,14 +32,15 @@ type Animator = (time: number) => boolean;
 
 export type BodySystemOptionsState = {
     // viewer position,
-    pos: Vector
+    // pos: Vector
     // target or direction
-    targetName: string,
-    sizeScale: number,
-    timeScale: number,
-    fov: number,
-    backgroudLightLevel: number,
-    showAxes: boolean
+    position?: Vector
+    target?: string,
+    sizeScale?: number,
+    timeScale?: number,
+    fov?: number,
+    ambientLightLevel?: number,
+    showAxes?: boolean
 }
 
 
@@ -56,6 +57,8 @@ export class BodySystem {
     ambiantLight: AmbientLight;
     stats?: Stats;
     target?: Body
+    scale: number = 1.0;
+
     clock: Clock;
     raycaster = new Raycaster();
 
@@ -66,18 +69,15 @@ export class BodySystem {
     
 
     // constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater, optionState: OptionsState){
-    constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater){
+    constructor( parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater,
+         {target= "Earth", sizeScale=1.0, timeScale=1.0, fov=35, ambientLightLevel=0.01, showAxes=false}:BodySystemOptionsState ){
+        
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;        
-        this.clock = new Clock();
     
-        
-        // this.stats = new Stats();
-        // parentElement.appendChild(this.stats.dom);
-
+        this.clock = new Clock();
         this.bodySystemUpdater = bodySystemUpdater;
         this.bodies = bodies;
-
 
 
         this.camera = createCamera();
@@ -87,31 +87,65 @@ export class BodySystem {
         parentElement.append(this.renderer.domElement);
 
         this.controls = createControls(this.camera, this.renderer.domElement);
-        
         this.viewTransitions = new ViewTransitions(this.camera, this.controls);
-        
-        // create bodies from here (just earth now)
         this.objects3D = createObjects3D(this.bodies);
 
         this.ambiantLight = createAmbiantLight();
         this.scene.add(this.ambiantLight);
 
-        this.setTarget(this.bodies[0]);        
+        // this has to be dealt with
         this.camera.position.set(0,0,1.5*this.bodies[0].radius/1000)
         this.controls.update();
         this.scene.add(...this.objects3D);
-        this.setAxesHelper(false);
-
-        // this.controls.target.set(this.bodyMeshes[0].position.x, this.bodyMeshes[0].position.y, this.bodyMeshes[0].position.z);
+        
+        this.setTarget(target);        
+        this.setAxesHelper(showAxes);
+        this.setScale(sizeScale);
+        this.setTimeScale(timeScale)
+        this.setFOV(fov);
+        this.setAmbiantLightLevel(ambientLightLevel);
         this.setSize(canvasSize);
         
         setupPickerHandlers((pointer: Vector) => this.pick(pointer));
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
-        // this.setTarget("Saturn");
-            
         
     }
 
+
+    getState(): BodySystemOptionsState {
+        const options: BodySystemOptionsState  = {};
+        options.position = {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z};
+        options.target = this.target?.name || "";
+        options.sizeScale = this.getScale();
+        options.timeScale = this.getTimeScale();
+        options.fov = this.getFov();
+        options.ambientLightLevel = this.getAmbiantLightLevel();
+        options.showAxes = this.hasAxesHelper();
+
+        return options;            
+        
+
+    }
+// function getCurrentState(): object {
+
+//     // var center = coordinateTransformation.getCenter();
+//     // var eye = view.getEye();
+//     // var target = view.getTarget();
+//     // var verticalExaggeration = view.getVerticalExaggeration();
+
+//     // var switchedOnGeologies = getSwitchedOnGeologies();
+//     // return {
+//     //   lat: Number( (center.lat * 180/Math.PI).toFixed(9)),
+//     //   lon: Number( (center.lon * 180/Math.PI).toFixed(9)),
+//     //   eye: eye.map(function(x){return Number( x.toFixed(0));}),
+//     //   target: target.map(function(x){return Number(x.toFixed(0));}),
+
+
+//     return {
+
+//     };
+// }
+//     }
 
     getBody(name: string): Body {
         name = name.toLowerCase();
@@ -153,8 +187,8 @@ export class BodySystem {
         }
     }
 
-    getTimeStep(){
-        this.clock.scale;
+    getTimeScale(): number {
+        return this.clock.scale;
     }
 
     /**
@@ -172,16 +206,31 @@ export class BodySystem {
         this.clock.setTime(new Date(isoString).getTime());
     }
 
+    getScale(): number {
+        return this.scale;
+    }
+
     setScale(scale: number){
+        this.scale = scale;
+
         this.objects3D.forEach((m) => {
             m.scale.set(scale, scale, scale);
         });
 
     }
 
+    getAmbiantLightLevel(): number {
+        return this.ambiantLight.intensity;
+    }
+
     setAmbiantLightLevel(level: number){
         this.ambiantLight.intensity = level;
     }
+
+    getFov(): number {
+        return this.camera.getEffectiveFOV();
+    }
+
     setFOV(fov: number){
         this.camera.fov = fov;        
         this.camera.updateProjectionMatrix();
@@ -207,7 +256,6 @@ export class BodySystem {
 
         this.viewTransitions.moveToTarget(body, undefined, 20, 100);
     }
-
 
     setTarget(body: Body|string){
         
