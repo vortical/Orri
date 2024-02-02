@@ -152,6 +152,8 @@ const createObject3D: Object3DBuilder = (body: Body) => {
             new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR + altitude, widthSegements, heightSegments),
             createAtmosphereMateriel(materialProperties.atmosphereUri)
         );
+        // atmosphereMesh.name = ;
+        atmosphereMesh.userData = {type: "atmosphere"};
         surfacemesh.add(atmosphereMesh);
     }
 

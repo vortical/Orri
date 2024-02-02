@@ -7,23 +7,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { throttle } from '../system/throttler.ts';
-// import { Vec3D } from '../system/vecs.ts';
-
-import { ViewTransitions } from './ViewTransitions.ts';
 
 import Stats from 'three/addons/libs/stats.module.js';
 
 import PubSub from 'pubsub-js';
 
-import { SYSTEM_TIME_TOPIC } from '../system/event-types.ts';
+import { MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, SYSTEM_TIME_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
 
 import { Clock, Timer } from '../system/timing.ts';
-import { Vec3D, Vector } from '../system/vecs.ts';
-import { vec3 } from 'three/examples/jsm/nodes/Nodes.js';
+import { Vector } from '../system/vecs.ts';
+import { Picker } from './Picker.ts';
 
-type PickerHandler = (c: Vector) => Body|null;
+
+// type PickerHandler = (c: Vector) => Body|null;
 type Animator = (time: number) => boolean;
 
+
+type BodySystemEvent = {
+    topic: string,
+    message: any
+};
+   
 
 //https://sahadar.github.io/pubsub/#installation
 //https://www.npmjs.com/package/pubsub-js
@@ -34,7 +38,8 @@ export type BodySystemOptionsState = {
     // viewer position,
     // pos: Vector
     // target or direction
-    position?: Vector
+    cameraPosition?: Vector,
+    targetPosition?: Vector,
     target?: string,
     sizeScale?: number,
     timeScale?: number,
@@ -60,17 +65,17 @@ export class BodySystem {
     scale: number = 1.0;
 
     clock: Clock;
-    raycaster = new Raycaster();
+    picker: Picker;// = new Raycaster();
 
     // timeStep: number = 1.0;
-    viewTransitions: ViewTransitions;
+    // viewTransitions: ViewTransitions;
     axesHelper?: AxesHelper;
     parentElement:HTMLElement;
     
 
     // constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater, optionState: OptionsState){
     constructor( parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater,
-         {target= "Earth", sizeScale=1.0, timeScale=1.0, fov=35, ambientLightLevel=0.01, showAxes=false}:BodySystemOptionsState ){
+         {cameraPosition, targetPosition, target="Earth", sizeScale=1.0, timeScale=1.0, fov=35, ambientLightLevel=0.01, showAxes=false}:BodySystemOptionsState ){
         
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;        
@@ -86,15 +91,22 @@ export class BodySystem {
         this.renderer = createRenderer();
         parentElement.append(this.renderer.domElement);
 
+        // this has to be dealt with
         this.controls = createControls(this.camera, this.renderer.domElement);
-        this.viewTransitions = new ViewTransitions(this.camera, this.controls);
+        this.controls.enabled = false;
+
+        targetPosition = targetPosition || {x: this.getBody(target).position.x/1000, y:0, z: 0}
+        cameraPosition = cameraPosition || {x: this.getBody(target).position.x/1000, y:0, z: this.getBody(target).radius/100};
+        this.setViewPosition(cameraPosition, targetPosition);
+
+        // this.camera.position.set(position.x, position.y, position.z!)
+
+        // this.viewTransitions = new ViewTransitions(this.camera, this.controls);
         this.objects3D = createObjects3D(this.bodies);
 
         this.ambiantLight = createAmbiantLight();
         this.scene.add(this.ambiantLight);
 
-        // this has to be dealt with
-        this.camera.position.set(0,0,1.5*this.bodies[0].radius/1000)
         this.controls.update();
         this.scene.add(...this.objects3D);
         
@@ -106,15 +118,51 @@ export class BodySystem {
         this.setAmbiantLightLevel(ambientLightLevel);
         this.setSize(canvasSize);
         
-        setupPickerHandlers((pointer: Vector) => this.pick(pointer));
+        this.picker = new Picker(this);
+
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         
     }
 
+    /**
+     * 
+     * TODO: enable to change the entire state in once call. Usefull for example to handle the back button without
+     * a full page refresh
+     * 
+     * @param state 
+     */
+    setState(state: Required<BodySystemOptionsState>){
+        // this would enable 
+
+        
+    //     this.setViewPosition(state.cameraPosition, state.targetPosition);
+
+
+    //     // this.viewTransitions = new ViewTransitions(this.camera, this.controls);
+    //     this.objects3D = createObjects3D(this.bodies);
+
+    //     this.ambiantLight = createAmbiantLight();
+    //     this.scene.add(this.ambiantLight);
+
+    //     this.controls.update();
+    //     this.scene.add(...this.objects3D);
+        
+    //     this.setTarget(target);        
+    //     this.setAxesHelper(showAxes);
+    //     this.setScale(sizeScale);
+    //     this.setTimeScale(timeScale)
+    //     this.setFOV(fov);
+    //     this.setAmbiantLightLevel(ambientLightLevel);
+        
+
+
+
+    }
 
     getState(): BodySystemOptionsState {
         const options: BodySystemOptionsState  = {};
-        options.position = {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z};
+        options.cameraPosition = {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z};
+        options.targetPosition = {x: this.controls.target.x, y: this.controls.target.y, z: this.controls.target.z};
         options.target = this.target?.name || "";
         options.sizeScale = this.getScale();
         options.timeScale = this.getTimeScale();
@@ -146,6 +194,13 @@ export class BodySystem {
 //     };
 // }
 //     }
+
+    getDistance(targetBody: Body): number {
+        const targetPosition = new Vector3(targetBody.position.x, targetBody.position.y, targetBody.position.z);
+        // todo: need to deal with those units somehow. Having the view using km and the body itself meters is error prone.
+        return this.camera.position.distanceTo(targetPosition.divideScalar(1000));
+    }
+
 
     getBody(name: string): Body {
         name = name.toLowerCase();
@@ -236,66 +291,60 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
     }
 
-    
-    /**
-     * WIP
-     * 
-     * We trigger a transition towards a body within an amount of time. The body
-     * may be moving, so each step will need to be adjusted. In the case of a fast moving
-     * object, we might need to estimate the position of the body after the transition time.
-     * 
-     * @param body 
-     */
-    setTargetAnimated(body: Body|string,) {
+
+    // followTarget(){
+
+
+
+    // }
+
+    setTarget(body: Body|string, moveToTarget: boolean = true){
+        
         
         if (typeof body === "string") {
             body = this.getBody(body);
 
         }
-        this.target = body;
+        if(this.target != body){
+            this.fireEvent({topic: BODY_SELECT_TOPIC.toString(), message: {body: body}});
+        }
 
-        this.viewTransitions.moveToTarget(body, undefined, 20, 100);
+        this.target = body;
+        
+        
+        if (moveToTarget){
+            // keep same distance...
+            const cameraPosition = this.camera.position.clone();
+            const target = this.controls.target.clone();
+            const targetTranslation = cameraPosition.sub(target);
+            this.controls.target.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);        
+            this.camera.position.set(this.controls.target.x+targetTranslation.x, this.controls.target.y+targetTranslation.y, this.controls.target.z+targetTranslation.z);
+        }else{
+            // just point controls...
+            this.controls.target.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);        
+        }
+        
+        
     }
 
-    setTarget(body: Body|string){
-        
-        
-        if (typeof body === "string") {
-            body = this.getBody(body);
-
-        }
-        this.target = body;
-
-        // keep same distance...
-        const cameraPosition = this.camera.position.clone();
-        const target = this.controls.target.clone();
-        const targetTranslation = cameraPosition.sub(target);
-
-        
-        
-        this.controls.target.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);        
-        this.camera.position.set(this.controls.target.x+targetTranslation.x, this.controls.target.y+targetTranslation.y, this.controls.target.z+targetTranslation.z);
-        
+    setViewPosition(cameraPosition: Vector, target: Vector){
+        this.controls.target.set(target.x, target.y, target.z!);        
+        this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z!);
     }
     
     followTarget(body: Body|string) {
         if (typeof body === "string") {
             body = this.getBody(body);
         }
-        
-        this.setTarget(body);
+        this.setTarget(body, true);
     }
 
-    pick(v: Vector): Body | null {
-        this.raycaster.setFromCamera(new Vector2(v.x, v.y), this.camera);
-        
-        const intersects = this.raycaster.intersectObjects(this.scene.children);
-        const names = intersects.map((intersected) => intersected.object.name)
-        console.log(`pick: ${names}`);
-        return null;
 
+    fireEvent(event : BodySystemEvent){
+        PubSub.publish(event.topic, event.message); 
     }
-    
+
+
     setSize(size: Dim){
         this.camera.aspect = size.ratio();
         this.camera.updateProjectionMatrix();
@@ -311,6 +360,9 @@ export class BodySystem {
             that.bodySystemUpdater.update(that.bodies, deltaTime).forEach((body: Body, i: string | number ) => {
                 BodyObject3D.updateObject3D(body, that.objects3D[i]);
             });
+
+
+            // We need to extend object3D class to have extra features...
 
             // APLLY special rotations to surface children (e.g. clouds)
             // that.objects3D.forEach((m)=> {
@@ -339,6 +391,7 @@ export class BodySystem {
         this.render();
 
         const timer = this.clock.startTimer("AnimationTimer");
+        this.controls.enabled = true;
 
         /**
          * The clock has a delta, which says how much time the previous frame took.
@@ -367,6 +420,10 @@ export class BodySystem {
     render() {
         this.renderer.render(this.scene, this.camera);
     }        
+
+
+
+    
 }
 
 
@@ -375,22 +432,6 @@ function createAmbiantLight() {
     return ambientLight;
 }
 
-
-function setupPickerHandlers(pickerHandler: PickerHandler) {
-    window.addEventListener( 'pointermove', throttle(500, undefined, 
-        (event: MouseEvent) => {
-           console.log(`move ${event}`);
-
-           // pointer position [-1, 1] for x and y 
-           return pickerHandler({
-                x: ( event.clientX / window.innerWidth ) * 2 - 1,
-                y: - ( event.clientY / window.innerHeight ) * 2 + 1
-            });
-
-}));
-
-
-}
 
 function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObserver) {
     window.addEventListener("resize", 

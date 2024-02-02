@@ -15,7 +15,7 @@ console.log("starting....");
 
 const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const datetimePickerElement = document.querySelector<HTMLInputElement>("#system-time")!;
-
+const statusElement =document.querySelector<HTMLInputElement>("#status-container")!;
 
 
 
@@ -39,17 +39,19 @@ function getCurrentState(): object {
     };
 }
 
+async function start(){
 
-const options = LocationBar.getState();
-const bodySystemUpdater = new NBodySystemUpdater();
-const bodies: Body[] = await DataService.loadSolarSystem();
-const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
+    const bodySystemUpdater = new NBodySystemUpdater();
+    const bodies: Body[] = await DataService.loadSolarSystem();
+    const options = LocationBar.getState();
+    const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
 
 
-UI(mainElement, datetimePickerElement, bodySystem);
+    UI(mainElement, datetimePickerElement, statusElement, bodySystem);
 
-bodySystem.start();
+    bodySystem.start();
+}
 
-    
+start();
     
     

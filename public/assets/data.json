@@ -1,6 +1,7 @@
 [
     {
         "name":"Sun", 
+        "type": "star",
         "mass": 1.989e30, 
         "radius": 696.34e6, 
         "position": {"x":0, "y":0, "z":0},
@@ -12,7 +13,7 @@
     },
 
     {
-        "name":"Mercury", 
+        "name":"Mercury",
         "parent": "Sun",
         "mass": 3.3022e23, 
         "radius": 2.44e6, 
