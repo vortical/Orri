@@ -4,8 +4,8 @@ import {BodySystemUpdater } from './BodySystemUpdater.ts';
 import { zipCombine } from '../system/arrays.ts';
 
 /**
- * Each body in a system influences all other bodies, regardless of size and distance. Thus
- * if there are m bodies, there will be m*(m-1) forces taken into account...
+ * Each body in a system influences all other bodies, regardless of size and distance. 
+ * If there are m bodies, there will be m*(m-1) forces taken into account...
  * 
  * Todo: We can come up with different implementations, each with their own use cases:
  * - using center of mass
@@ -133,7 +133,7 @@ class NBodySystemUpdater implements BodySystemUpdater{
         });
             
         bodies.forEach((body, index) => {
-            body.speed = body.nextSpeed(avgAccelerations[index], time)  
+            body.velocity = body.nextSpeed(avgAccelerations[index], time)  
         });
 
         return bodies;

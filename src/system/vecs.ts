@@ -5,7 +5,7 @@ import { toRad } from "./geometry";
 type Vector = {
     x: number,
     y: number,
-    z?: number
+    z: number
 }
 
 type EulerVector = Vector | {
@@ -45,7 +45,10 @@ class Vec3D implements Vector {
         return new Vector3(this.x, this.y, this.z);
     }
 
-    static fromVector(v: Vector): Vec3D {
+    static fromVector(v?: Vector): Vec3D {
+        if(!v){
+            return new Vec3D(0,0,0);
+        }
         return new Vec3D(v.x, v.y, v.z);
     }
 

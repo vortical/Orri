@@ -258,9 +258,17 @@ export class BodySystem {
     setDatetime(isoString: string){
         // TO: this will also require us to rebuild the model from
         // a service that gives us positions/speeds at that time
+        
         this.clock.setTime(new Date(isoString).getTime());
+        this.updateKinematics(this.clock.getTime());
     }
 
+    updateKinematics(time: number){
+
+    }
+
+
+    
     getScale(): number {
         return this.scale;
     }
@@ -360,25 +368,6 @@ export class BodySystem {
             that.bodySystemUpdater.update(that.bodies, deltaTime).forEach((body: Body, i: string | number ) => {
                 BodyObject3D.updateObject3D(body, that.objects3D[i]);
             });
-
-
-            // We need to extend object3D class to have extra features...
-
-            // APLLY special rotations to surface children (e.g. clouds)
-            // that.objects3D.forEach((m)=> {
-                
-            //     // so based on time delta, determine the angle of rotation
-                
-                
-            //     // move the body on its axis.
-            //     const child = m.children[0];
-            //     // move children suchjjj as clouds on its axis
-            //     if(child.children && child.children.length==1){
-            //         child.children[0].rotateY(toRad(0.005));
-            //     }
-
-            // })
-
             resolve(null);
     
         });

@@ -6,6 +6,13 @@ type Vector = {
 }
 
 
+interface KinematicObject {
+    name: string;
+    velocity: Vector
+    position: Vector;
+    datetime: Date;
+  }
+
 
 type TimePeriod = {
     days?:number,
@@ -13,8 +20,6 @@ type TimePeriod = {
     minutes?: number,
     seconds?: number
 };
-
-
 
 
 type MaterialProperties = {
@@ -53,18 +58,10 @@ type BodyProperties = {
     name: string;
     parent: string;
     mass: number;
-    radius: number;
+    radius: number;    
+    position?: Vector;
+    velocity?: Vector;
     
-    /**
-     * position in 2D relative to parent and local to this body's orbital plane.
-     */
-    position: Vector;
-
-    /**
-     * position in 2D relative to parent and local to this body's oribital plane.
-     */
-
-    speed: Vector;
     /**
      * The orbital plane of this body in degrees. 
      * 
@@ -108,7 +105,7 @@ type BodyProperties = {
     sideralRotation?: Vector,    
     lightProperties?: LightProperties;
     /**
-     * Rings may be partitioned/broken into sections with different oribital periods.
+     * Rings may be partitioned/broken into sections with different oribital periods..
      */
     rings?: RingProperties[];
     color?: string;
@@ -117,4 +114,4 @@ type BodyProperties = {
 }
 
 
-export type { RingProperties, BodyProperties, LightProperties, MaterialProperties, TimePeriod};
+export type { RingProperties, BodyProperties, LightProperties, MaterialProperties, TimePeriod, KinematicObject};

@@ -47,8 +47,8 @@ class BodyObject3D {
             // this would rotate the ring if we did not filter this out (only rotate the atmosphere).
             // regardless we need to create a model that represents our model
             if(c.children && c.children.length==1){
-                if(c.children[0].name === "atmosphere"){
-                   c.children[0].rotateY(toRad(0.0015));
+                if(c.children[0].userData?.type === "atmosphere"){
+                   c.children[0].rotateY(toRad(0.001));
                 }
             }
         }))

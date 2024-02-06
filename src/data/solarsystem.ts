@@ -101,7 +101,7 @@ const earth =    new Body({
       mass: 5.9736e24, 
       radius: 6.378e6, 
       position: {x:-149597871e3, y:0, z:0} as Vec3D,       
-      speed: {x:0, y: 0, z: 29780} as Vec3D,
+      velocity: {x:0, y: 0, z: 29780} as Vec3D,
       orbitInclination: 0, // this can be determined by the speed vectors. But if speed is given in as a scalar and we need to convert to a vector, then we can use this inclination to calculate the speed.
       obliquityToOrbit: 23.44,
       sideralRotationPeriod: (23*3600 + 56*60 + 4.09)
@@ -132,7 +132,7 @@ const earth =    new Body({
       radius: 1.737400e6, 
       position: {x: -149597871e3+384.400e6, y:0, z:0} as Vec3D, 
       //moon revolves counterclockwise around Earth.
-      speed: {x:0, y: 0, z: 29780 - 1023.16} as Vec3D,
+      velocity: {x:0, y: 0, z: 29780 - 1023.16} as Vec3D,
 
       orbitInclination:5.145, // we use this to calculate the z speed. 
       //obliquityToOrbit: 1.5424,

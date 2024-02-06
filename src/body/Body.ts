@@ -1,7 +1,7 @@
 import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vec3D, Vector } from '../system/vecs.ts';
-import { RingProperties, BodyProperties, LightProperties, TimePeriod } from './models.ts';
+import { RingProperties, BodyProperties, LightProperties, TimePeriod, KinematicObject } from './models.ts';
 
 /**
  * G is the universal gravitational constant 
@@ -152,12 +152,13 @@ class Body {
     /** in meters
      * 
      */
-    position: Vec3D;
-    // speed would be based off have orbital plane
+    position!: Vec3D;
+    
     /**
      * in meters/s
      */
-    speed: Vec3D;
+    velocity!: Vec3D;
+
     acceleration!: Vec3D;
 
     // rotation angle along its obliquity axis.
@@ -184,14 +185,14 @@ class Body {
 
 
     
-    constructor({name, parent, mass, radius, position, speed, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE}, sideralRotation = {x:0, y:0,z:0}, lightProperties, rings}: BodyProperties) {
+    constructor({name, parent, mass, radius, position, velocity, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE}, sideralRotation = {x:0, y:0,z:0}, lightProperties, rings}: BodyProperties) {
       this.name = name;
       this.parentName = parent;
 
       this.mass = mass;
       this.radius = radius;
-      this.position = Vec3D.fromVector(position);
-      this.speed = Vec3D.fromVector(speed);
+      this.position = Vec3D.fromVector(position)
+      this.velocity = Vec3D.fromVector(velocity)
       this.orbitInclination = orbitInclination;
       this.obliquityToOrbit = obliquityToOrbit;
       // this is seconds...
@@ -201,6 +202,13 @@ class Body {
       this.color = color;
       this.sideralRotation = Vec3D.toRad(sideralRotation);
 
+    }
+
+    // kinematics should probably include sideral rotation period and sideral rotation angle
+
+    setKinematics(kinematics: KinematicObject){
+        this.velocity = Vec3D.fromVector(kinematics.velocity);
+        this.position = Vec3D.fromVector(kinematics.position);
     }
 
         // when we start, 
@@ -220,7 +228,7 @@ class Body {
         //  exact speed figures for the time we start simulation.
 
     obliquityOrientation(): Vec3D{ 
-        return {x: 0, y: 0, z: toRad(-this.obliquityToOrbit )};       
+        return new Vec3D(0, 0, toRad(-this.obliquityToOrbit ));       
     }
 
 
@@ -302,9 +310,9 @@ class Body {
      */
     nextSpeed(acc: Vec3D, time: number): Vec3D {
         return {
-            x: this.speed.x + acc.x * time,
-            y: this.speed.y + acc.y * time,
-            z: this.speed.z + acc.z * time
+            x: this.velocity.x + acc.x * time,
+            y: this.velocity.y + acc.y * time,
+            z: this.velocity.z + acc.z * time
         };
     }
 
@@ -318,9 +326,9 @@ class Body {
      */
     nextPosition(acc: Vec3D, time: number): Vec3D {
         return {
-            x: this.position.x + (this.speed.x * time) + (acc.x * time * time) / 2,
-            y: this.position.y + (this.speed.y * time) + (acc.y * time * time) / 2,
-            z: this.position.z + (this.speed.z * time) + (acc.z * time * time) / 2,              
+            x: this.position.x + (this.velocity.x * time) + (acc.x * time * time) / 2,
+            y: this.position.y + (this.velocity.y * time) + (acc.y * time * time) / 2,
+            z: this.position.z + (this.velocity.z * time) + (acc.z * time * time) / 2,              
         }
     }
 }

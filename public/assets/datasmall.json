@@ -1,0 +1,59 @@
+[
+    {
+        "name":"Sun", 
+        "type": "star",
+        "mass": 1.989e30, 
+        "radius": 696.34e6, 
+
+        "obliquityToOrbit": 7.25,
+        "sideralRotationPeriod": {"days": 25} ,
+        "lightProperties":{}
+    },
+
+    {
+        "name":"Mercury",
+        "parent": "Sun",
+        "mass": 3.3022e23, 
+        "radius": 2.44e6, 
+
+        "orbitInclination": 7.005, 
+        "obliquityToOrbit": 0.034,
+        "sideralRotationPeriod": {"days": 58.646}
+    },
+
+
+    {
+        "name":"Venus", 
+        "parent": "Sun",
+        "mass": 4.869e24, 
+        "radius": 6.05e6, 
+
+        "orbitInclination": 3.39, 
+        "obliquityToOrbit": 177.4,
+        "sideralRotationPeriod": {"days":  243.02 }
+    },
+
+
+    {
+        "name":"Earth", 
+        "parent": "Sun",
+        "mass": 5.9736e24, 
+        "radius": 6.378e6, 
+
+        "orbitInclination": 0, 
+        "obliquityToOrbit": 23.44,
+        "sideralRotationPeriod": {"hours": 23, "minutes":56, "seconds":4.09}
+    },
+    {
+        "name": "Moon", 
+        "parent": "Earth",
+        "mass": 7.3477e22, 
+        "radius": 1.737400e6, 
+
+        "orbitInclination":5.145, 
+        "obliquityToOrbit": 1.5424,
+        "sideralRotationPeriod": {"days": 27.3217},
+        "sideralRotation": {"x":0, "y": 0, "z":0}
+    }
+]
+
