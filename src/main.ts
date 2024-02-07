@@ -48,6 +48,9 @@ async function start(){
 
     const options = LocationBar.getState();
     const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
+    // set the up of the viewer to be perpendicular to earth's orbit
+    const earth = bodySystem.getBody("earth");
+    bodySystem.setCameraUp(earth.get_orbital_plane_normal());
 
 
     UI(mainElement, datetimePickerElement, statusElement, bodySystem);

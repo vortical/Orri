@@ -48,7 +48,7 @@ class BodyObject3D {
             // regardless we need to create a model that represents our model
             if(c.children && c.children.length==1){
                 if(c.children[0].userData?.type === "atmosphere"){
-                   c.children[0].rotateY(toRad(0.001));
+                   c.children[0].rotateY(toRad(0.05));
                 }
             }
         }))

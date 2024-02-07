@@ -195,6 +195,12 @@ export class BodySystem {
 // }
 //     }
 
+    setCameraUp(v: Vector3 = new Vector3(0,1,0) ){
+        this.camera.up.set(v.x, v.y, v.z);
+        // this.camera.upd
+        // this.camera.updateProjectionMatrix();
+    }
+
     getDistance(targetBody: Body): number {
         const targetPosition = new Vector3(targetBody.position.x, targetBody.position.y, targetBody.position.z);
         // todo: need to deal with those units somehow. Having the view using km and the body itself meters is error prone.
@@ -268,7 +274,7 @@ export class BodySystem {
     }
 
 
-    
+
     getScale(): number {
         return this.scale;
     }

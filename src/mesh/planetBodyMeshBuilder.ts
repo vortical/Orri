@@ -1,6 +1,6 @@
 import { Body, MaterialProperties } from '../body/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Euler } from "three";
+import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Euler, Quaternion } from "three";
 import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 // import { rotationForObliquityToOrbit } from '../system/geometry.ts';
@@ -79,8 +79,7 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
         // start at 0...
         const angle = new Vector3(1,0,0);
 
-        // we do 360 degrees.
-
+        // The geometry is a ring.
         for (let i = 0; i < positions.count; i++){
             
             verticePosition.fromBufferAttribute(positions, i);
@@ -131,6 +130,12 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
 
 
 
+ /*
+
+
+ */
+
+
 
 const createObject3D: Object3DBuilder = (body: Body) => {
 
@@ -162,17 +167,37 @@ const createObject3D: Object3DBuilder = (body: Body) => {
 
     const ringMeshes = createRingMeshes(body);
     
-    const worldmesh = new Object3D();
-    worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
+    const bodymesh = new Object3D();
+    bodymesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
+
+    
+    // the model's coordinates were based on the normal up being at (0,1,0), but the model is oriented based
+    // on its orbital plane, so we need orient the axis of the the model along its orbital plane's normal.
+
+
+
+    // axis tilt, right now we just arbitrarily tilt it around z axis, but
+    // obliquityOrientation will need to based on actual equinox values of the body. 
+    //  This just means that right now the tilt will look real, but it won't match the date... nor will
+    // the rotation around the axis.
     const rotation =body.obliquityOrientation();
-    worldmesh.rotation.set(rotation.x, rotation.y, rotation.z); 
-    worldmesh.add(surfacemesh);
+    
+    bodymesh.rotation.set(rotation.x, rotation.y, rotation.z); 
+    
+
+    
+    const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
+    let q = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm);
+    bodymesh.applyQuaternion(q);
+
+    
+    bodymesh.add(surfacemesh);
     
     ringMeshes?.forEach((ringMesh) => surfacemesh.add(ringMesh))
     
     ringMeshes?.forEach((ringMesh) => ringMesh.rotation.set(-Math.PI/2, 0, 0));
 
-    return worldmesh;
+    return bodymesh;
 }    
 
 export { createObject3D as createPlanetObject3D };

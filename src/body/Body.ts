@@ -185,7 +185,9 @@ class Body {
 
 
     
-    constructor({name, parent, mass, radius, position, velocity, color="lightgrey", orbitInclination=0, obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE}, sideralRotation = {x:0, y:0,z:0}, lightProperties, rings}: BodyProperties) {
+    constructor({name, parent, mass, radius, position, velocity, color="lightgrey", orbitInclination=0, 
+                obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE},
+                sideralRotation = {x:0, y:0,z:0}, lightProperties, rings}: BodyProperties) {
       this.name = name;
       this.parentName = parent;
 
@@ -203,6 +205,43 @@ class Body {
       this.sideralRotation = Vec3D.toRad(sideralRotation);
 
     }
+
+
+    get_orbital_plane_normal(){
+
+        if (!this.parent){
+            // todo: we could get the plane with 2 velocity vectors.
+            return undefined;
+        }
+
+        const parent = this.parent;
+
+        const parent_position = parent.position.toVector3();
+        const parent_velocity = parent.velocity.toVector3();
+  
+  
+        const this_position = this.position.toVector3();
+        const this_velocity = this.velocity.toVector3();
+  
+        // a- b
+        const rel_pos = new Vector3().subVectors(this_position, parent_position)
+  
+        const rel_vel = new Vector3().subVectors(this_velocity, parent_velocity);
+  
+        const cross = new Vector3().crossVectors(rel_pos, rel_vel)
+        const plane_norm = cross.normalize();
+        return plane_norm;
+    }
+  
+  
+            
+    //   let q = new Quaternion()
+    //   q = q.setFromUnitVectors(new Vector3(0, 1, 0), norm)
+      
+    //   const p = new Vector3(0,10,0).applyQuaternion(q);
+
+
+    // }
 
     // kinematics should probably include sideral rotation period and sideral rotation angle
 
@@ -239,7 +278,7 @@ class Body {
      * @returns 
      */
     nextSideralRotation(time: number): Vec3D {
-        // note: assuming sideral rotation has a constant period then no need to use delta time, just a start time and
+        // note: todo: assuming sideral rotation has a 'constant' period then no need to use delta time, just a start time and
         // current time (i.e.: pass in the clock's time). This would avoid cumulative errors on long runs.
 
         // The sideral rotation is local and thus based on the body's axis (on y axis)
