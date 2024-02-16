@@ -44,6 +44,9 @@ async function start(){
 
     const dataService = new DataService(config.spacefield_host)
     const bodySystemUpdater = new NBodySystemUpdater();
+
+    // See https://github.com/skyfielders/python-skyfield/blob/522475572276cc6f224587e4275d7564ab123b13/skyfield/planetarylib.py
+    // as it has planetary data
     const bodies: Body[] = await dataService.loadSolarSystem(new Date());
 
     const options = LocationBar.getState();

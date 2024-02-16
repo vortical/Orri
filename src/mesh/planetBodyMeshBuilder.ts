@@ -143,7 +143,6 @@ const createObject3D: Object3DBuilder = (body: Body) => {
 
     const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
 
-    // could use LOD...
     const widthSegements = 64;
     const heightSegments = 32;
 
@@ -162,34 +161,25 @@ const createObject3D: Object3DBuilder = (body: Body) => {
         surfacemesh.add(atmosphereMesh);
     }
 
-
     surfacemesh.name = name;
-
     const ringMeshes = createRingMeshes(body);
-    
     const bodymesh = new Object3D();
     bodymesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
 
     
-    // the model's coordinates were based on the normal up being at (0,1,0), but the model is oriented based
-    // on its orbital plane, so we need orient the axis of the the model along its orbital plane's normal.
-
-
-
-    // axis tilt, right now we just arbitrarily tilt it around z axis, but
-    // obliquityOrientation will need to based on actual equinox values of the body. 
-    //  This just means that right now the tilt will look real, but it won't match the date... nor will
-    // the rotation around the axis.
-    const rotation =body.obliquityOrientation();
+    // TODO: put all this this logic in axis.direction
+    if(body.axisDirection !== undefined){
+        // rotate body so axis is normal to its orbital plane (i.e.: equatorial = orbital/ecliptic)
+        const axis = body.axisDirection!;
+        bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
     
-    bodymesh.rotation.set(rotation.x, rotation.y, rotation.z); 
-    
-
-    
-    const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
-    let q = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm);
-    bodymesh.applyQuaternion(q);
-
+    }else{
+        // We tilt the body using the body's obliquity arbitrarily tilt the body using 
+        const rotation =body.obliquityOrientation();
+        bodymesh.applyQuaternion(rotation);
+        const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
+        bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
+    }
     
     bodymesh.add(surfacemesh);
     

@@ -2,6 +2,9 @@ import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vec3D, Vector } from '../system/vecs.ts';
 import { RingProperties, BodyProperties, LightProperties, TimePeriod, KinematicObject } from './models.ts';
+import { TimeUnit, timePeriodToMs, timePeriodToUnits } from '../system/timing.ts';
+import { degToRad } from 'three/src/math/MathUtils.js';
+import { KnotCurve } from 'three/examples/jsm/curves/CurveExtras.js';
 
 /**
  * G is the universal gravitational constant 
@@ -10,139 +13,29 @@ import { RingProperties, BodyProperties, LightProperties, TimePeriod, KinematicO
 const G: number = 6.674e-11;
 
 
-/**
- * 
- * 
- * The reference plane is earths plane.
- * 
- * 
- * See https://en.wikipedia.org/wiki/Orbital_inclination
- * 
- */
-function rotationFromOrbitalInclination(angleDegree: number){
-    // todo, for now I consider everything is on earth orbital plane (2d...)
-
-}
 
 /**
- * We start the tilt aroud x axi
- * @param angleDeg 
- * @returns rotation vector based off x axis.
+ * Avoid error accumulation, use a base time and rotation for anything with
+ * a constant period.
  */
-function rotationFromAxialTilt(angleDeg: number): Vec3D{
-    return new Vec3D(toRad(angleDeg),0 , 0);
-    
+
+
+interface RotationCalculator {
+    (timeMs: number): Vec3D;
 }
 
-// type TimePeriod = {
-//     days:number,
-//     hours: number,
-//     minutes: number,
-//     seconds: number
-// };
-
-// type MaterialProperties = {
-//     name: string;
-//     textureUri?: string;
-//     bumpMapUri?: string;
-//     normalUri?: string;
-//     atmosphereUri?: string;
-//     alphaUri?: string;
-//     color?: string;
-
-// }
-
-// type LightProperties = {
-//     color?:  string;
-//     intensity?: number;
-//     distance?: number;
-//     decay?: number ;  
-
-// }
 
 
 
-
-
-
-// type BodyPayload = {
-//     name: string;
-//     parent?: Body;
-//     mass: number;
-//     radius: number;
-    
-//     /**
-//      * position in 2D relative to parent and local to this body's orbital plane.
-//      */
-//     position: Vector;
-
-//     /**
-//      * position in 2D relative to parent and local to this body's oribital plane.
-//      */
-
-//     speed: Vector;
-//     /**
-//      * The orbital plane of this body in degrees. 
-//      * 
-//      * TODO: Note that this should be a quaternion in
-//      * order to establish precise initial position (especially the y component) and speed vectors. For now the initial
-//      * position will be at a position intersecting the parent's plane at y=0 (i.e. one of two points, depending on
-//      * orientation of inclination (i.e. negative or position))
-//      *  
-//      */
-//     orbitInclination?: number;
-
-//     /**
-//      * 
-//      * TODO: This should be a euler vector (or a quaternion) to establish initial axis 
-//      * direction (not just scalar angle, which leads us to establish an arbitrary axis direction). 
-//      * 
-//      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body
-//      * (the imaginary line running through the center of the planet from the north
-//      * to south poles) is tilted relative to a line perpendicular to the planet's 
-//      * orbit around its parent, with north pole defined by right hand rule.
-//      * 
-//      * Thus, given this right hand rule, Venus rotates in a retrograde direction, opposite
-//      * the other planets, so the obliquity is almost 180 degrees and spinning with a north pole
-//      * pointing "downward" (southward). 
-//      * 
-//      * 
-//      * Uranus rotates almost on its side relative to the orbit.
-//      * 
-//      * Pluto is pointing slightly "down". 
-//      */
-//     obliquityToOrbit?: number;
-
-
-//     /**
-//      * Period of rotation around axis in seconds
-//      * 
-//      * TODO: Note this should be a quaternion or euler vector in order to determine an
-//      * initial rotation value.
-//      */
-//     sideralRotationPeriod?: number; 
-//     lightProperties?: LightProperties;
-//     color?: string;
-// }
-
-
-// https://nssdc.gsfc.nasa.gov/planetary/planetfact.html
-// https://en.wikipedia.org/wiki/Orbital_inclination
-
-function timePeriodToMs(timePeriod: TimePeriod): number {
-    const daysToMillis = (days?: number) => days? days * hoursToMillis(24) : 0
-    const hoursToMillis = (hours?: number) => hours? hours * minutesToMillis(60) : 0;
-    const minutesToMillis = (minutes?: number) => minutes? minutes * secondsToMillis(60): 0;
-    const secondsToMillis = (seconds?: number) => seconds? seconds * 1000: 0;
-
-    return daysToMillis(timePeriod.days) + hoursToMillis(timePeriod.hours)+minutesToMillis(timePeriod.minutes)+secondsToMillis(timePeriod.seconds);
-}
 
 
 class Body {
     name: string;
     parentName: string;
     parent?: Body;
+
+    timeMs!: number;
+
     mass: number;
     /**
      * in meters
@@ -154,6 +47,15 @@ class Body {
      */
     position!: Vec3D;
     
+    /**
+     * angle of rotation around its axis (i.e. its time of day)
+     * rename to sideralRotation
+     */
+    rotation!: number;
+
+    axisDirection?: Vector;
+
+    rotationAtTime!: RotationCalculator;
     /**
      * in meters/s
      */
@@ -172,8 +74,8 @@ class Body {
     // tilt
     obliquityToOrbit: number; 
     
-    /** time for a rotation upon axis in seconds */
-    sideralRotationPeriod: number = Number.MAX_VALUE;
+    /** time for a sideral rotation upon axis*/
+    sideralRotationPeriodMs: number; // = Number.MAX_VALUE;
 
     lightProperties?: LightProperties;
     rings?: RingProperties[];
@@ -183,11 +85,10 @@ class Body {
     object3D!: Object3D; 
   
 
-
     
     constructor({name, parent, mass, radius, position, velocity, color="lightgrey", orbitInclination=0, 
-                obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE},
-                sideralRotation = {x:0, y:0,z:0}, lightProperties, rings}: BodyProperties) {
+                obliquityToOrbit=0, sideralRotationPeriod={seconds: Number.MAX_VALUE}, lightProperties,
+                rings}: BodyProperties) {
       this.name = name;
       this.parentName = parent;
 
@@ -197,35 +98,34 @@ class Body {
       this.velocity = Vec3D.fromVector(velocity)
       this.orbitInclination = orbitInclination;
       this.obliquityToOrbit = obliquityToOrbit;
-      // this is seconds...
-      this.sideralRotationPeriod = timePeriodToMs(sideralRotationPeriod)/1000;
+      
+      this.sideralRotationPeriodMs = timePeriodToMs(sideralRotationPeriod);
       this.lightProperties = lightProperties;
       this.rings = rings;
       this.color = color;
-      this.sideralRotation = Vec3D.toRad(sideralRotation);
 
     }
 
-
+    /**
+     * @returns The normal to the body's oribital plane (e.g. for earth this is the ecliptic plane)
+     */
     get_orbital_plane_normal(){
 
         if (!this.parent){
-            // todo: we could get the plane with 2 velocity vectors.
+            // we consider the plane to be based on an orbit around some parent
+            // but we could infer the plane with two velocity vectors...
             return undefined;
         }
 
         const parent = this.parent;
-
         const parent_position = parent.position.toVector3();
         const parent_velocity = parent.velocity.toVector3();
-  
   
         const this_position = this.position.toVector3();
         const this_velocity = this.velocity.toVector3();
   
         // a- b
         const rel_pos = new Vector3().subVectors(this_position, parent_position)
-  
         const rel_vel = new Vector3().subVectors(this_velocity, parent_velocity);
   
         const cross = new Vector3().crossVectors(rel_pos, rel_vel)
@@ -234,56 +134,30 @@ class Body {
     }
   
   
-            
-    //   let q = new Quaternion()
-    //   q = q.setFromUnitVectors(new Vector3(0, 1, 0), norm)
-      
-    //   const p = new Vector3(0,10,0).applyQuaternion(q);
-
-
-    // }
-
     // kinematics should probably include sideral rotation period and sideral rotation angle
-
     setKinematics(kinematics: KinematicObject){
+
+        const baseTimeMs = kinematics.datetime.getTime()
+
+        const baseRotation = toRad(kinematics.axis?.rotation || 0) ;
+
+        this.axisDirection = kinematics.axis?.direction;
+
         this.velocity = Vec3D.fromVector(kinematics.velocity);
         this.position = Vec3D.fromVector(kinematics.position);
+        
+        this.rotationAtTime = function(periodMs: number) {
+            return (timeMs: number) => {
+                const PI_2 = 2 * Math.PI;
+
+                return new Vec3D(0, (baseRotation + (PI_2 * (timeMs - baseTimeMs)/periodMs) ) % PI_2,0);
+            }
+        }(this.sideralRotationPeriodMs);
     }
 
-        // when we start, 
-        // we need to have the time of the start of the simulation. Given we have the period of a body's
-        // orbit
-        //
-
-        // when:
-        // *  during an object' orbit around its parent body does it
-        // experience northern (right hand rule) winter solstice? This is to help us 
-        // This should be a modulus time (e.g 358/365). It helps us establish the orientation
-        // of the axis (i.e.: around what axis to we apply the obliquityToOrbit property?). 
-        // Also of note is that we need to calculate that axis based on the body's orbital plane
-        // which is the same as the speed vectors.
-        // 
-        //* during an object's orbit does it experience apoapsis/periaps... unless we have
-        //  exact speed figures for the time we start simulation.
-
-    obliquityOrientation(): Vec3D{ 
-        return new Vec3D(0, 0, toRad(-this.obliquityToOrbit ));       
-    }
-
-
-    
-    /**
-     * 
-     * @param time in seconds
-     * @returns 
-     */
-    nextSideralRotation(time: number): Vec3D {
-        // note: todo: assuming sideral rotation has a 'constant' period then no need to use delta time, just a start time and
-        // current time (i.e.: pass in the clock's time). This would avoid cumulative errors on long runs.
-
-        // The sideral rotation is local and thus based on the body's axis (on y axis)
-        const yAngleIncrement = 2 * Math.PI * time / this.sideralRotationPeriod;
-        return new Vec3D(this.sideralRotation.x,  (this.sideralRotation.y+yAngleIncrement) % (2 * Math.PI), this.sideralRotation.z);
+    obliquityOrientation(): Quaternion { 
+        return new Quaternion().setFromAxisAngle(new Vector3(0,0,1), degToRad(-this.obliquityToOrbit));
+        
     }
 
     /**

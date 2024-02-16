@@ -31,8 +31,12 @@ export class DataService {
         const response = await fetch(apiUrl, requestOptions);
         const json = await response.json();
 
+        
+        if (json.axis) {
+            json.axis.direction = transform_to_local_coordinate_system(json.axis.direction);
+        }
 
-        return  {name: json.name, velocity: transform_to_local_coordinate_system(json.velocity), position: transform_to_local_coordinate_system(json.position), datetime: new Date(json.datetime)}; 
+        return  {name: json.name, axis: json.axis, velocity: transform_to_local_coordinate_system(json.velocity), position: transform_to_local_coordinate_system(json.position), datetime: new Date(json.datetime)}; 
     }
     
   

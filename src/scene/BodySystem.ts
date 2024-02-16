@@ -371,7 +371,7 @@ export class BodySystem {
         const that = this
         return new Promise(function(resolve){
 
-            that.bodySystemUpdater.update(that.bodies, deltaTime).forEach((body: Body, i: string | number ) => {
+            that.bodySystemUpdater.update(that.bodies, deltaTime, that.clock).forEach((body: Body, i: string | number ) => {
                 BodyObject3D.updateObject3D(body, that.objects3D[i]);
             });
             resolve(null);

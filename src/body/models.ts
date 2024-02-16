@@ -6,8 +6,15 @@ type Vector = {
 }
 
 
+interface Axis {
+    rotation: number
+    //ICRS vector of the axis, body spins around this axis
+    direction: Vector
+}
+
 interface KinematicObject {
     name: string;
+    axis?: Axis,
     velocity: Vector
     position: Vector;
     datetime: Date;
@@ -15,10 +22,11 @@ interface KinematicObject {
 
 
 type TimePeriod = {
-    days?:number,
-    hours?: number,
-    minutes?: number,
+    days?:number
+    hours?: number
+    minutes?: number
     seconds?: number
+    millis?: number
 };
 
 
@@ -64,42 +72,27 @@ type BodyProperties = {
     
     /**
      * The orbital plane of this body in degrees. 
-     * 
-     * TODO: Note that this should be a quaternion in
-     * order to establish precise initial position (especially the y component) and speed vectors. For now the initial
-     * position will be at a position intersecting the parent's plane at y=0 (i.e. one of two points, depending on
-     * orientation of inclination (i.e. negative or position))
-     *  
+     * Note: Not USED, we calculate this based on velocities.
      */
     orbitInclination?: number;
 
     /**
      * 
-     * TODO: This should be a euler vector (or a quaternion) to establish initial axis 
-     * direction (not just scalar angle, which leads us to establish an arbitrary axis direction). 
      * 
      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body
      * (the imaginary line running through the center of the planet from the north
      * to south poles) is tilted relative to a line perpendicular to the planet's 
-     * orbit around its parent, with north pole defined by right hand rule.
+     * orbit around its parent (orbital plane), with north pole defined by right hand rule.
+     *  
+     * This inclination defines is the equatorial plane
      * 
-     * Thus, given this right hand rule, Venus rotates in a retrograde direction, opposite
-     * the other planets, so the obliquity is almost 180 degrees and spinning with a north pole
-     * pointing "downward" (southward). 
-     * 
-     * 
-     * Uranus rotates almost on its side relative to the orbit.
-     * 
-     * Pluto is pointing slightly "down". 
+     * We only use this value to calculate a tilt an axis direction (in 3D) is not given
      */
     obliquityToOrbit?: number;
 
 
     /**
      * Period of rotation around axis in seconds
-     * 
-     * TODO: Note this should be a quaternion or euler vector in order to determine an
-     * initial rotation value.
      */
     sideralRotationPeriod?: TimePeriod; 
     sideralRotation?: Vector,    
@@ -114,4 +107,4 @@ type BodyProperties = {
 }
 
 
-export type { RingProperties, BodyProperties, LightProperties, MaterialProperties, TimePeriod, KinematicObject};
+export type { RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod};

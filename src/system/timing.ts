@@ -1,9 +1,50 @@
+import { TimePeriod } from "../body/models";
 import { SYSTEM_TIME_TOPIC } from "./event-types";
 
 export function delay(i: number): Promise<void> {
     return new Promise((resolve, reject) => setTimeout(() => resolve(), i))
 };
     
+
+export enum TimeUnit {
+    Milliseconds,
+    Seconds,
+    Minutes,
+    Hours,
+    Days
+}
+
+export function timePeriodToMs(timePeriod: TimePeriod): number {
+    const daysToMillis = (days?: number) => days? days * hoursToMillis(24) : 0
+    const hoursToMillis = (hours?: number) => hours? hours * minutesToMillis(60) : 0;
+    const minutesToMillis = (minutes?: number) => minutes? minutes * secondsToMillis(60): 0;
+    const secondsToMillis = (seconds?: number) => seconds? seconds * 1000: 0;
+    const millisToMills = (millis? :number) => millis? millis : 0;
+
+    return daysToMillis(timePeriod.days) + hoursToMillis(timePeriod.hours)+minutesToMillis(timePeriod.minutes)+secondsToMillis(timePeriod.seconds) + millisToMills(timePeriod.millis);
+}
+
+export function timePeriodToUnits(timePeriod: TimePeriod, unit: TimeUnit=TimeUnit.Milliseconds): number {
+    return timeMsToUnits(timePeriodToMs(timePeriod), unit);
+}
+
+export function timeMsToUnits(timeMs: number, unit: TimeUnit=TimeUnit.Milliseconds): number {
+    switch (unit) {
+        case TimeUnit.Milliseconds:
+            return timeMs;
+        case TimeUnit.Seconds:
+            return timeMs / 1000.0;
+        case TimeUnit.Minutes:
+            return timeMs / 60000.0;
+        case TimeUnit.Hours: 
+            return timeMs / 3600000.0;
+        case TimeUnit.Days:
+            return timeMs / 86400000.0;
+        default:
+            throw new Error()
+    }
+}
+
 
 export class Timer {
 

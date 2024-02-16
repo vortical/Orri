@@ -76,10 +76,18 @@ const meshProperties = {
       
       
     },    
+
     {
       name: "Uranus",
-      textureUri: "/assets/textures/planets/uranus.jpg",
+      textureUri: "/assets/textures/planets/uranus_color.jpg",
+      normalUri: "/assets/textures/planets/uranus_norm.jpg",
+      bumpMapUri: "/assets/textures/planets/uranus_bw.jpg",
     },    
+
+    // {
+    //   name: "Uranus",
+    //   textureUri: "/assets/textures/planets/uranus.jpg",
+    // },    
     {
       name: "Neptune",
       textureUri: "/assets/textures/planets/neptune.jpg",
