@@ -1,14 +1,17 @@
-import { Object3D } from "three";
-import { Body } from '../body/Body.ts';
+import { Body } from "../body/Body.ts";
+import { BodyObject3D } from "./BodyObject3D";
+import { StarBodyObject3D } from "./StarBodyObject3D";
+import { PlanetaryBodyObject3D } from "./PlanetBodyObject3D";
 
-type Object3DBuilderFactory = (body: Body) => Object3DBuilder;
-
-type Object3DBuilder = (body: Body) => Object3D;
-
-export type { Object3DBuilder, Object3DBuilderFactory };
-
-
-// export abstract class MeshBuilder {
-//     public abstract createMesh(body: Body): Mesh;
-
-// }
+export  const BodyObject3DFactory  = {
+    create: (body: Body): BodyObject3D => {
+        switch(body.type){
+            case "star":
+                return new StarBodyObject3D(body);
+            case "planet":
+                return new PlanetaryBodyObject3D(body);
+            default:
+                throw new Error("Invalid body type: "+body.type);
+        }
+    }
+}

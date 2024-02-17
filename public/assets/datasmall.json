@@ -1,7 +1,7 @@
 [
     {
-        "name":"Sun", 
         "type": "star",
+        "name":"Sun", 
         "mass": 1.989e30, 
         "radius": 696.34e6, 
 
@@ -11,6 +11,7 @@
     },
 
     {
+        "type": "planet",
         "name":"Mercury",
         "parent": "Sun",
         "mass": 3.3022e23, 
@@ -23,6 +24,7 @@
 
 
     {
+        "type": "planet",
         "name":"Venus", 
         "parent": "Sun",
         "mass": 4.869e24, 
@@ -35,6 +37,7 @@
 
 
     {
+        "type": "planet",
         "name":"Earth", 
         "parent": "Sun",
         "mass": 5.9736e24, 
@@ -45,6 +48,7 @@
         "sideralRotationPeriod": {"hours": 23, "minutes":56, "seconds":4.0905}
     },
     {
+        "type": "planet",
         "name": "Moon", 
         "parent": "Earth",
         "mass": 7.3477e22, 
@@ -56,6 +60,7 @@
         "sideralRotation": {"x":0, "y": 0, "z":0}
     },
     {
+        "type": "planet",
         "name": "Mars", 
         "parent": "Sun",
         "mass": 6.4185e23, 
@@ -67,6 +72,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Jupiter", 
         "parent": "Sun",
         "mass": 1898e24, 
@@ -89,6 +95,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Io", 
         "parent": "Jupiter",
         "mass": 8.932e22, 
@@ -101,6 +108,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Europa", 
         "parent": "Jupiter",
         "mass": 4.8e22, 
@@ -113,6 +121,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Ganymede", 
         "parent": "Jupiter",
         "mass": 14.819e22, 
@@ -125,6 +134,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Callisto", 
         "parent": "Jupiter",
         "mass": 10.76e22, 
@@ -138,6 +148,7 @@
   
 
     {
+        "type": "planet",
         "name": "Saturn", 
         "parent": "Sun",
         "mass": 568e24, 
@@ -160,6 +171,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Uranus", 
         "parent": "Sun",
         "mass": 86.8e24, 
@@ -181,6 +193,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Neptune", 
         "parent": "Sun",
         "mass": 102e24, 
@@ -194,6 +207,7 @@
     },
 
     {
+        "type": "planet",
         "name": "Pluto", 
         "parent": "Sun",
         "mass": 0.01303e24, 
@@ -205,8 +219,6 @@
         "obliquityToOrbit": 119.51,
         "sideralRotationPeriod": {"hours": 153.2928}
     }
-
-
 
 ]
 

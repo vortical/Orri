@@ -1,8 +1,9 @@
 import { Body, MaterialProperties } from '../body/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Euler, Quaternion } from "three";
+import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Euler, Quaternion, Object3DEventMap } from "three";
 import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
+import { BodyObject3D } from './BodyObject3D.ts';
 // import { rotationForObliquityToOrbit } from '../system/geometry.ts';
 
 
@@ -129,42 +130,30 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
  }
 
 
-
- /*
-
-
- */
-
-
-
 const createObject3D: Object3DBuilder = (body: Body) => {
 
-    const { name, radius, position } = body;
-
-    const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
+    const materialProperties = meshProperties.solarSystem.find((b) => b.name.toLocaleLowerCase() == body.name.toLowerCase())!;
 
     const widthSegements = 64;
     const heightSegments = 32;
 
-    const geometry = new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
+    const geometry = new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
     const material = createBodySurfaceMaterial(materialProperties);
     const surfacemesh = new Mesh(geometry, material);
 
     if (materialProperties.atmosphereUri) {
         const altitude = 15; //  km
         const atmosphereMesh = new Mesh(
-            new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR + altitude, widthSegements, heightSegments),
+            new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR + altitude, widthSegements, heightSegments),
             createAtmosphereMateriel(materialProperties.atmosphereUri)
         );
-        // atmosphereMesh.name = ;
         atmosphereMesh.userData = {type: "atmosphere"};
         surfacemesh.add(atmosphereMesh);
     }
 
-    surfacemesh.name = name;
+    surfacemesh.name = body.name;
     const ringMeshes = createRingMeshes(body);
     const bodymesh = new Object3D();
-    bodymesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
 
     
     // TODO: put all this this logic in axis.direction
@@ -190,4 +179,13 @@ const createObject3D: Object3DBuilder = (body: Body) => {
     return bodymesh;
 }    
 
-export { createObject3D as createPlanetObject3D };
+
+
+
+class PlanetaryBodyObject3D extends BodyObject3D {
+    createObject3D(body: Body): Object3D{
+        return createObject3D(body)
+    }
+}
+
+export { PlanetaryBodyObject3D };

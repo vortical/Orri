@@ -3,6 +3,7 @@ import { Vec3D } from '../system/vecs.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { zipCombine } from '../system/arrays.ts';
 import { Clock, TimeUnit, timeMsToUnits } from '../system/timing.ts';
+import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 
 /**
  * Each body in a system influences all other bodies, regardless of size and distance. 
@@ -16,39 +17,27 @@ import { Clock, TimeUnit, timeMsToUnits } from '../system/timing.ts';
 class NBodySystemUpdater implements BodySystemUpdater {
 
 
-  // TODO: consider making this a single managed class once we get further along
-  // that way we can just do:
-  // NBodySystem.update(timestep): Object3D[] and we won't care about anything else.
+  update(bodyObject3Ds: BodyObject3D[], timestepMs: number, clock: Clock): BodyObject3D[] {
 
-  update(bodies: Body[], timestepMs: number, clock: Clock): Body[] {
-
-    // const delta = timePeriodToUnits(timestep, TimeUnit.Seconds);
     // each update can handle a step of about 600 seconds (todo: configure a stability param, we handle 
     // orbital steps of planets at 30 days per second on one pass...)
     // so if a timestep is 6000, then we loop 10 times for each 600.
-    //
 
     const maxStableTimestepMs = 600 * 1000; // make this adjustable.
     const iterations = Math.ceil(timestepMs / maxStableTimestepMs);
     const stableTimeStep = timestepMs / iterations;
+    const bodies = bodyObject3Ds.map( o => o.body);
 
     for (let i = 0; i < iterations; i++) {
       this.updateBodyProperties(bodies, stableTimeStep);
     }
 
-    // assume rotation along axis is constant
-
-    // bodies.forEach((body) => {
-    //   body.sideralRotation = body.nextSideralRotation(timestepMs);
-    // });
-
-
     bodies.forEach((body) => {
       body.sideralRotation = body.rotationAtTime(clock.getTime());
     });
 
-
-    return bodies;
+    bodyObject3Ds.forEach(b => b.update());
+    return bodyObject3Ds;
   }
 
 

@@ -39,6 +39,11 @@ export class DataService {
         return  {name: json.name, axis: json.axis, velocity: transform_to_local_coordinate_system(json.velocity), position: transform_to_local_coordinate_system(json.position), datetime: new Date(json.datetime)}; 
     }
     
+    loadKinematics(bodyNames: string[], time: Date): Promise<KinematicObject[]> {
+
+        return Promise.all(bodyNames.map( async (name) =>  this.loadKinematicObject(name, time)))
+
+    }
   
     async loadSolarSystem(time: Date = new Date()): Promise<Body[]> {
 
@@ -49,7 +54,9 @@ export class DataService {
             bodies
                 .filter((b) => b.parentName)
                 .forEach((b) => b.parent = bodies.find((parent) => parent.name == b.parentName ));
-            
+                    
+                
+        
             return await Promise.all(bodies.map( async (b) => {
                 const kinematicObject = await that.loadKinematicObject(b.name, time);
                 b.setKinematics(kinematicObject);

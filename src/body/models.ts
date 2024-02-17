@@ -60,9 +60,13 @@ type RingProperties = {
     colorMapUri?: string;
 };
 
+type BodyType = "star" | "planet" ;
+
+
 
 
 type BodyProperties = {
+    type: BodyType;
     name: string;
     parent: string;
     mass: number;
@@ -107,4 +111,4 @@ type BodyProperties = {
 }
 
 
-export type { RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod};
+export type { BodyType, RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod};

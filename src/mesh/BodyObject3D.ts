@@ -1,21 +1,19 @@
 
 import { Mesh, Object3D } from 'three';
 import { Body } from '../body/Body.ts';
-import { Object3DBuilder } from './Object3DBuilder.ts';
-import { createPlanetObject3D } from './planetBodyMeshBuilder.ts';
-import { createStarObject3D } from './starBodyMeshBuilder.ts';
 import { toRad } from '../system/geometry.ts';
 
-function getObject3DBuilder(body: Body): Object3DBuilder {
+// function getObject3DBuilder(body: Body): Object3DBuilder {
 
-    if(body.lightProperties){
-        return createStarObject3D;
-    }else{
-        return createPlanetObject3D;        
-    }
-}
+//     if(body.lightProperties){
+//         return createStarObject3D;
+//     }else{
+//         return createPlanetObject3D;        
+//     }
+// }
 
-class BodyObject3D {
+
+abstract class BodyObject3D {
 
     // This is something for which we wrap a root mesh associated to a body and the body model.
 
@@ -24,22 +22,43 @@ class BodyObject3D {
     // update surface animations (we'd need to introduce and leverage LOD)
 
 
-    static createObject3D(body: Body): Object3D {
-        const meshBuilder = getObject3DBuilder(body);
-        const object3D = meshBuilder(body);        
-        body.object3D = object3D; // todo: side effect...
-        return object3D;
+    object3D: Object3D;
+    body: Body;
+
+    constructor(body: Body){
+        this.body = body;
+        this.object3D = this.createObject3D(body)
+        
     }
+
+    abstract createObject3D(body: Body): Object3D;
+
+    scale(scale: number){
+        this.object3D.scale.set(scale, scale, scale);
+    }
+
+    setBody(body: Body){
+        this.body = body;
+        this.update();
+    }
+
+    update(){
+        // this.body = body;
+
+        const body = this.body;
     
-    static updateObject3D(body: Body, object3D: Object3D): Object3D {
+
+    // static updateObject3D(body: Body, object3D: Object3D): Object3D {
         // position of the body's locality:
-        object3D.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);
+        this.object3D.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);
+
+        // subclasses could have their own logic
 
         
 
         // this is the axis sideral rotation, we apply this to the 'surface' mesh
         
-        object3D.children?.forEach((c => {
+        this.object3D.children?.forEach((c => {
             c.rotation.set(body.sideralRotation.x, body.sideralRotation.y, body.sideralRotation.z);
             // each surface itself may have animations (e.g. atmosphere), so we should
             // call an update on those.
@@ -48,15 +67,28 @@ class BodyObject3D {
             // regardless we need to create a model that represents our model
             if(c.children && c.children.length==1){
                 if(c.children[0].userData?.type === "atmosphere"){
-                   c.children[0].rotateY(toRad(0.05));
+                   c.children[0].rotateY(toRad(0.02));
                 }
             }
         }))
 
-
-        return object3D;
+        return this;
+        
     }    
 }
+
+
+
+// class PlanetaryBodyObject3D extends BodyObject3D{
+
+//     static createObject3D(body: Body): Object3D {
+//         const meshBuilder = getObject3DBuilder(body);
+//         const object3D = meshBuilder(body);        
+//         // body.object3D = object3D; // todo: side effect...
+//         return object3D;
+//     }
+// }
+
 
 export { BodyObject3D };
 

@@ -17,6 +17,7 @@ import { MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, SYSTEM_TIME_TOP
 import { Clock, Timer } from '../system/timing.ts';
 import { Vector } from '../system/vecs.ts';
 import { Picker } from './Picker.ts';
+import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 
 
 // type PickerHandler = (c: Vector) => Body|null;
@@ -58,7 +59,7 @@ export class BodySystem {
     scene: Scene;
     renderer: WebGLRenderer;
     controls: OrbitControls;
-    objects3D: Object3D[];
+    bodyObjects3D: BodyObject3D[];
     ambiantLight: AmbientLight;
     stats?: Stats;
     target?: Body
@@ -102,13 +103,13 @@ export class BodySystem {
         // this.camera.position.set(position.x, position.y, position.z!)
 
         // this.viewTransitions = new ViewTransitions(this.camera, this.controls);
-        this.objects3D = createObjects3D(this.bodies);
+        this.bodyObjects3D = createObjects3D(this.bodies);
 
         this.ambiantLight = createAmbiantLight();
         this.scene.add(this.ambiantLight);
 
         this.controls.update();
-        this.scene.add(...this.objects3D);
+        this.scene.add(...this.bodyObjects3D.map(o => o.object3D));
         
         this.setTarget(target);        
         this.setAxesHelper(showAxes);
@@ -123,6 +124,7 @@ export class BodySystem {
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         
     }
+
 
     /**
      * 
@@ -282,8 +284,8 @@ export class BodySystem {
     setScale(scale: number){
         this.scale = scale;
 
-        this.objects3D.forEach((m) => {
-            m.scale.set(scale, scale, scale);
+        this.bodyObjects3D.forEach((m) => {
+            m.scale(scale);
         });
 
     }
@@ -367,15 +369,14 @@ export class BodySystem {
         this.render();   
     }
 
-     tick(deltaTime: number) {
+    tick(deltaTime: number) {
         const that = this
         return new Promise(function(resolve){
-
-            that.bodySystemUpdater.update(that.bodies, deltaTime, that.clock).forEach((body: Body, i: string | number ) => {
-                BodyObject3D.updateObject3D(body, that.objects3D[i]);
-            });
+            that.bodySystemUpdater.update(that.bodyObjects3D, deltaTime, that.clock);
+            // .forEach((body: Body, i: number ) => {
+            //     BodyObject3D.updateObject3D(body, that.bodyObjects3D[i]);
+            // });
             resolve(null);
-    
         });
     }
 
@@ -439,8 +440,8 @@ function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObs
     ));    
 }
 
-function createObjects3D(bodies: Body[]): Object3D[] {
-    return bodies.map((body) => BodyObject3D.createObject3D(body));
+function createObjects3D(bodies: Body[]): BodyObject3D[] {
+    return bodies.map((body) => BodyObject3DFactory.create(body));
 }
 
 function createScene(): Scene {

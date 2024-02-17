@@ -4,6 +4,7 @@ import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, MeshBasicMaterial } from "three";
 import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
+import { BodyObject3D } from './BodyObject3D.ts';
 
 const textureLoader = new TextureLoader();
 
@@ -62,4 +63,11 @@ const createObject3D: Object3DBuilder = (body: Body): Object3D => {
     return worldmesh;
 }
 
-export { createObject3D as createStarObject3D };
+
+class StarBodyObject3D extends BodyObject3D {
+    createObject3D(body: Body): Object3D{
+        return createObject3D(body)
+    }
+}
+
+export { StarBodyObject3D };
