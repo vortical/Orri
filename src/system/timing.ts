@@ -176,9 +176,10 @@ export class Clock {
      * 
      * @param msToUnit units based on ms. So 1000 msToUnit is a second.
      */
-    constructor(){
-        this.clockTimeMs = Date.now();
-        this.realTimestampMs = this.clockTimeMs;
+    constructor(clockTimeMs: number = Date.now() ){
+        this.setTime(clockTimeMs);
+        // this.clockTimeMs = Date.now();
+        // this.realTimestampMs = this.clockTimeMs;
     }
     
     setTime(timeMs: number) {

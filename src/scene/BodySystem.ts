@@ -21,33 +21,26 @@ import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
 
 
-// type PickerHandler = (c: Vector) => Body|null;
 type Animator = (time: number) => boolean;
 
 
 type BodySystemEvent = {
-    topic: string,
-    message: any
+    topic: string;
+    message: any;
 };
    
 
-//https://sahadar.github.io/pubsub/#installation
-//https://www.npmjs.com/package/pubsub-js
-
-
 
 export type BodySystemOptionsState = {
-    // viewer position,
-    // pos: Vector
-    // target or direction
-    cameraPosition?: Vector,
-    targetPosition?: Vector,
-    target?: string,
-    sizeScale?: number,
-    timeScale?: number,
-    fov?: number,
-    ambientLightLevel?: number,
-    showAxes?: boolean
+    date?: number;
+    cameraPosition?: Vector;
+    targetPosition?: Vector;
+    target?: string;
+    sizeScale?: number;
+    timeScale?: number;
+    fov?: number;
+    ambientLightLevel?: number;
+    showAxes?: boolean;
 }
 
 
@@ -77,12 +70,12 @@ export class BodySystem {
 
     // constructor(parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater, optionState: OptionsState){
     constructor( parentElement:HTMLElement, bodies:Body[], bodySystemUpdater: BodySystemUpdater,
-         {cameraPosition, targetPosition, target="Earth", sizeScale=1.0, timeScale=1.0, fov=35, ambientLightLevel=0.01, showAxes=false}:BodySystemOptionsState ){
+         {cameraPosition, targetPosition, target="Earth", sizeScale=1.0, timeScale=1.0, fov=35, ambientLightLevel=0.01, showAxes=false, date = Date.now()}:BodySystemOptionsState ){
         
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;        
     
-        this.clock = new Clock();
+        this.clock = new Clock(date);
         this.addUpdater(bodySystemUpdater);
         this.bodies = bodies;
 
@@ -176,6 +169,7 @@ export class BodySystem {
         options.fov = this.getFov();
         options.ambientLightLevel = this.getAmbiantLightLevel();
         options.showAxes = this.hasAxesHelper();
+        options.date = this.clock.getTime();
 
         return options;            
         

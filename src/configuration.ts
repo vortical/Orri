@@ -1,5 +1,5 @@
 const config = {
-    spacefield_host: "localhost:8001"
+    spacefield_host: "192.168.0.165:8001"
 
 }
 
