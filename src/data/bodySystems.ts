@@ -1,10 +1,10 @@
     
 import { Quaternion, Vector3 } from 'three';
-import { Body }  from '../body/Body';
+import { Body }  from '../domain/Body.ts';
 import { Vec3D, Vector } from '../system/vecs';
 import { toRad } from '../system/geometry';
 import { createBodies } from "../body/builders.ts";
-import { KinematicObject } from '../body/models.ts';
+import { KinematicObject } from '../domain/models.ts';
 
 
 //https://planet-texture-maps.fandom.com/wiki/Callisto

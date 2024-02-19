@@ -1,6 +1,6 @@
 
 import { Mesh, Object3D } from 'three';
-import { Body } from '../body/Body.ts';
+import { Body } from '../domain/Body.ts';
 import { toRad } from '../system/geometry.ts';
 
 // function getObject3DBuilder(body: Body): Object3DBuilder {
@@ -33,13 +33,17 @@ abstract class BodyObject3D {
 
     abstract createObject3D(body: Body): Object3D;
 
+    name(): string {
+        return this.body.name;
+    }
+
     scale(scale: number){
         this.object3D.scale.set(scale, scale, scale);
     }
 
     setBody(body: Body){
         this.body = body;
-        this.update();
+        // this.update();
     }
 
     update(){

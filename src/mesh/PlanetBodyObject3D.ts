@@ -1,19 +1,13 @@
-import { Body, MaterialProperties } from '../body/Body.ts';
+import { Body } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, MeshPhysicalMaterial, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Euler, Quaternion, Object3DEventMap } from "three";
-import { Object3DBuilder } from "./Object3DBuilder.ts";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
-// import { rotationForObliquityToOrbit } from '../system/geometry.ts';
+import { MaterialProperties } from '../domain/models.ts';
 
 
 const textureLoader = new TextureLoader();
 
-
-
-function createRingMaterial(){
-
-}
 
 function createAtmosphereMateriel(textureUri: string) {
 
@@ -130,7 +124,7 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
  }
 
 
-const createObject3D: Object3DBuilder = (body: Body) => {
+const createObject3D = (body: Body) => {
 
     const materialProperties = meshProperties.solarSystem.find((b) => b.name.toLocaleLowerCase() == body.name.toLowerCase())!;
 

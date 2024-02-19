@@ -3,13 +3,14 @@ import './style.css'
 import { BodySystem, BodySystemOptionsState } from './scene/BodySystem.ts'
 // import { DataService } from './data/bodySystems.ts';
 import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
-import { Body} from './body/Body.ts';
+import { Body} from './domain/Body.ts';
 
-import UI from './ui.ts';
+import UI, { UIManager } from './ui.ts';
 
 import LocationBar from './LocationBar.ts';
 import { DataService } from './services/dataservice.ts';
 import config from './configuration.ts';
+import { BodiesAtTimeUpdater } from './body/BodiesAtTimeUpdater.ts';
 
 console.log("starting....");
 
@@ -56,7 +57,12 @@ async function start(){
     bodySystem.setCameraUp(earth.get_orbital_plane_normal());
 
 
-    UI(mainElement, datetimePickerElement, statusElement, bodySystem);
+    const ui = new UIManager(mainElement, datetimePickerElement, statusElement, bodySystem);
+
+    ui.addDateTimeChangeListener( async (datetime) => {
+        const kinematics = await dataService.loadKinematics(Array.from(bodySystem.bodyObjects3D.keys()), datetime);
+        bodySystem.addUpdater(new BodiesAtTimeUpdater(kinematics,  datetime));
+    })
 
     bodySystem.start();
 }

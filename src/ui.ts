@@ -6,26 +6,45 @@ import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from './system/event-types.ts';
 import LocationBar from './LocationBar.ts';
 import { PickerEvent } from './scene/Picker.ts';
-import { throttle } from './system/throttler.ts';
+import { throttle } from "./system/timing.ts";
 
 
-export default function UI(parentElement:HTMLElement, dateinput: HTMLInputElement, statusElement: HTMLElement, bodySystem: BodySystem){
-    buildLilGui(bodySystem);
-    new DateTimeInputComponent(dateinput, bodySystem);
 
-    new StatusComponent(statusElement, bodySystem);
+// this is just quick hack to set up. Fix this
 
-    // // Handle the history back button
-    window.addEventListener('popstate', function(event) {
-        // poor mans implementatio, but it works...with flashes and bangs.
 
-        // So consider just set the state without a full page reload, 
-        if (event.state){
-            location.href = location.href;
-        }
-    });
+export class UIManager {
 
+    dateInputComponent: DateTimeInputComponent;
+
+    constructor(parentElement:HTMLElement, dateinput: HTMLInputElement, statusElement: HTMLElement, bodySystem: BodySystem){
+        buildLilGui(bodySystem);
+        this.dateInputComponent = new DateTimeInputComponent(dateinput, bodySystem);
+    
+        // d
+    
+        new StatusComponent(statusElement, bodySystem);
+    
+        // // Handle the history back button
+        window.addEventListener('popstate', function(event) {
+            // poor mans implementatio, but it works...with flashes and bangs.
+    
+            // So consider just set the state without a full page reload, 
+            if (event.state){
+                location.href = location.href;
+            }
+        });
+    
+
+    }
+
+
+    addDateTimeChangeListener(f: (datetime: Date) => void){
+        this.dateInputComponent.addChangeListener(f)
+    }
 }
+
+
 
 function buildLilGui(bodySystem: BodySystem){
     const gui = new GUI().title("planets");
@@ -112,8 +131,12 @@ function buildLilGui(bodySystem: BodySystem){
 }
         
 
+type IsoDatetimeString = string
+
 
 class DateTimeInputComponent {
+
+    changeListeners: DateTimeChangeListener[] = [];
 
     
     /**
@@ -138,7 +161,9 @@ class DateTimeInputComponent {
         let timeSubscription = subscribeToTime();
 
         dateinput.addEventListener("change", (event) => {
-            bodySystem.setDatetime(event.target.value);
+            const time = new Date(event.target.value);
+            this.notifiyChangeListeners(time);
+            // bodySystem.setDatetime(event.target.value);
             console.log("Change Selected date:", event.target.value);
         });
     
@@ -161,7 +186,27 @@ class DateTimeInputComponent {
     
 
     }
+
+    notifiyChangeListeners(datetime: Date){
+        const that = this;
+
+        return new Promise(function(resolve){
+            that.changeListeners.forEach( async (listener: DateTimeChangeListener) => {
+                listener(datetime);
+            });            
+            resolve(null);
+        });
+    }
+
+    addChangeListener(datetimeChangeListener: DateTimeChangeListener) {
+        this.changeListeners.push(datetimeChangeListener);
+
+    }
 }
+
+type DateTimeChangeListener = (datetime: Date ) => void;
+
+
 
 class UserInteraction {
 

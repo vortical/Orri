@@ -1,4 +1,4 @@
-import { Body } from './Body.ts';
+import { Body } from '../domain/Body.ts';
 import { Vec3D } from '../system/vecs.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { zipCombine } from '../system/arrays.ts';
@@ -15,9 +15,11 @@ import { BodyObject3D } from '../mesh/BodyObject3D.ts';
  *   would be quite pertinent in the case of our solar system (i.e.: this way we'd not introduce earth's contribution to io's orbit anmd view versa)
  */
 class NBodySystemUpdater implements BodySystemUpdater {
+  isOneTimeUpdate = false;
+  isEnabled = true;
 
 
-  update(bodyObject3Ds: BodyObject3D[], timestepMs: number, clock: Clock): BodyObject3D[] {
+  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
 
     // each update can handle a step of about 600 seconds (todo: configure a stability param, we handle 
     // orbital steps of planets at 30 days per second on one pass...)
@@ -26,7 +28,9 @@ class NBodySystemUpdater implements BodySystemUpdater {
     const maxStableTimestepMs = 600 * 1000; // make this adjustable.
     const iterations = Math.ceil(timestepMs / maxStableTimestepMs);
     const stableTimeStep = timestepMs / iterations;
-    const bodies = bodyObject3Ds.map( o => o.body);
+
+
+    const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
 
     for (let i = 0; i < iterations; i++) {
       this.updateBodyProperties(bodies, stableTimeStep);

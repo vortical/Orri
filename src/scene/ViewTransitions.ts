@@ -1,6 +1,6 @@
 import { PerspectiveCamera, Vector3 } from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
-import { Body } from '../body/Body.ts';
+import { Body } from '../domain/Body.ts';
 
 class ViewTransitions {
     camera: PerspectiveCamera;

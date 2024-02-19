@@ -1,12 +1,12 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver, toRad } from '../system/geometry.ts';
-import { Body } from '../body/Body.ts';
+import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 
-import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
+import { BodySystemUpdater, BodySystemUpdater } from '../body/BodySystemUpdater.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
-import { throttle } from '../system/throttler.ts';
+import { throttle } from "../system/timing.ts";
 
 import Stats from 'three/addons/libs/stats.module.js';
 
@@ -18,6 +18,7 @@ import { Clock, Timer } from '../system/timing.ts';
 import { Vector } from '../system/vecs.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
+import { CompositeUpdater } from '../body/CompositeUpdater.ts';
 
 
 // type PickerHandler = (c: Vector) => Body|null;
@@ -53,13 +54,13 @@ export type BodySystemOptionsState = {
 
 export class BodySystem {
 
-    bodySystemUpdater: BodySystemUpdater;
+    bodySystemUpdater: CompositeUpdater = new CompositeUpdater()
     bodies: Body[];
     camera: PerspectiveCamera;
     scene: Scene;
     renderer: WebGLRenderer;
     controls: OrbitControls;
-    bodyObjects3D: BodyObject3D[];
+    bodyObjects3D: Map<string, BodyObject3D>;
     ambiantLight: AmbientLight;
     stats?: Stats;
     target?: Body
@@ -82,7 +83,7 @@ export class BodySystem {
         this.parentElement = parentElement;        
     
         this.clock = new Clock();
-        this.bodySystemUpdater = bodySystemUpdater;
+        this.addUpdater(bodySystemUpdater);
         this.bodies = bodies;
 
 
@@ -92,6 +93,7 @@ export class BodySystem {
         this.renderer = createRenderer();
         parentElement.append(this.renderer.domElement);
 
+        this.bodyObjects3D = createObjects3D(this.bodies);
         // this has to be dealt with
         this.controls = createControls(this.camera, this.renderer.domElement);
         this.controls.enabled = false;
@@ -103,14 +105,14 @@ export class BodySystem {
         // this.camera.position.set(position.x, position.y, position.z!)
 
         // this.viewTransitions = new ViewTransitions(this.camera, this.controls);
-        this.bodyObjects3D = createObjects3D(this.bodies);
 
         this.ambiantLight = createAmbiantLight();
         this.scene.add(this.ambiantLight);
 
         this.controls.update();
-        this.scene.add(...this.bodyObjects3D.map(o => o.object3D));
-        
+
+        // urgh, make a composite class that holds our 3D object to avoid code like this
+        this.scene.add(...Array.from(this.bodyObjects3D.values()).map(o => o.object3D));
         this.setTarget(target);        
         this.setAxesHelper(showAxes);
         this.setScale(sizeScale);
@@ -161,6 +163,9 @@ export class BodySystem {
 
     }
 
+    getBodyNames() {
+        return 
+    }
     getState(): BodySystemOptionsState {
         const options: BodySystemOptionsState  = {};
         options.cameraPosition = {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z};
@@ -211,8 +216,7 @@ export class BodySystem {
 
 
     getBody(name: string): Body {
-        name = name.toLowerCase();
-        return this.bodies.find((b)=> b.name.toLowerCase() === name)!;
+        return this.bodyObjects3D.get(name.toLowerCase())!.body;
     }
 
     hasStats(): boolean  {
@@ -263,19 +267,37 @@ export class BodySystem {
         this.clock.setScale(timesScale)
     }
 
-    setDatetime(isoString: string){
-        // TO: this will also require us to rebuild the model from
-        // a service that gives us positions/speeds at that time
+    // setBodies(bodies: Body[]){
         
-        this.clock.setTime(new Date(isoString).getTime());
-        this.updateKinematics(this.clock.getTime());
+    //     bodies.forEach(body => {
+    //         const bodyObject3d = this.bodyObjects3D.find( o => o.name() == body.name)
+    //         bodyObject3d?.setBody(body);
+    //     }, this);
+        
+    //     this.bodies = bodies;
+      
+    // }
+
+    addUpdater(updater: BodySystemUpdater){
+        this.bodySystemUpdater.addUpdater(updater);
+
     }
 
-    updateKinematics(time: number){
+    // updateToTime(isoString: string){
 
-    }
+    //     this.updaters()
 
+    //     // TO: this will also require us to rebuild the model from
+    //     // a service that gives us positions/speeds at that time
+        
+    //     this.clock.setTime(new Date(isoString).getTime());
+    //     // this.updateKinematics(this.clock.getTime());
+    // }
 
+    // updateKinematics(time: number){
+    //     this.dataservice
+
+    // }
 
     getScale(): number {
         return this.scale;
@@ -287,7 +309,6 @@ export class BodySystem {
         this.bodyObjects3D.forEach((m) => {
             m.scale(scale);
         });
-
     }
 
     getAmbiantLightLevel(): number {
@@ -307,12 +328,6 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
     }
 
-
-    // followTarget(){
-
-
-
-    // }
 
     setTarget(body: Body|string, moveToTarget: boolean = true){
         
@@ -369,13 +384,11 @@ export class BodySystem {
         this.render();   
     }
 
+
     tick(deltaTime: number) {
-        const that = this
-        return new Promise(function(resolve){
-            that.bodySystemUpdater.update(that.bodyObjects3D, deltaTime, that.clock);
-            // .forEach((body: Body, i: number ) => {
-            //     BodyObject3D.updateObject3D(body, that.bodyObjects3D[i]);
-            // });
+        // const that = this
+        return new Promise( (resolve) => {
+            this.bodySystemUpdater.update(this.bodyObjects3D, deltaTime, this.clock);
             resolve(null);
         });
     }
@@ -389,15 +402,6 @@ export class BodySystem {
         const timer = this.clock.startTimer("AnimationTimer");
         this.controls.enabled = true;
 
-        /**
-         * The clock has a delta, which says how much time the previous frame took.
-         * 
-         * Real time is 60 fps (depends on monitor).
-         * 
-         * Each tick in my update expect a delta time in second.
-         * 
-         * 
-         */
         this.renderer.setAnimationLoop( async() => {
             const delta = timer.getDelta()!;
             await this.tick(delta);
@@ -440,8 +444,17 @@ function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObs
     ));    
 }
 
-function createObjects3D(bodies: Body[]): BodyObject3D[] {
-    return bodies.map((body) => BodyObject3DFactory.create(body));
+/**
+ * Build a map-of(name->BodyObject3D) from a Body[]
+ * 
+ * @param bodies 
+ * @returns Map<string, BodyObject3D> 
+ */
+function createObjects3D(bodies: Body[]): Map<string, BodyObject3D> {
+    return bodies.reduce(
+        (m: Map<string, BodyObject3D>, body: Body) => m.set(body.name.toLowerCase(), BodyObject3DFactory.create(body)),
+        new Map<string, BodyObject3D>()
+    );
 }
 
 function createScene(): Scene {

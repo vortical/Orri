@@ -1,5 +1,5 @@
 
-import { Body, MaterialProperties } from '../body/Body.ts';
+import { Body, MaterialProperties } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, MeshBasicMaterial } from "three";
 import { Object3DBuilder } from "./Object3DBuilder.ts";

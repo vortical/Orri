@@ -1,5 +1,5 @@
-import { Body } from "../body/Body.ts";
-import { BodyProperties, KinematicObject } from "../body/models";
+import { Body } from "../domain/Body.ts";
+import { BodyProperties, KinematicObject } from "../domain/models.ts";
 import { Vector } from "../system/vecs.ts";
 
 

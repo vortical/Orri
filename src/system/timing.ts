@@ -1,10 +1,63 @@
-import { TimePeriod } from "../body/models";
+import { TimePeriod } from "../domain/models";
 import { SYSTEM_TIME_TOPIC } from "./event-types";
 
 export function delay(i: number): Promise<void> {
     return new Promise((resolve, reject) => setTimeout(() => resolve(), i))
 };
     
+
+
+/**
+ *
+ *
+ * Limit the invocation frequency of a function.
+ * 
+ * E.g. of usage:
+ * 
+ * async function throttling() {
+ *
+ *   function delay(i: number): Promise<void> {
+ *       return new Promise((resolve, reject) => setTimeout(() => resolve(), i))
+ *   }
+ *
+ *   const context = {
+ *       value: "Some property"
+ *   };
+ *
+ *   const throttledFunction = throttle(200, context, (v: number, x: number) => {
+ *          console.log(this.value+" args:"+v+","+x);
+ *       }
+ *   });
+ *
+ * 
+ *   for(let i=0; i< 10000; i++){
+ *       throttledFunction(i, i+100);
+ *       await delay(1);
+ *   }
+* }
+
+ * @param threshold represents minimum interval delta between invocation
+ * @param scope the scope/context of the function
+ * @param fn the function.
+ * @returns
+ */
+export function throttle(threshold: number, scope: any | undefined, fn: (...args: any) => any) {
+    let last: number | undefined = undefined;
+    let timeoutId: any = undefined;
+    return function (...args: any) {
+        const context = scope || this;
+        const now = new Date().getTime();
+        last = last || now - threshold;
+
+        // replace previous throttled invocation, update
+        // time with remaining time until threshold is met.
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            last = now;
+            fn.apply(context, args);
+        }, threshold - (now - last));
+    };
+};
 
 export enum TimeUnit {
     Milliseconds,
@@ -46,6 +99,12 @@ export function timeMsToUnits(timeMs: number, unit: TimeUnit=TimeUnit.Millisecon
 }
 
 
+/**
+ * A timer associated to a clock. 
+ * 
+ * This timer is used internally to determine the time delta between each animation loop with a clock
+ * that can be sped/slowed up/down.
+ */
 export class Timer {
 
     clock: Clock
@@ -53,7 +112,6 @@ export class Timer {
     /**
      * Base unit is 1 ms.
      */
-    
     name: string;
     timestamp: number;
     startTime: number;
@@ -61,7 +119,6 @@ export class Timer {
     constructor(clock: Clock, name: string){
         this.clock = clock;
         this.name = name;
-        
     }
 
     /**
@@ -86,30 +143,33 @@ export class Timer {
         this.timestamp = this.startTime;    
         return this;
     }
-
-
 }
 
 
-
+/**
+ * Manages the animation time, can be sped up/slowed down. Can have downstream timers associated to
+ * it.
+ * 
+ * Also publishes its current time at each second to a topic: SYSTEM_TIME_TOPIC.
+ */
 export class Clock {
     
     /**
-     * 
-     * * ms since the UNIX epoch (January 1, 1970 00:00:00 UTC) 
+     * ms based on the usual the UNIX epoch (January 1, 1970 00:00:00 UTC) 
      */
-
-    
-    
     clockTimeMs: number;
     realTimestampMs: number;
 
     /**
      * Default scale 1 is 1:1
      */
-
     scale: number = 1;   
+
     timers = new Map<string, Timer>();
+
+    /**
+     * references the pub/sub publisher once started, else indefined
+     */
     timePublisherId: any = undefined;
 
     /**
@@ -118,11 +178,7 @@ export class Clock {
      */
     constructor(){
         this.clockTimeMs = Date.now();
-        
         this.realTimestampMs = this.clockTimeMs;
-
-        
-
     }
     
     setTime(timeMs: number) {
@@ -132,11 +188,9 @@ export class Clock {
 
     getTime(): number {
         const realTimeDelta = Date.now() - this.realTimestampMs;
-
         const clockTime = this.clockTimeMs + (realTimeDelta) * this.scale;
         return clockTime;
     }
-
 
     setScale(scale: number){
         this.setTime(this.getTime());
@@ -177,11 +231,9 @@ export class Clock {
     
     /**
      * 
-     * @returns time in units
+     * @returns time ms
      */
     getDelta(timerId: string=""): number | undefined { 
         return this.timers.get(timerId)?.getDelta();
     }
-
-
 }
