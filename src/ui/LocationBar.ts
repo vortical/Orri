@@ -1,4 +1,4 @@
-import { BodySystemOptionsState } from './scene/BodySystem.ts'
+import { BodySystemOptionsState } from '../scene/BodySystem.ts'
 
 export default class LocationBar {
 

@@ -431,7 +431,6 @@ function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObs
     window.addEventListener("resize", 
     throttle(1000/30, undefined, 
         (event: UIEvent) => {
-            console.log(`event: ${event}`);
             sizeObserver(new Dim(container.clientWidth, container.clientHeight));
         }
 
