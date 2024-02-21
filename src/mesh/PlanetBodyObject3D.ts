@@ -48,6 +48,7 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
         map: materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined,
         normalMap: materialProperties.normalUri? textureLoader.load(materialProperties.normalUri) : undefined,
         bumpMap: materialProperties.bumpMapUri? textureLoader.load(materialProperties.bumpMapUri) : undefined,
+        specularMap: materialProperties.specularMapUri? textureLoader.load(materialProperties.specularMapUri) : undefined,
         color: materialProperties.color 
     }
 

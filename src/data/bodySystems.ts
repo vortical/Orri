@@ -20,7 +20,8 @@ const meshProperties = {
       name: "Earth",
       textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
       normalUri: "/assets/textures/planets/earth_normal_2048.jpg",
-      atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png"
+      atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png",
+      specularMapUri: "/assets/textures/planets/earth_specular_2048.jpg"
     },
     {
       name: "moon",
@@ -41,8 +42,9 @@ const meshProperties = {
     },
     {
       name: "Mars",
-      textureUri: "/assets/textures/planets/mars_1k.jpg",
-      bumpMapUri: "/assets/textures/planets/mars_topo_1k.jpg",
+      textureUri: "/assets/textures/planets/mars_2k_color.jpg",
+      normalUri: "/assets/textures/planets/mars_2k_normal.jpg",
+
     },
     {
       name: "Jupiter",

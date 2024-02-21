@@ -1,7 +1,7 @@
 
 import { Body, MaterialProperties } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, MeshBasicMaterial } from "three";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3 } from "three";
 import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
@@ -43,24 +43,30 @@ const createObject3D: Object3DBuilder = (body: Body): Object3D => {
     
     surfacemesh.name = name;
     
-    const { color = "white", intensity = 0.9, distance = 0, decay = 0.06 } = body.lightProperties!;
+    const { color = "white", intensity = 1.2, distance = 0, decay = 0.06 } = body.lightProperties!;
     const light = new PointLight(color, intensity, distance, decay);
 
     
     light.add(surfacemesh);
 
-    const worldmesh = new Object3D();
-    worldmesh.position.set(position.x * SCENE_LENGTH_UNIT_FACTOR, position.y * SCENE_LENGTH_UNIT_FACTOR, position.z * SCENE_LENGTH_UNIT_FACTOR);
+    const bodymesh = new Object3D();
 
-    const rotation =body.obliquityOrientation();
+    if(body.axisDirection !== undefined){
+        // rotate body so axis is normal to its orbital plane (i.e.: equatorial = orbital/ecliptic)
+        const axis = body.axisDirection!;
+        bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
     
-    worldmesh.rotation.set(rotation.x, rotation.y, rotation.z); //to do, this is the axis tilt on the orbital plane.
-    
+    }else{
+        // We tilt the body using the body's obliquity arbitrarily tilt the body using 
+        const rotation =body.obliquityOrientation();
+        bodymesh.applyQuaternion(rotation);
+        const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
+        bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
+    }
 
+    bodymesh.add(light);
 
-    worldmesh.add(light);
-
-    return worldmesh;
+    return bodymesh;
 }
 
 
