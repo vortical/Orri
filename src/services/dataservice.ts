@@ -1,5 +1,5 @@
 import { Body } from "../domain/Body.ts";
-import { BodyProperties, KinematicObject } from "../domain/models.ts";
+import { BodyProperties, KinematicObject, VectorComponents } from "../domain/models.ts";
 import { Vector } from "../system/vecs.ts";
 
 
@@ -19,7 +19,7 @@ export class DataService {
          * @param v 
          * @returns 
          */
-        function transform_to_local_coordinate_system(v: Vector): Vector{
+        function transform_to_local_coordinate_system(v: VectorComponents): VectorComponents{
             return {x: v.x, y: v.z, z: -v.y};
         }
 

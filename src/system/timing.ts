@@ -113,8 +113,8 @@ export class Timer {
      * Base unit is 1 ms.
      */
     name: string;
-    timestamp: number;
-    startTime: number;
+    timestamp!: number;
+    startTime!: number;
 
     constructor(clock: Clock, name: string){
         this.clock = clock;
@@ -157,8 +157,8 @@ export class Clock {
     /**
      * ms based on the usual the UNIX epoch (January 1, 1970 00:00:00 UTC) 
      */
-    clockTimeMs: number;
-    realTimestampMs: number;
+    clockTimeMs!: number;
+    realTimestampMs!: number;
 
     /**
      * Default scale 1 is 1:1

@@ -1,10 +1,14 @@
 
+
+// Clean this up, this file is a heterogenous hodgepuge...
+
 function toRad(degrees:number): number{
     return degrees * Math.PI / 180;
 }
 
 
 
+// todo: move this directly where its uses
 class Dim {
     w: number;
     h: number;
@@ -22,6 +26,7 @@ class Dim {
 
 
 
+// todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
 export { Dim, toRad };

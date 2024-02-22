@@ -4,6 +4,7 @@ import { BodySystem } from "./BodySystem.ts";
 import { Body } from '../domain/Body.ts';
 import { throttle } from "../system/timing.ts";
 import { MOUSE_CLICK_ON_BODY_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
+import { VectorComponents } from "../domain/models.ts";
 
 export type PickerEvent = {
     body: Body | null;
@@ -25,7 +26,7 @@ export class Picker {
      * @param v  pointer position between [-1, 1] for x and y 
      * @returns picked body or null
      */
-    pick(v: Vector): Body | null {
+    pick(v: VectorComponents): Body | null {
         this.raycaster.setFromCamera(new Vector2(v.x, v.y), this.bodySystem.camera);
         const intersects = this.raycaster.intersectObjects(this.bodySystem.scene.children);
 

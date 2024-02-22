@@ -1,22 +1,23 @@
 
-type Vector = {
-    x: number,
-    y: number,
-    z: number
+
+interface VectorComponents{
+    x: number;
+    y: number;
+    z: number;
 }
 
 
 interface Axis {
     rotation: number
     //ICRS vector of the axis, body spins around this axis
-    direction: Vector
+    direction: VectorComponents
 }
 
 interface KinematicObject {
     name: string;
     axis?: Axis,
-    velocity: Vector
-    position: Vector;
+    velocity: VectorComponents
+    position: VectorComponents;
     datetime: Date;
   }
 
@@ -72,8 +73,8 @@ type BodyProperties = {
     parent: string;
     mass: number;
     radius: number;    
-    position?: Vector;
-    velocity?: Vector;
+    position?: VectorComponents;
+    velocity?: VectorComponents;
     
     /**
      * The orbital plane of this body in degrees. 
@@ -100,7 +101,7 @@ type BodyProperties = {
      * Period of rotation around axis in seconds
      */
     sideralRotationPeriod?: TimePeriod; 
-    sideralRotation?: Vector,    
+    sideralRotation?: VectorComponents,    
     lightProperties?: LightProperties;
     /**
      * Rings may be partitioned/broken into sections with different oribital periods..
@@ -112,4 +113,4 @@ type BodyProperties = {
 }
 
 
-export type { BodyType, RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod};
+export type { VectorComponents, BodyType, RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod };

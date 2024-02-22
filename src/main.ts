@@ -41,7 +41,7 @@ async function start(){
 
 try {
     start();
-}catch(err) {
+}catch(err: any) {
     console.error("Could not start application:"+ err.message)
 };
 
