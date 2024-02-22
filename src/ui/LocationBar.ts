@@ -1,5 +1,8 @@
 import { BodySystemOptionsState } from '../scene/BodySystem.ts'
 
+/**
+ * Manage history based on state being pushed. Users can also copy the location/share it.
+ */
 export default class LocationBar {
 
     static getState(): BodySystemOptionsState {

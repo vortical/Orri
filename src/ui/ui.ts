@@ -1,5 +1,3 @@
-// import './style.css'
-
 import { BodySystem } from '../scene/BodySystem.ts'
 import GUI from 'lil-gui';
 import PubSub from 'pubsub-js';
@@ -11,11 +9,13 @@ import { ClockTimeUpdateHandler } from './ClockTimeUpdateHandler.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { DataService } from '../services/dataservice.ts';
 
+/**
+ * A terse UI...
+ */ 
 export class SimpleUI {
 
     constructor(statusElement: HTMLElement, bodySystem: BodySystem, dataService: DataService) {
         buildLilGui(bodySystem, dataService);
-
         new StatusComponent(statusElement, bodySystem);
 
         // // Handle the history back button
@@ -27,11 +27,11 @@ export class SimpleUI {
     }
 }
 
-
 function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     const gui = new GUI().title("Settings");
     const bodyNames = bodySystem.bodies.map((b) => b.name);
 
+    // stored in the closure... not in class instance.
     let savedSettings = {};
 
     const options = {
@@ -63,7 +63,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         resetTimeScale() {
             timeScaleController.setValue(1);
             resetTimeScaleButton.disable();
-            
         }
     };
 
@@ -74,7 +73,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
             timeToNowButton.disable();
         }
     }
-
 
     function setSystemTime(datetime: string|Date){
         return new Promise(async (resolve) => {
@@ -110,7 +108,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
 
     timeScaleController.load
 
-
     const resetTimeScaleButton = gui.add(options, "resetTimeScale").name('Reset Time Scale');
     
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
@@ -119,7 +116,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     });
     
     gui.add(options, "pushStateToLocationBar").name('Push State to Location Bar and History');
-
 
     const scaleController = gui.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => {
@@ -136,7 +132,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
             bodySystem.setAmbiantLightLevel(v);
         });
     
-    
     const showAxesController = gui.add(options, "showAxes").name('ICRS Axes')
         .onChange((v: boolean) => {
             bodySystem.setAxesHelper(v);
@@ -152,7 +147,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     loadButton.disable();
     checkTimeToNowButtonState();
 
-
     PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event) => {
         if (event.body && options.target != event.body.name) {
             targetController.setValue(event.body.name).updateDisplay();
@@ -164,14 +158,13 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     return gui;
 }
 
-
 function formatDistance(distance: number): string {
     return Math.trunc(distance).toLocaleString();
 }
 
 /**
  * A poor man implementation of some status. 
- * todo: This type of information should be setup as an overlay over the 3d canvas.
+ * todo: This type of information should be setup as an overlay over the 3d canvas. Include body speeds etc...
  */
 class StatusComponent {
 
@@ -189,14 +182,11 @@ class StatusComponent {
         */
         
         const statusDivElement = document.createElement('div');
-
         const targetElement = document.createElement('div');
         const hoverElement = document.createElement('div');
-
         statusDivElement.appendChild(targetElement)
         statusDivElement.appendChild(document.createElement('br'));
         statusDivElement.appendChild(hoverElement);
-        
         element.appendChild(statusDivElement);
 
         bodySystem.controls.addEventListener("change", throttle(200, undefined, (e) => {
@@ -204,9 +194,7 @@ class StatusComponent {
             targetElement.innerHTML = targetText;
         }));
 
-
         PubSub.subscribe(MOUSE_HOVER_OVER_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-
             if (pickEvent.body) {
                 if (pickEvent.body != bodySystem.target) {
                     const hover_text = `Mouse over ${pickEvent.body!.name} at distance: ${formatDistance(bodySystem.getDistance(pickEvent.body))} km`;
@@ -215,23 +203,15 @@ class StatusComponent {
                     const hover_text = `This is your target ${pickEvent.body!.name}`;
                     hoverElement.innerHTML = hover_text
                 }
-
             } else {
                 hoverElement.innerHTML = '...';
             }
-
         });
 
-
         PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-
             if (pickEvent.body && pickEvent.body != bodySystem.target) {
                 bodySystem.setTarget(pickEvent.body, false);
             }
-
         });
     }
-
-
-
 }

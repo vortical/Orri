@@ -3,15 +3,12 @@ import { SYSTEM_TIME_TOPIC } from "../system/event-types";
 
 export class ClockTimeUpdateHandler {
     subscribtion: any;
-
     controller: Controller;
     _onFinishChange?: (v: string) => void;
-
     currentValue?: string;
 
     constructor(controller: Controller){
-        this.controller = controller;
-        
+        this.controller = controller;        
         this.subscribeToClockTime();
 
         // stop listening to clock when it gains focus
@@ -27,9 +24,7 @@ export class ClockTimeUpdateHandler {
             if (this.currentValue !== v){
                 this.currentValue = undefined;
                 this._onFinishChange && this._onFinishChange(v);
-
             }
-
         });
     }
 

@@ -79,11 +79,7 @@ export class DataService {
 
         let bodies = payloadBodies.map((payload) => new Body(payload));  
         return postCreate(bodies);
-
-      
     }
-  
-  
   }
 
 
