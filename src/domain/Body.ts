@@ -1,10 +1,9 @@
-import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three';
+import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
-import { Vec3D, Vector } from '../system/vecs.ts';
-import { RingProperties, BodyProperties, LightProperties, TimePeriod, KinematicObject, BodyType } from './models.ts';
-import { TimeUnit, timePeriodToMs, timePeriodToUnits } from '../system/timing.ts';
+import { Vector } from '../system/vecs.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents } from './models.ts';
+import { timePeriodToMs } from '../system/timing.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
-import { KnotCurve } from 'three/examples/jsm/curves/CurveExtras.js';
 
 /**
  * G is the universal gravitational constant 
@@ -21,7 +20,7 @@ const G: number = 6.674e-11;
 
 
 interface RotationCalculator {
-    (timeMs: number): Vec3D;
+    (timeMs: number): Vector;
 }
 
 class Body {
@@ -42,7 +41,7 @@ class Body {
     /** in meters
      * 
      */
-    position!: Vec3D;
+    position!: Vector;
 
     /**
      * angle of rotation around its axis (i.e. its time of day)
@@ -56,12 +55,12 @@ class Body {
     /**
      * in meters/s
      */
-    velocity!: Vec3D;
+    velocity!: Vector;
 
-    acceleration!: Vec3D;
+    acceleration!: Vector;
 
     // rotation angle along its obliquity axis.
-    sideralRotation: Vec3D;
+    sideralRotation!: Vector;
 
     // rotationQuaternion!: Quaternion; // using euler 
 
@@ -86,8 +85,8 @@ class Body {
 
         this.mass = mass;
         this.radius = radius;
-        this.position = Vec3D.fromVector(position)
-        this.velocity = Vec3D.fromVector(velocity)
+        this.position = Vector.fromVectorComponents(position)
+        this.velocity = Vector.fromVectorComponents(velocity)
         this.orbitInclination = orbitInclination;
         this.obliquityToOrbit = obliquityToOrbit;
 
@@ -110,19 +109,20 @@ class Body {
         }
 
         const parent = this.parent;
-        const parent_position = parent.position.toVector3();
-        const parent_velocity = parent.velocity.toVector3();
+        const parent_position = parent.position;
+        const parent_velocity = parent.velocity;
 
-        const this_position = this.position.toVector3();
-        const this_velocity = this.velocity.toVector3();
+        const this_position = this.position;
+        const this_velocity = this.velocity;
 
         // a- b
-        const rel_pos = new Vector3().subVectors(this_position, parent_position)
-        const rel_vel = new Vector3().subVectors(this_velocity, parent_velocity);
+        // const rel_pos = new Vector3().subVectors(this_position, parent_position)
+        // const rel_vel = new Vector3().subVectors(this_velocity, parent_velocity);
 
-        const cross = new Vector3().crossVectors(rel_pos, rel_vel)
-        const plane_norm = cross.normalize();
-        return plane_norm;
+        const rel_pos = Vector.substract(parent_position, this_position);
+        const rel_vel = Vector.substract(parent_velocity, this_velocity);
+
+        return new Vector3().crossVectors(rel_pos, rel_vel).normalize();
     }
 
 
@@ -133,16 +133,15 @@ class Body {
 
         const baseRotation = toRad(kinematics.axis?.rotation || 0);
 
-        this.axisDirection = kinematics.axis?.direction;
+        this.axisDirection = kinematics.axis? Vector.fromVectorComponents(kinematics.axis.direction) : undefined;
 
-        this.velocity = Vec3D.fromVector(kinematics.velocity);
-        this.position = Vec3D.fromVector(kinematics.position);
+        this.velocity = Vector.fromVectorComponents(kinematics.velocity);
+        this.position = Vector.fromVectorComponents(kinematics.position);
 
         this.rotationAtTime = function (periodMs: number) {
             return (timeMs: number) => {
                 const PI_2 = 2 * Math.PI;
-
-                return new Vec3D(0, (baseRotation + (PI_2 * (timeMs - baseTimeMs) / periodMs)) % PI_2, 0);
+                return new Vector(0, (baseRotation + (PI_2 * (timeMs - baseTimeMs) / periodMs)) % PI_2, 0);
             }
         }(this.sideralRotationPeriodMs);
     }
@@ -157,8 +156,8 @@ class Body {
      * @param body 
      * @returns Distance from this body to body 
      */
-    distanceTo(body: Body): Vec3D {
-        return Vec3D.substract(this.position, body.position);
+    distanceTo(body: Body): Vector {
+        return Vector.substract(this.position, body.position);
     }
 
     /**
@@ -166,18 +165,18 @@ class Body {
      * @param body1 
      * @param body2 
      */
-    static twoBodyForce(body1: Body, body2: Body): Vec3D {
+    static twoBodyForce(body1: Body, body2: Body): Vector {
         const vec = body1.distanceTo(body2);
-        const mag = Vec3D.magnitude(vec);
+        const mag = vec.magnitude();
 
         const numerator = G * body1.mass * body2.mass;
         const denominator = Math.pow(mag, 3);
 
-        return {
-            x: (numerator * vec.x) / denominator,
-            y: (numerator * vec.y) / denominator,
-            z: (numerator * vec.z) / denominator
-        };
+        return new Vector(
+            (numerator * vec.x) / denominator,
+            (numerator * vec.y) / denominator,
+            (numerator * vec.z) / denominator
+        );
     }
 
     /**
@@ -188,21 +187,12 @@ class Body {
      * @param body2 
      * @returns 2 Accelerations: [acceleration on body1, acceleration on body2]
      */
-    static twoBodyAccelerations(body1: Body, body2: Body): Map<string, Vec3D> {
+    static twoBodyAccelerations(body1: Body, body2: Body): Map<string, Vector> {
         const f = Body.twoBodyForce(body1, body2);
         return new Map(
             [
-                ["ij", {
-                    x: f.x / body1.mass,
-                    y: f.y / body1.mass,
-                    z: f.z / body1.mass
-                }],
-                ["ji", {
-                    x: -f.x / body2.mass,
-                    y: -f.y / body2.mass,
-                    z: -f.z / body2.mass
-
-                }]
+                ["ij", new Vector(f.x / body1.mass, f.y / body1.mass, f.z / body1.mass)],
+                ["ji", new Vector(-f.x / body2.mass, -f.y / body2.mass, -f.z / body2.mass)]
             ]);
     }
 
@@ -214,12 +204,12 @@ class Body {
      * @param time increment
      * @returns vo + acc * time
      */
-    nextSpeed(acc: Vec3D, time: number): Vec3D {
-        return {
-            x: this.velocity.x + acc.x * time,
-            y: this.velocity.y + acc.y * time,
-            z: this.velocity.z + acc.z * time
-        };
+    nextSpeed(acc: VectorComponents, time: number): Vector {
+        return new Vector(
+            this.velocity.x + acc.x * time,
+            this.velocity.y + acc.y * time,
+            this.velocity.z + acc.z * time
+        );
     }
 
     /**
@@ -230,14 +220,13 @@ class Body {
      * @param time 
      * @returns so + vo * t + a * (t * t)/2
      */
-    nextPosition(acc: Vec3D, time: number): Vec3D {
-        return {
-            x: this.position.x + (this.velocity.x * time) + (acc.x * time * time) / 2,
-            y: this.position.y + (this.velocity.y * time) + (acc.y * time * time) / 2,
-            z: this.position.z + (this.velocity.z * time) + (acc.z * time * time) / 2,
-        }
+    nextPosition(acc: VectorComponents, time: number): Vector {
+        return new Vector(
+            this.position.x + (this.velocity.x * time) + (acc.x * time * time) / 2,
+            this.position.y + (this.velocity.y * time) + (acc.y * time * time) / 2,
+            this.position.z + (this.velocity.z * time) + (acc.z * time * time) / 2,
+        );
     }
 }
 
 export { Body, G };
-// export type { MaterialProperties };

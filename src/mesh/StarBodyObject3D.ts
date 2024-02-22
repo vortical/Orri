@@ -1,8 +1,8 @@
 
-import { Body, MaterialProperties } from '../domain/Body.ts';
+import { Body } from '../domain/Body.ts';
+import { MaterialProperties } from '../domain/models.ts';
 import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3 } from "three";
-import { Object3DBuilder } from "./Object3DBuilder.ts";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 
@@ -29,7 +29,7 @@ function createSunMaterial(materialProperties: MaterialProperties): Material {
 
 }
 
-const createObject3D: Object3DBuilder = (body: Body): Object3D => {
+const createObject3D = (body: Body): Object3D => {
     const { name, radius, position } = body;
     const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
 

@@ -1,9 +1,9 @@
 import { Body } from '../domain/Body.ts';
-import { Vec3D } from '../system/vecs.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { zipCombine } from '../system/arrays.ts';
 import { Clock, TimeUnit, timeMsToUnits } from '../system/timing.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { VectorComponents } from '../domain/models.ts';
 
 /**
  * Each body in a system influences all other bodies, regardless of size and distance. 
@@ -84,9 +84,9 @@ class NBodySystemUpdater implements BodySystemUpdater {
      * @param bodies 
      * @returns each body's acceleration vector.
      */
-    function nBodyAccelerations(bodies: Body[]): Vec3D[] {
-      let accelerationContributions: Vec3D[][] = [];
-      let bodyAccelerations: Vec3D[] = [];
+    function nBodyAccelerations(bodies: Body[]): VectorComponents[] {
+      let accelerationContributions: VectorComponents[][] = [];
+      let bodyAccelerations: VectorComponents[] = [];
 
       for (let i = 0; i < bodies.length; i++) {
         for (let j = 0; j < bodies.length; j++) {

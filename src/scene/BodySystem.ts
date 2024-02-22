@@ -1,10 +1,10 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLight, HemisphereLight, Mesh, Object3D, PerspectiveCamera, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
-import { Dim, WindowSizeObserver, toRad } from '../system/geometry.ts';
+import { AmbientLight, AxesHelper, Camera, Color, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { Dim, WindowSizeObserver} from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 
-import { BodySystemUpdater, BodySystemUpdater } from '../body/BodySystemUpdater.ts';
+import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { throttle } from "../system/timing.ts";
 
@@ -12,13 +12,14 @@ import Stats from 'three/addons/libs/stats.module.js';
 
 import PubSub from 'pubsub-js';
 
-import { MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, SYSTEM_TIME_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
+import {BODY_SELECT_TOPIC } from '../system/event-types.ts';
 
-import { Clock, Timer } from '../system/timing.ts';
+import { Clock } from '../system/timing.ts';
 import { Vector } from '../system/vecs.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
+import { VectorComponents } from '../domain/models.ts';
 
 
 type Animator = (time: number) => boolean;
@@ -33,8 +34,8 @@ type BodySystemEvent = {
 
 export type BodySystemOptionsState = {
     date?: number;
-    cameraPosition?: Vector;
-    targetPosition?: Vector;
+    cameraPosition?: VectorComponents;
+    targetPosition?: VectorComponents;
     target?: string;
     sizeScale?: number;
     timeScale?: number;
@@ -56,7 +57,7 @@ export class BodySystem {
     bodyObjects3D: Map<string, BodyObject3D>;
     ambiantLight: AmbientLight;
     stats?: Stats;
-    target?: Body
+    target: Body
     scale: number = 1.0;
 
     clock: Clock;
@@ -91,13 +92,12 @@ export class BodySystem {
         this.controls = createControls(this.camera, this.renderer.domElement);
         this.controls.enabled = false;
 
-        targetPosition = targetPosition || {x: this.getBody(target).position.x/1000, y:0, z: 0}
-        cameraPosition = cameraPosition || {x: this.getBody(target).position.x/1000, y:0, z: this.getBody(target).radius/100};
+        this.target = this.getBody(target);
+        targetPosition = targetPosition || new Vector(this.getBody(target).position.x/1000, 0, 0);
+        cameraPosition = cameraPosition || new Vector(this.getBody(target).position.x/1000, 0, this.getBody(target).radius/100);
+
         this.setViewPosition(cameraPosition, targetPosition);
 
-        // this.camera.position.set(position.x, position.y, position.z!)
-
-        // this.viewTransitions = new ViewTransitions(this.camera, this.controls);
 
         this.ambiantLight = createAmbiantLight();
         this.scene.add(this.ambiantLight);
@@ -352,7 +352,7 @@ export class BodySystem {
         
     }
 
-    setViewPosition(cameraPosition: Vector, target: Vector){
+    setViewPosition(cameraPosition: VectorComponents, target: VectorComponents){
         this.controls.target.set(target.x, target.y, target.z!);        
         this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z!);
     }
