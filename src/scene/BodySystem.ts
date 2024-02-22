@@ -456,7 +456,7 @@ function createScene(): Scene {
     return scene;
 }
 
-function createCamera({fov=35, aspectRatio=1.0, near=1000, far=15000000000}={}): PerspectiveCamera {
+function createCamera({fov=35, aspectRatio=1.0, near=500, far=13000000000}={}): PerspectiveCamera {
     const camera = new PerspectiveCamera(
         fov, 
         aspectRatio, 

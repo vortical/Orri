@@ -9,6 +9,9 @@ import { KinematicObject } from '../domain/models.ts';
 
 //https://planet-texture-maps.fandom.com/wiki/Callisto
 // move this to the server, this will be served up
+
+// would be nice to be able to have various resolutions that can be pulled
+
 const meshProperties = {
   solarSystem: [
     {
@@ -18,10 +21,18 @@ const meshProperties = {
     },
     {
       name: "Earth",
-      textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
-      normalUri: "/assets/textures/planets/earth_normal_2048.jpg",
+      // textureUri: "/assets/textures/planets/earthmap4k.jpg",
+      bumpMapUri: "/assets/textures/planets/earthbump4k.jpg",
+      specularMapUri: "/assets/textures/planets/earthspec4k.jpg",
+      
+      textureUri: "/assets/textures/planets/8081_earthmap10k.jpg",
+      
+
+      // textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
+      
+      // normalUri: "/assets/textures/planets/earth_normal_2048.jpg",
       atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png",
-      specularMapUri: "/assets/textures/planets/earth_specular_2048.jpg"
+      // specularMapUri: "/assets/textures/planets/earth_specular_2048.jpg"
     },
     {
       name: "moon",
