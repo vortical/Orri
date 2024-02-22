@@ -19,17 +19,24 @@ class NBodySystemUpdater implements BodySystemUpdater {
   isEnabled = true;
 
 
-  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
+  /**
+   * TO do, all updates should be put in webworkers. Each layer can be done in parallel in its 
+   * own webworker. (we have one layer, so not needed yet)
+   * 
 
-    // each update can handle a step of about 600 seconds (todo: configure a stability param, we handle 
-    // orbital steps of planets at 30 days per second on one pass...)
-    // so if a timestep is 6000, then we loop 10 times for each 600.
+   * @param bodyObject3Ds 
+   * @param timestepMs 
+   * @param clock 
+   * @returns 
+   */
+  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
+    // Generally, for celestial bodies, a step of about 600 seconds is pretty stable (make this configurable)
+    // break down the update so that we don't exceed maxStableTimestepMs per update.
+    // if this is exceeded, then break down the update into 'iterations' loops.
 
     const maxStableTimestepMs = 600 * 1000; // make this adjustable.
     const iterations = Math.ceil(timestepMs / maxStableTimestepMs);
     const stableTimeStep = timestepMs / iterations;
-
-
     const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
 
     for (let i = 0; i < iterations; i++) {
@@ -43,7 +50,6 @@ class NBodySystemUpdater implements BodySystemUpdater {
     bodyObject3Ds.forEach(b => b.update());
     return bodyObject3Ds;
   }
-
 
   /**
    * 
