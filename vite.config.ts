@@ -1,5 +1,20 @@
-import { defineConfig } from 'vite'
+/** @type {import('vite').UserConfig} */
 
-export default defineConfig({
-  // ...todo: setup configs and bases
-})
+import { defineConfig, loadEnv } from 'vite'
+
+export default defineConfig(({ command, mode }) => {
+    // Load env file based on `mode` in the current working directory.
+    // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+    const env = loadEnv(mode, process.cwd(), '')
+
+    if (command === 'serve') {
+        return {};
+    } else {
+        // return {};        
+        // command === 'build'
+        return {
+            base: "/StarForge/"
+        }
+    }
+
+});

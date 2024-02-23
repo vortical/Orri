@@ -28,6 +28,7 @@ async function start(){
 }
 
 try {
+    const environment = import.meta.env;
     start();
 }catch(err: any) {
     console.error("Could not start application:"+ err.message)
