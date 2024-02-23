@@ -13,7 +13,7 @@ const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const statusElement =document.querySelector<HTMLInputElement>("#status-container")!;
 
 async function start(){
-    const dataService = new DataService(config.spacefield_host)
+    const dataService = new DataService(config.spacefield_host, config.baseUrl);
     const bodySystemUpdater = new NBodySystemUpdater();
     const options = LocationBar.getState();
     const date = options.date ? new Date(options.date): new Date()
@@ -28,7 +28,7 @@ async function start(){
 }
 
 try {
-    const environment = import.meta.env;
+    console.log(`Starting with config: \n${JSON.stringify(config)}`);
     start();
 }catch(err: any) {
     console.error("Could not start application:"+ err.message)

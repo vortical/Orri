@@ -5,10 +5,19 @@ import { Vector } from "../system/vecs.ts";
 
 export class DataService {
     host: string;
+    assetsBaseUrl: string
   
   
-    constructor(host: string) {
+    /**
+     * assetsBaseUrl is location of data on the client. This is temporary until
+     * we move all this to server.
+     * 
+     * @param host 
+     * @param assetsBaseUrl 
+     */
+    constructor(host: string, assetsBaseUrl: string = "/") {
       this.host = host;
+      this.assetsBaseUrl = assetsBaseUrl
     }
     
     async loadKinematicObject(name: string, time: Date): Promise<KinematicObject> {
@@ -66,7 +75,7 @@ export class DataService {
 
         }
         
-        const response = await fetch("/assets/datasmall.json").catch((err: Error) => {
+        const response = await fetch(`${this.assetsBaseUrl}assets/datasmall.json`).catch((err: Error) => {
             console.error(err);
             throw new Error(`Could not load body data: could not fetch data ${err.message}`);
         })

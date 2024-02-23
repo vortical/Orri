@@ -1,17 +1,20 @@
 /** @type {import('vite').UserConfig} */
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ command, mode }) => {
-    // Load env file based on `mode` in the current working directory.
-    // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
 
-    // if (command === 'serve') {
-    //     return {};
-    // } else {
-    //     // return {};        
-    //     // command === 'build'
-    return {
-        base: "/StarForge/"
-    }
+    // rely on the .env, .env.development, .env.production files for our configs
+
+    const env = loadEnv(mode, process.cwd(), '')
+    const baseurl_path = env.VITE_BASEURL_PATH;
+
+    // The vite config, just the stuff vite needs to serve/build
+    const vitconfig = {
+        base: baseurl_path
+    };
+
+    console.log(JSON.stringify(vitconfig));
+
+    return vitconfig;
 });
