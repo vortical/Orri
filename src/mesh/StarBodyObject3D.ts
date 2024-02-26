@@ -4,9 +4,14 @@ import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, Material, TextureLoader, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3 } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
+import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+
 
 const textureLoader = new TextureLoader();
 
+// this this for a flare effect and it uses fly control which I love
+
+// https://threejs.org/examples/#webgl_lensflares
 function createSunMaterial(materialProperties: MaterialProperties): Material {
     return new MeshBasicMaterial( { 
         map: materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined,
@@ -27,6 +32,21 @@ const createObject3D = (body: Body): Object3D => {
     const { color = "white", intensity = 1.2, distance = 0, decay = 0.06 } = body.lightProperties!;
     const light = new PointLight(color, intensity, distance, decay);
     const bodymesh = new Object3D();
+
+    // const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0.png' );
+    const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0_alpha.png' );
+    // const textureFlare3 = textureLoader.load( '/assets/textures/lensflare/lensflare3.png' );
+
+    const lensflare = new Lensflare();
+    // TODO: // make this element resizable
+    lensflare.addElement( new LensflareElement( textureFlare0, 100, 0, light.color ) );
+    
+    // lensflare.addElement( new LensflareElement( textureFlare3, 60, 0.6 ) );
+    // lensflare.addElement( new LensflareElement( textureFlare3, 70, 0.7 ) );
+    // lensflare.addElement( new LensflareElement( textureFlare3, 120, 0.9 ) );
+    // lensflare.addElement( new LensflareElement( textureFlare3, 70, 1 ) );
+    light.add( lensflare );
+
     
     light.add(surfacemesh);
 

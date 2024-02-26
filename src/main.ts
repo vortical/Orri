@@ -12,6 +12,9 @@ import { BodiesAtTimeUpdater } from './body/BodiesAtTimeUpdater.ts';
 const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const statusElement =document.querySelector<HTMLInputElement>("#status-container")!;
 
+
+// here is an html overlay renderer (CSS2DRenderer)
+//https://threejs.org/examples/#css2d_label
 async function start(){
     const dataService = new DataService(config.spacefield_host, config.baseUrl);
     const bodySystemUpdater = new NBodySystemUpdater();
