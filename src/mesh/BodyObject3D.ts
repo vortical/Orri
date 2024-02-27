@@ -2,20 +2,23 @@
 import { Object3D } from 'three';
 import { Body } from '../domain/Body.ts';
 import { toRad } from '../system/geometry.ts';
+import { BodySystem } from '../scene/BodySystem.ts';
 
 
 abstract class BodyObject3D {
     object3D: Object3D;
     body: Body;
+    bodySystem: BodySystem;
 
-    constructor(body: Body){
+    constructor(body: Body, bodySystem: BodySystem){
         this.body = body;
+        this.bodySystem = bodySystem;
         this.object3D = this.createObject3D(body)
     }
 
     abstract createObject3D(body: Body): Object3D;
 
-    name(): string {
+    getName(): string {
         return this.body.name;
     }
 
@@ -27,6 +30,18 @@ abstract class BodyObject3D {
         this.body = body;
     }
 
+    getObject3D(): Object3D {
+        if(this.body === undefined){
+            this.object3D = this.createObject3D(this.body);
+        }
+        return this.object3D;
+        
+    }
+
+    /**
+     * Calling this after making changes to the underlying body properties
+     * will update the 3d properties of the Obect3D
+     */
     update(){
         const body = this.body;
         this.object3D.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);

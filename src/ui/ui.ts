@@ -42,6 +42,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         fov: bodySystem.getFov(),
         backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
         showAxes: bodySystem.hasAxesHelper(),
+        // showShadows:  this is whewre I am 
         showStats: bodySystem.hasStats(),
         saveUISettings() {
             savedSettings = gui.save();
@@ -149,7 +150,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
 
     PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event) => {
         if (event.body && options.target != event.body.name) {
-            targetController.setValue(event.body.name).updateDisplay();
+            targetController.setValue(event.body.getName()).updateDisplay();
         }
     });
 

@@ -5,6 +5,7 @@
 const config = {
     spacefield_host: import.meta.env.VITE_EPHEMERIDS_HOST || "vortical.hopto.org:8000",
     baseUrl: import.meta.env.BASE_URL || "/",
+
 };
     
 

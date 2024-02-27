@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -7,7 +7,7 @@ import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { throttle } from "../system/timing.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
-import { BODY_SELECT_TOPIC } from '../system/event-types.ts';
+import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
 import { Clock } from '../system/timing.ts';
 import { Vector } from '../system/vecs.ts';
 import { Picker } from './Picker.ts';
@@ -15,10 +15,12 @@ import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
 import { VectorComponents } from '../domain/models.ts';
 
-type BodySystemEvent = {
+export type BodySystemEvent<T> = {
     topic: string;
-    message: any;
+    message: T;
 };
+
+
 
 export type BodySystemOptionsState = {
     date?: number;
@@ -111,6 +113,16 @@ export class BodySystem {
         return this.camera.position.distanceTo(targetPosition.divideScalar(1000));
     }
 
+    // fix... bodyObject3D vs Object3D is not something we should deal with
+    getBodyObject3D(name: string): BodyObject3D {
+        return this.bodyObjects3D.get(name.toLowerCase())!
+    }
+    // fix... bodyObject3D vs Object3D is not something we should deal with
+    getObject3D(name: string): Object3D {
+        return this.bodyObjects3D.get(name.toLowerCase())!.object3D;
+    }
+
+    //fix...see above
     getBody(name: string): Body {
         return this.bodyObjects3D.get(name.toLowerCase())!.body;
     }
@@ -193,6 +205,15 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
     }
 
+
+    /**
+     * todo, set target vs get target... not same type
+     */
+    getBodyObject3DTarget(): BodyObject3D {
+        const targetBody = this.target;
+        return this.getBodyObject3D(targetBody.name);
+    }
+
     /**
      * todo: this algorythm should be something dynamic/variable
      * 
@@ -205,7 +226,10 @@ export class BodySystem {
         }
 
         if (this.target != body) {
-            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: body } });
+            // um if the target is really changed ... then we also fire an event.
+            // this method needs to be modified as its used for both changing the target
+            // and point the camera/controls to the target.
+            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });
         }
 
         this.target = body;
@@ -235,7 +259,7 @@ export class BodySystem {
         this.setTarget(body, true);
     }
 
-    fireEvent(event: BodySystemEvent) {
+    fireEvent(event: BodySystemEvent<BodySelectEventMessageType>) {
         PubSub.publish(event.topic, event.message);
     }
 
@@ -278,6 +302,20 @@ export class BodySystem {
     render() {
         this.renderer.render(this.scene, this.camera);
     }
+
+
+    /**
+     * Build a map-of(name->BodyObject3D) from a Body[]
+     * 
+     * @param bodies 
+     * @returns Map<string, BodyObject3D> 
+     */
+    createObjects3D(bodies: Body[]): Map<string, BodyObject3D> {
+        return bodies.reduce(
+        (m: Map<string, BodyObject3D>, body: Body) => m.set(body.name.toLowerCase(), BodyObject3DFactory.create(body)),
+        new Map<string, BodyObject3D>()
+    );
+}
 }
 
 function createAmbiantLight(ambientLightLevel: number) {

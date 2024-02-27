@@ -74,7 +74,7 @@ export class DataService {
 
 
         }
-        
+
         const response = await fetch(`${this.assetsBaseUrl}assets/datasmall.json`).catch((err: Error) => {
             console.error(err);
             throw new Error(`Could not load body data: could not fetch data ${err.message}`);
