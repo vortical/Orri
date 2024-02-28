@@ -31,7 +31,7 @@ abstract class BodyObject3D {
     }
 
     getObject3D(): Object3D {
-        if(this.body === undefined){
+        if(this.object3D === undefined){
             this.object3D = this.createObject3D(this.body);
         }
         return this.object3D;

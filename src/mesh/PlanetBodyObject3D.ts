@@ -1,6 +1,6 @@
 import { Body } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry } from "three";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { MaterialProperties } from '../domain/models.ts';
@@ -18,6 +18,7 @@ function createAtmosphereMateriel(textureUri: string) {
 
 function createBodySurfaceMaterial(materialProperties: MaterialProperties): Material {
     
+    
     const params: MeshPhongMaterialParameters = {
         map: materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined,
         normalMap: materialProperties.normalUri? textureLoader.load(materialProperties.normalUri) : undefined,
@@ -26,6 +27,7 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
         color: materialProperties.color 
     }
 
+    // const material = new MeshLambertMaterial();
     const material = new MeshPhongMaterial(params);
     return material;
 }
@@ -53,6 +55,8 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
             const verticeAngle = verticePosition.angleTo(angle);
             const distanceFromCenter = verticePosition.fromBufferAttribute(positions, i).length();
             mesh.geometry.attributes.uv.setXY(i, Math.abs(distanceFromCenter) < midpoint ? 0 : 1, verticeAngle/Math.PI);
+            
+            
         }
         return mesh;
     }
@@ -76,6 +80,9 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
         });
       
         const mesh = new Mesh(geometry, material);
+        // mesh.receiveShadow = body.receiveShadow;
+        // mesh.castShadow = body.castShadow;
+    
         return adjustTextureUV(mesh, (r.minRadius/1000 + r.maxRadius/1000)/2);
     });
  }
@@ -89,6 +96,7 @@ const createObject3D = (body: Body) => {
     const material = createBodySurfaceMaterial(materialProperties);
     const surfacemesh = new Mesh(geometry, material);
 
+
     if (materialProperties.atmosphereUri) {
         const altitude = 15; //  km
         const atmosphereMesh = new Mesh(
@@ -98,12 +106,17 @@ const createObject3D = (body: Body) => {
         // hack hack...  todo: reference the body object 3D into 'parts', not just three.js 3d objects with user data to identify them.
         // e.g.: atmosphere, surface (roads etc...) 
         atmosphereMesh.userData = {type: "atmosphere"};
+        // todo: An atmosphere cast shadows upon the surface, That would be cool to consider
+        atmosphereMesh.receiveShadow = body.receiveShadow;
+        atmosphereMesh.castShadow = body.castShadow;
         surfacemesh.add(atmosphereMesh);
     }
 
+    // todo: give the name to the bodyMesh Object
     surfacemesh.name = body.name;
     const ringMeshes = createRingMeshes(body);
-    const bodymesh = new Object3D();
+    // const bodymesh = new Object3D();
+    const bodymesh = new Group();
     
     // TODO: put all this this logic in axis.direction
     if(body.axisDirection !== undefined){
@@ -119,7 +132,11 @@ const createObject3D = (body: Body) => {
         bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
     }
     
+    surfacemesh.receiveShadow = body.receiveShadow;
+    surfacemesh.castShadow = body.castShadow;
+
     bodymesh.add(surfacemesh);
+
     ringMeshes?.forEach((ringMesh) => surfacemesh.add(ringMesh))
     ringMeshes?.forEach((ringMesh) => ringMesh.rotation.set(-Math.PI/2, 0, 0));
     return bodymesh;

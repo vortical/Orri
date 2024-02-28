@@ -73,6 +73,9 @@ type BodyProperties = {
     parent: string;
     mass: number;
     radius: number;    
+    castShadow: boolean;
+    receiveShadow: boolean;
+    
     position?: VectorComponents;
     velocity?: VectorComponents;
     

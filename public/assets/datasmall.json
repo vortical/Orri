@@ -4,6 +4,8 @@
         "name":"Sun", 
         "mass": 1.989e30, 
         "radius": 696.34e6, 
+        "castShadow": false,
+        "receiveShadow": false,
 
         "obliquityToOrbit": 7.25,
         "sideralRotationPeriod": {"days": 25} ,
@@ -16,6 +18,8 @@
         "parent": "Sun",
         "mass": 3.3022e23, 
         "radius": 2.44e6, 
+        "castShadow": false,
+        "receiveShadow": false,
 
         "orbitInclination": 7.005, 
         "obliquityToOrbit": 0.034,
@@ -29,6 +33,8 @@
         "parent": "Sun",
         "mass": 4.869e24, 
         "radius": 6.05e6, 
+        "castShadow": false,
+        "receiveShadow": false,
 
         "orbitInclination": 3.39, 
         "obliquityToOrbit": 177.4,
@@ -42,6 +48,8 @@
         "parent": "Sun",
         "mass": 5.9736e24, 
         "radius": 6.378e6, 
+        "castShadow": false,
+        "receiveShadow": true,
 
         "orbitInclination": 0, 
         "obliquityToOrbit": 23.44,
@@ -53,6 +61,8 @@
         "parent": "Earth",
         "mass": 7.3477e22, 
         "radius": 1.737400e6, 
+        "castShadow": true,
+        "receiveShadow": false,
 
         "orbitInclination":5.145, 
         "obliquityToOrbit": 1.5424,
@@ -65,6 +75,8 @@
         "parent": "Sun",
         "mass": 6.4185e23, 
         "radius": 3.185500e6, 
+        "castShadow": false,
+        "receiveShadow": false,
 
         "orbitInclination": 1.8, 
         "obliquityToOrbit": 25.2,
@@ -77,6 +89,8 @@
         "parent": "Sun",
         "mass": 1898e24, 
         "radius": 71.492e6, 
+        "castShadow": false,
+        "receiveShadow": true,
         
 
         "orbitInclination": 1.3, 
@@ -100,7 +114,8 @@
         "parent": "Jupiter",
         "mass": 8.932e22, 
         "radius": 1.8213e6, 
-        "notes": "Using Average distance and speed.",
+        "castShadow": true,
+        "receiveShadow": false,
 
         "orbitInclination": 0.036, 
         "obliquityToOrbit": 0,
@@ -113,7 +128,8 @@
         "parent": "Jupiter",
         "mass": 4.8e22, 
         "radius": 1.561e6, 
-        "notes": "Using Average distance and speed.",        
+        "castShadow": true,
+        "receiveShadow": false,
 
         "orbitInclination": 0.47, 
         "obliquityToOrbit": 0,
@@ -126,7 +142,9 @@
         "parent": "Jupiter",
         "mass": 14.819e22, 
         "radius": 2.6341e6, 
-        "notes": "Using Average distance and speed.",
+        "castShadow": true,
+        "receiveShadow": false,
+
 
         "orbitInclination": 0.2, 
         "obliquityToOrbit": 0,
@@ -139,7 +157,8 @@
         "parent": "Jupiter",
         "mass": 10.76e22, 
         "radius": 2.41e6, 
-        "notes": "Using Average distance and speed.",
+        "castShadow": true,
+        "receiveShadow": false,
 
         "orbitInclination": 2.02, 
         "obliquityToOrbit": 0,
@@ -153,6 +172,8 @@
         "parent": "Sun",
         "mass": 568e24, 
         "radius": 60.268e6,
+        "castShadow": false,
+        "receiveShadow": true,
 
         "orbitInclination": 2.486, 
         "obliquityToOrbit": 26.73,
@@ -176,6 +197,8 @@
         "parent": "Sun",
         "mass": 86.8e24, 
         "radius": 25.559000e6, 
+        "castShadow": false,
+        "receiveShadow": false,
 
         "orbitInclination": 0.770, 
         "obliquityToOrbit": 97.77,
@@ -198,8 +221,8 @@
         "parent": "Sun",
         "mass": 102e24, 
         "radius": 24.764e6, 
-        "position": {"x": 0, "y":0, "z":4471050e6}, 
-        "speed": {"x": 5470, "y": 0, "z": 0},
+        "castShadow": false,
+        "receiveShadow": false,
 
         "orbitInclination": 1.77, 
         "obliquityToOrbit": 28.32,
@@ -212,8 +235,8 @@
         "parent": "Sun",
         "mass": 0.01303e24, 
         "radius": 1.188e6, 
-        "position": {"x": 0, "y":0, "z":4434987e6}, 
-        "speed": {"x": 6100, "y": 0, "z": 0},
+        "castShadow": false,
+        "receiveShadow": false,
 
         "orbitInclination": 17.16, 
         "obliquityToOrbit": 119.51,

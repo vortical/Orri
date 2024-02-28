@@ -38,6 +38,10 @@ class Body {
      */
     radius: number;
 
+    castShadow: boolean;
+
+    receiveShadow: boolean;
+
     /** in meters
      * 
      */
@@ -78,13 +82,16 @@ class Body {
     color: string;
 
 
-    constructor({ type, name, parent, mass, radius, position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings }: BodyProperties) {
+    constructor({ type, name, parent, mass, radius, castShadow=false, receiveShadow=false,position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parent;
 
         this.mass = mass;
         this.radius = radius;
+        this.castShadow = castShadow;
+        this.receiveShadow = receiveShadow;
+        
         this.position = Vector.fromVectorComponents(position)
         this.velocity = Vector.fromVectorComponents(velocity)
         this.orbitInclination = orbitInclination;
