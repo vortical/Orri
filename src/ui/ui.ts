@@ -38,11 +38,13 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         date: "",
         target: bodySystem.target?.name || "",
         timeScale: bodySystem.getTimeScale(),
+
         sizeScale: 1.0,
         fov: bodySystem.getFov(),
         backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
         showAxes: bodySystem.hasAxesHelper(),
         // showShadows:  this is whewre I am 
+        projectShadows: bodySystem.areShadowsEnabled(),
         showStats: bodySystem.hasStats(),
         saveUISettings() {
             savedSettings = gui.save();
@@ -122,6 +124,14 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         .onChange((v: number) => {
             bodySystem.setScale(v);
         });
+    
+
+    const projectShadowsController = gui.add(options, "projectShadows").name('Cast Shadows')
+        .onChange((v: boolean) => {
+            bodySystem.setShadowsEnabled(v);
+        });
+
+
     
     const fovController = gui.add(options, "fov", 10, 70, 0.5).name('Field Of Vue')
         .onChange((v: number) => {
