@@ -6,17 +6,15 @@ import { BodySystem } from '../scene/BodySystem.ts';
 
 
 abstract class BodyObject3D {
-    object3D: Object3D;
+    abstract object3D: Object3D;
     body: Body;
     bodySystem: BodySystem;
 
     constructor(body: Body, bodySystem: BodySystem){
         this.body = body;
         this.bodySystem = bodySystem;
-        this.object3D = this.createObject3D(body)
     }
 
-    abstract createObject3D(body: Body): Object3D;
 
     getName(): string {
         return this.body.name;
@@ -30,13 +28,13 @@ abstract class BodyObject3D {
         this.body = body;
     }
 
-    getObject3D(): Object3D {
-        if(this.object3D === undefined){
-            this.object3D = this.createObject3D(this.body);
-        }
-        return this.object3D;
+    // getObject3D(): Object3D {
+    //     if(this.object3D === undefined){
+    //         this.object3D = this.createObject3D(this.body);
+    //     }
+    //     return this.object3D;
         
-    }
+    // }
 
     /**
      * Calling this after making changes to the underlying body properties

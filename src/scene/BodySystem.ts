@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -33,6 +33,7 @@ export type BodySystemOptionsState = {
     fov?: number;
     ambientLightLevel?: number;
     showAxes?: boolean;
+    castShadows?: boolean;
 }
 
 export class BodySystem {
@@ -54,7 +55,7 @@ export class BodySystem {
     lightHelper?: DirectionalLightHelper;
 
 
-    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.015, showAxes = false, date = Date.now() }: BodySystemOptionsState) {
+    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.015, showAxes = false, date = Date.now(), castShadows = false}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;
         this.clock = new Clock(date);
@@ -85,6 +86,7 @@ export class BodySystem {
         this.setSize(canvasSize);
         this.picker = new Picker(this);
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
+        this.setShadowsEnabled(castShadows);
     }
 
     setState(state: Required<BodySystemOptionsState>) {
@@ -101,6 +103,7 @@ export class BodySystem {
         options.fov = this.getFov();
         options.ambientLightLevel = this.getAmbiantLightLevel();
         options.showAxes = this.hasAxesHelper();
+        options.castShadows = this.areShadowsEnabled();
         options.date = this.clock.getTime();
         return options;
     }
@@ -140,17 +143,17 @@ export class BodySystem {
         starBodies.forEach(it => it.setShadowsEnabled(value));
 
         
-        if(value){
-            const light = (this.getBodyObject3D("sun") as StarBodyObject3D).shadowingLight!;
-            const lightHelper = new DirectionalLightHelper(light, 400000);
-            this.lightHelper = lightHelper;
-            lightHelper.update();
-            this.scene.add( lightHelper );
+        // if(value){
+        //     const light = (this.getBodyObject3D("sun") as StarBodyObject3D).shadowingLight!;
+        //     const lightHelper = new DirectionalLightHelper(light, 400000);
+        //     this.lightHelper = lightHelper;
+        //     lightHelper.update();
+        //     this.scene.add( lightHelper );
 
-        }else{
-            this.lightHelper?.removeFromParent();
-            this.lightHelper?.dispose();
-        }
+        // }else{
+        //     this.lightHelper?.removeFromParent();
+        //     this.lightHelper?.dispose();
+        // }
 
       
     }
@@ -327,7 +330,7 @@ export class BodySystem {
             await this.tick(delta);
             this.followTarget(this.target);
             this.controls.update();
-            this.lightHelper?.update();
+            // this.lightHelper?.update();
             this.render();
             this.updateStats();
         });
@@ -371,18 +374,7 @@ function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObs
         ));
 }
 
-// /**
-//  * Build a map-of(name->BodyObject3D) from a Body[]
-//  * 
-//  * @param bodies 
-//  * @returns Map<string, BodyObject3D> 
-//  */
-// function createObjects3D(bodies: Body[]): Map<string, BodyObject3D> {
-//     return bodies.reduce(
-//         (m: Map<string, BodyObject3D>, body: Body) => m.set(body.name.toLowerCase(), BodyObject3DFactory.create(body)),
-//         new Map<string, BodyObject3D>()
-//     );
-// }
+
 
 function createScene(): Scene {
     const scene = new Scene();
@@ -402,8 +394,10 @@ function createCamera({ fov = 35, aspectRatio = 1.0, near = 500, far = 130000000
 function createRenderer(): WebGLRenderer {
     const renderer  = new WebGLRenderer({ antialias: true });
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = PCFSoftShadowMap; 
-    renderer.cul
+    // renderer.shadowMap.type = PCFSoftShadowMap; 
+    renderer.shadowMap.type = PCFShadowMap;
+
+    // renderer.cul
     return renderer
 }
 

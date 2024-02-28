@@ -1,12 +1,12 @@
 import { Body } from '../domain/Body.ts';
-import { MaterialProperties } from '../domain/models.ts';
+import { LightProperties, MaterialProperties } from '../domain/models.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Camera, PerspectiveCamera, DirectionalLightHelper } from "three";
+import { Mesh, Material, TextureLoader, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Camera, PerspectiveCamera, DirectionalLightHelper, Group } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
-import { BodySystem, BodySystemEvent } from '../scene/BodySystem.ts';
+import { BodySystem } from '../scene/BodySystem.ts';
 
 
 const textureLoader = new TextureLoader();
@@ -43,40 +43,48 @@ class DirectionLightTargetListener {
     }
 }
 
+const defaultLightProperties: Required<LightProperties> = {
+    color:  "white",
+    intensity: 1.5,
+    distance: 0,
+    decay: 0.0
+};
+
+
+const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
 
 class StarBodyObject3D extends BodyObject3D {
-    // shadowsEnabled: boolean = false;
-
-    pointLight: PointLight;
+    object3D: Object3D;
+    pointLight!: PointLight;
     shadowingLight?: DirectionalLight;
-
     shadowingLightTargetListener: DirectionLightTargetListener;
+    lightProperties: Required<LightProperties>;
 
     constructor(body: Body, bodySystem: BodySystem){
         super(body, bodySystem);
-
-        this.pointLight = this.getObject3D().getObjectByName("pointlight") as PointLight;
-
+        this.lightProperties = {...defaultLightProperties, ...body.lightProperties};
+        this.object3D  = this.init();        
         this.shadowingLightTargetListener = new DirectionLightTargetListener(this);
     }
 
-    createObject3D(body: Body): Object3D {
+    init() {
 
         function createSunMaterial(materialProperties: MaterialProperties): Material {
             return new MeshBasicMaterial( { 
                 map: materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined,
                 color: "white",
                  
-            }  );
+            } );
         }
+
         function createFlares(size: number, color: any): Lensflare {
             const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0_alpha.png' );
             const lensflare = new Lensflare();
             lensflare.addElement( new LensflareElement( textureFlare0, 110, 0, color ) );
             return lensflare;        
         }
-    
-        const { name, radius } = body;
+        
+        const { name, radius } = this.body;
         const widthSegements = 64;
         const heightSegments = 32;
         const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
@@ -92,77 +100,99 @@ class StarBodyObject3D extends BodyObject3D {
 
         // Create the underlying pointlight along with flares, this is our
         // only source of light when shadows are disabled.
-        const { color = "white", intensity = 1.5, distance = 0, decay = 0.00 } = body.lightProperties!;
-        const light = new PointLight(color, intensity, distance, decay);
-        light.name = "pointlight";
-        const lensflare = createFlares(100, light.color);
+        this.pointLight = new PointLight(this.lightProperties.color, this.lightProperties.intensity, this.lightProperties.distance, this.lightProperties.decay);
         
-        light.add(lensflare );
-        light.add(surfacemesh);
+        this.pointLight.name = "pointlight";
+        const lensflare = createFlares(100, this.pointLight.color);
         
-        const bodymesh = new Object3D();
+        this.pointLight.add(lensflare );
+        this.pointLight.add(surfacemesh);
+        
+        const bodymesh = new Group();
 
         // Align it local axis
-        if(body.axisDirection !== undefined){
+        if(this.body.axisDirection !== undefined){
             // rotate body so axis is normal to its orbital plane (i.e.: equatorial = orbital/ecliptic)
-            const axis = body.axisDirection!;
+            const axis = this.body.axisDirection!;
             bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
             
         }else{
             // We tilt the body using the body's obliquity arbitrarily tilt the body using 
-            const rotation =body.obliquityOrientation();
+            const rotation = this.body.obliquityOrientation();
             bodymesh.applyQuaternion(rotation);
-            const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
+            const body_orbital_norm = this.body.get_orbital_plane_normal() || new Vector3(0,1,0);
             bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
         }
         
-        bodymesh.add(light);
+        bodymesh.add(this.pointLight );
         return bodymesh;
     }
     
 
     createShadowLight(): DirectionalLight{
 
-        const SHADOW_MAP_SIZE = 2048*4;
+        const SHADOW_MAP_SIZE = 2048*16;
 
-        const { color = "white", intensity = 1.5 } = this.body.lightProperties!;
+        const { color, intensity } = this.lightProperties;
         const light = new DirectionalLight(color, intensity);
         light.castShadow = true;
 
-        // this will need to calcualted?
-        const shadowCameraSize = 150000; // 100,000k ... just need to keep this value as small as possible as resolution wil drop off
-
+        const shadowCameraSize = 80000; // ~jupiter radius size...
         light.shadow.camera.top = shadowCameraSize;
         light.shadow.camera.bottom = -shadowCameraSize;
         light.shadow.camera.left = -shadowCameraSize;
         light.shadow.camera.right = shadowCameraSize;
 
         light.shadow.bias = 0.0001;
-        light.shadow.radius = 5
-        light.shadow.blurSamples = 8
+        light.shadow.radius = 3;
+        light.shadow.blurSamples = 8;
     
         light.shadow.mapSize.width = SHADOW_MAP_SIZE;
         light.shadow.mapSize.height = SHADOW_MAP_SIZE;
     
-        light.shadow.camera.near = this.bodySystem.camera.near; //scaleUnit(Math.max(1, maxPos/1000));
-        light.shadow.camera.far = this.bodySystem.camera.far;//scaleUnit(maxPos);        
+        light.shadow.camera.near = this.bodySystem.camera.near; 
+        light.shadow.camera.far = this.bodySystem.camera.far;
         this.shadowingLight = light;
         this.object3D.add(light);
 
         return light;
-
-
-
-
-        // we need target that is in the scene
-        // Documentation states:
-        // the target's {@link THREE.Object3D.matrixWorld | matrixWorld} gets automatically updated each frame
-        // (if the target object is in the scene.)
-        // return light;
-
     }
 
-    // will need a listener to the target!
+    
+    getLightIntensity(): number {
+        return this.lightProperties.intensity;
+    }
+
+    setLightIntensity(level: number){        
+        this.lightProperties.intensity = level;        
+    }
+
+
+
+    areShadowsEnabled(): boolean {
+        return this.shadowingLight !== undefined;
+    }
+
+
+
+    /**
+     * The shadowingLight and pointlight's intensities have a total value of this.lightProperties.intensity.
+     * When shadowingLight is active, it will have SHADOW_LIGHT_TO_POINT_LIGHT_RATIO; hence if its total intensity is 3 and the ratio is 2,
+     * shadowlight will have intensity 2 and pointlight will have intensity 1.
+     * 
+     * This measure determines how much light remains in shadowed areas; a ratio of 2 means that non shadowed areas
+     * will be twice as intense as shadowed areas.
+     */
+    #updateLightIntensities(){
+        if (this.areShadowsEnabled()){
+            this.shadowingLight!.intensity = SHADOW_LIGHT_TO_POINT_LIGHT_RATIO * this.lightProperties.intensity / (1 + SHADOW_LIGHT_TO_POINT_LIGHT_RATIO);
+            this.pointLight.intensity = 1 * this.lightProperties.intensity / (1 + SHADOW_LIGHT_TO_POINT_LIGHT_RATIO);
+        }else{
+            this.pointLight.intensity = this.lightProperties.intensity;
+        }
+    }
+
+
     #disableShadowLight() {
         if (!this.areShadowsEnabled()){
             return;
@@ -171,7 +201,8 @@ class StarBodyObject3D extends BodyObject3D {
         this.shadowingLight?.removeFromParent();
         this.shadowingLight?.dispose();
         this.shadowingLight = undefined;
-        this.pointLight.intensity = 1.5;
+        this.#updateLightIntensities();
+        // this.pointLight.intensity = this.lightProperties.intensity;
     }
 
     #enableShadowLight() {
@@ -184,12 +215,9 @@ class StarBodyObject3D extends BodyObject3D {
         const target = this.bodySystem.getBodyObject3DTarget().object3D;
         light.target = target;
         this.shadowingLight = light;
-        this.pointLight.intensity = 0.00;
+        this.#updateLightIntensities();
+        // this.pointLight.intensity = 0.00;
 
-    }
-
-    areShadowsEnabled(): boolean {
-        return this.shadowingLight !== undefined;
     }
 
     setShadowsEnabled(value: boolean): StarBodyObject3D {

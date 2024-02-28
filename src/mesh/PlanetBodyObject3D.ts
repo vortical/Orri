@@ -4,6 +4,7 @@ import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParamet
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { MaterialProperties } from '../domain/models.ts';
+import { BodySystem } from '../scene/BodySystem.ts';
 
 
 const textureLoader = new TextureLoader();
@@ -143,8 +144,16 @@ const createObject3D = (body: Body) => {
 }    
 
 class PlanetaryBodyObject3D extends BodyObject3D {
-    createObject3D(body: Body): Object3D{
-        return createObject3D(body)
+
+    object3D: Object3D;
+
+    constructor(body: Body, bodySystem: BodySystem){
+        super(body, bodySystem);
+        this.object3D = this.init();
+    }
+
+    init(): Object3D{
+        return createObject3D(this.body)
     }
 }
 
