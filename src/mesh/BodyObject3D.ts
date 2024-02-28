@@ -53,7 +53,7 @@ abstract class BodyObject3D {
             if(c.children && c.children.length==1){
                 if(c.children[0].userData?.type === "atmosphere"){
                     // fake this for now
-                   c.children[0].rotateY(toRad(0.001));
+                   c.children[0].rotateY(toRad(0.0015));
                 }
             }
         }))

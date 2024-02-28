@@ -1,6 +1,6 @@
 import { Body } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide } from "three";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide, Vector2 } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { MaterialProperties } from '../domain/models.ts';

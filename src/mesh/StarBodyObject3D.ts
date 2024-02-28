@@ -45,7 +45,7 @@ class DirectionLightTargetListener {
 
 const defaultLightProperties: Required<LightProperties> = {
     color:  "white",
-    intensity: 1.5,
+    intensity: 1.2,
     distance: 0,
     decay: 0.0
 };
@@ -159,13 +159,13 @@ class StarBodyObject3D extends BodyObject3D {
     }
 
     
-    getLightIntensity(): number {
-        return this.lightProperties.intensity;
-    }
+    // getLightIntensity(): number {
+    //     return this.lightProperties.intensity;
+    // }
 
-    setLightIntensity(level: number){        
-        this.lightProperties.intensity = level;        
-    }
+    // setLightIntensity(level: number){        
+    //     this.lightProperties.intensity = level;        
+    // }
 
 
 

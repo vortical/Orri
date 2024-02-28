@@ -21,11 +21,11 @@ const meshProperties = {
     },
     {
       name: "Earth",
-      // textureUri: "/assets/textures/planets/earthmap4k.jpg",
+      textureUri: "/assets/textures/planets/earthmap4k.jpg",
       bumpMapUri: "/assets/textures/planets/earthbump4k.jpg",
       specularMapUri: "/assets/textures/planets/earthspec4k.jpg",
       
-      textureUri: "/assets/textures/planets/8081_earthmap10k.jpg",
+      // textureUri: "/assets/textures/planets/8081_earthmap10k.jpg",
       
 
       // textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
