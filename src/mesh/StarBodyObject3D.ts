@@ -84,6 +84,7 @@ class StarBodyObject3D extends BodyObject3D {
     getFlare(scale: number): Lensflare {
         // Closest and diff needs to be > 0
         // todo: just use a for loop, return as soon as condition is met given (they are!) the flares are ordered...
+        // scale *= 2;
         const closest = this.flares.reduce((prev, cur) =>  (cur.scale - scale > 0) && (Math.abs(cur.scale - scale) < Math.abs(prev.scale - scale))? cur: prev, this.flares[0]);
         return closest.lensflare;
     }
