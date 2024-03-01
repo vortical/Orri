@@ -7,6 +7,7 @@ import { BodyObject3D } from './BodyObject3D.ts';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
+import { Dim, getMeshScreenSize, getObjectScreenSize } from '../system/geometry.ts';
 
 
 const textureLoader = new TextureLoader();
@@ -21,6 +22,9 @@ const textureLoader = new TextureLoader();
  * 
  * 
  */
+
+const FLARE_TEXTURE_SIZE = 512;
+const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
 
 
 class DirectionLightTargetListener {
@@ -50,21 +54,38 @@ const defaultLightProperties: Required<LightProperties> = {
     decay: 0.0
 };
 
+class ScaledLensflare{
+    scale: number;
+    lensflare: Lensflare;
 
-const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
+    constructor(scale: number, lensflare: Lensflare){
+        this.scale = scale;
+        this.lensflare = lensflare
+    }
+}
 
 class StarBodyObject3D extends BodyObject3D {
     object3D: Object3D;
     pointLight!: PointLight;
     shadowingLight?: DirectionalLight;
+    lensflare?: Lensflare;
     shadowingLightTargetListener: DirectionLightTargetListener;
     lightProperties: Required<LightProperties>;
+    surfaceMesh!: Mesh;
+    flares: ScaledLensflare[] = [];
 
     constructor(body: Body, bodySystem: BodySystem){
         super(body, bodySystem);
         this.lightProperties = {...defaultLightProperties, ...body.lightProperties};
         this.object3D  = this.init();        
         this.shadowingLightTargetListener = new DirectionLightTargetListener(this);
+    }
+
+    getFlare(scale: number): Lensflare {
+        // Closest and diff needs to be > 0
+        // todo: just use a for loop, return as soon as condition is met given (they are!) the flares are ordered...
+        const closest = this.flares.reduce((prev, cur) =>  (cur.scale - scale > 0) && (Math.abs(cur.scale - scale) < Math.abs(prev.scale - scale))? cur: prev, this.flares[0]);
+        return closest.lensflare;
     }
 
     init() {
@@ -77,13 +98,27 @@ class StarBodyObject3D extends BodyObject3D {
             } );
         }
 
-        function createFlares(size: number, color: any): Lensflare {
+        function createFlares(color: any): ScaledLensflare[] {
             const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0_alpha.png' );
-            const lensflare = new Lensflare();
-            lensflare.addElement( new LensflareElement( textureFlare0, 110, 0, color ) );
-            return lensflare;        
+            const flares = [];
+
+            // 50 textures spread out betwen a max and min scale (log curve)
+            const nbflares = 50;
+            const maxScaleValue = 10;
+            const minScaleValue = 0.005;
+            const step = (Math.log(maxScaleValue) - Math.log(minScaleValue))/(nbflares - 1);
+            for(let i =0; i < nbflares; i++){
+                const scale = Math.exp(Math.log(minScaleValue) + i * step);
+                const lensflare = new Lensflare();
+                lensflare.addElement( new LensflareElement( textureFlare0, 512*scale, 0, color ) );
+                const scaledFlare = new ScaledLensflare(scale, lensflare)
+                lensflare.visible = false;
+                flares.push(scaledFlare);
+            }
+            return flares;
         }
         
+
         const { name, radius } = this.body;
         const widthSegements = 64;
         const heightSegments = 32;
@@ -97,17 +132,19 @@ class StarBodyObject3D extends BodyObject3D {
         });        
         const surfacemesh = new Mesh(geometry, material);
         surfacemesh.name = name;
+        this.surfaceMesh = surfacemesh;
 
         // Create the underlying pointlight along with flares, this is our
         // only source of light when shadows are disabled.
         this.pointLight = new PointLight(this.lightProperties.color, this.lightProperties.intensity, this.lightProperties.distance, this.lightProperties.decay);
         
         this.pointLight.name = "pointlight";
-        const lensflare = createFlares(100, this.pointLight.color);
+        this.flares = createFlares(this.pointLight.color);
         
-        this.pointLight.add(lensflare );
+        this.pointLight.add(...(this.flares.map(it => it.lensflare)));
         this.pointLight.add(surfacemesh);
         
+
         const bodymesh = new Group();
 
         // Align it local axis
@@ -173,14 +210,13 @@ class StarBodyObject3D extends BodyObject3D {
         return this.shadowingLight !== undefined;
     }
 
-
-
     /**
      * The shadowingLight and pointlight's intensities have a total value of this.lightProperties.intensity.
      * When shadowingLight is active, it will have SHADOW_LIGHT_TO_POINT_LIGHT_RATIO; hence if its total intensity is 3 and the ratio is 2,
      * shadowlight will have intensity 2 and pointlight will have intensity 1.
      * 
-     * This measure determines how much light remains in shadowed areas; a ratio of 2 means that non shadowed areas
+     * This measure determines how much light remains in shadowed areas (pointlight will illuminate shadowed areas
+     * as it is disabled for shadows); a ratio of 2 means that non shadowed areas
      * will be twice as intense as shadowed areas.
      */
     #updateLightIntensities(){
@@ -227,68 +263,45 @@ class StarBodyObject3D extends BodyObject3D {
             this.#disableShadowLight();
         }
         return this;
+    }
 
-            
-        // }
-        // if(this.shadowingLight){
-        //     return this;
-        // }
 
-        // this.shadowsEnabled = value;
-        // const light = this.createShadowLight();
-        // light.target = this.bodySystem.getBodyObject3DTarget().object3D;
-        // this.shadowingLight = light;
-        // return this;
+    /**
+     * Lensflare arent the usual mesh with an inherent geometry. They have a static size (they are 2d and designed to 
+     * emulate flare on the camera lens). So we pre-created a set of flares with different sizes. 
+     * 
+     * For every frame rendered, we determine the desired scale of a flare and ensure it is visible while
+     * disabling other flares.
+     */
+    updateLensflareSize(){
+
+        function computeFlareScaleForStarSize(bodysizePixels: Dim): number {
+            // the texture size is 512, and the center part of it (i.e. 2/29 or ~7%) represents the actual body.
+            // so given a passed in body size, we determine the scale value of this texture.            
+            const centerBodySize = FLARE_TEXTURE_SIZE * 2/29; // ~35 pixels - 7%
+            const scale = Math.max(bodysizePixels.w, bodysizePixels.h) / centerBodySize;
+            return scale;
+        }
+
+        const starSizePixels: Dim = getObjectScreenSize(new Dim(this.body.radius*2/1000,this.body.radius*2/1000), this.object3D.position, this.bodySystem.camera, this.bodySystem.getSize());
+        const scale = computeFlareScaleForStarSize(starSizePixels);
+        const flare = this.getFlare(scale);
+
+        if(this.lensflare !==  flare){
+            if(this.lensflare){
+                this.lensflare.visible = false;
+                console.log("switch flare for scale:"+scale);
+            }
+            this.lensflare = flare;
+            this.lensflare.visible = true;
+        }
+    }
+
+
+    update(): void {
+        super.update();
+        this.updateLensflareSize();        
     }
 }
 
 export { StarBodyObject3D };
-
-            // const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0.png' );
-            // const textureFlare3 = textureLoader.load( '/assets/textures/lensflare/lensflare3.png' );
-        
-            // TODO: // make this element resizable
-            
-            // lensflare.addElement( new LensflareElement( textureFlare3, 60, 0.6 ) );
-            // lensflare.addElement( new LensflareElement( textureFlare3, 70, 0.7 ) );
-            // lensflare.addElement( new LensflareElement( textureFlare3, 120, 0.9 ) );
-            // lensflare.addElement( new LensflareElement( textureFlare3, 70, 1 ) );
-
-
-
-
-// function createSunMaterial(materialProperties: MaterialProperties): Material {
-//     return new MeshBasicMaterial( { 
-//         map: materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined,
-//         color: "white",
-         
-//     }  );
-// }
-
-// // TODO: // make this element resizable
-// function createFlares(size: number, color: any): Lensflare {
-
-//         // const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0.png' );
-//         const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0_alpha.png' );
-//         // const textureFlare3 = textureLoader.load( '/assets/textures/lensflare/lensflare3.png' );
-    
-//         const lensflare = new Lensflare();
-//         // TODO: // make this element resizable
-//         lensflare.addElement( new LensflareElement( textureFlare0, 100, 0, color ) );
-        
-//         // lensflare.addElement( new LensflareElement( textureFlare3, 60, 0.6 ) );
-//         // lensflare.addElement( new LensflareElement( textureFlare3, 70, 0.7 ) );
-//         // lensflare.addElement( new LensflareElement( textureFlare3, 120, 0.9 ) );
-//         // lensflare.addElement( new LensflareElement( textureFlare3, 70, 1 ) );
-//         return lensflare;
-    
-// }
-
-// create ShadowLighting(){
-
-//     const light = new DirectionalLight(0xffffff, config.intensity);
-//     light.position.set(this.position[0], this.position[0], this.position[2]);
-//     light.castShadow = enableShadow;
-
-
-// }

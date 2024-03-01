@@ -53,6 +53,7 @@ export class BodySystem {
     axesHelper?: AxesHelper;
     parentElement: HTMLElement;
     lightHelper?: DirectionalLightHelper;
+    size!: Dim;
 
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.015, showAxes = false, date = Date.now(), castShadows = false}: BodySystemOptionsState) {
@@ -304,7 +305,20 @@ export class BodySystem {
         PubSub.publish(event.topic, event.message);
     }
 
+    /**
+     * 
+     * @returns screen size
+     */
+    getSize(): Dim {
+        return this.size;
+    }
+
+    /**
+     * 
+     * @param size screen size
+     */
     setSize(size: Dim) {
+        this.size = size;
         this.camera.aspect = size.ratio();
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(size.w, size.h);
