@@ -40,7 +40,7 @@ abstract class BodyObject3D {
      * Calling this after making changes to the underlying body properties
      * will update the 3d properties of the Obect3D
      */
-    update(){
+    update(): void {
         const body = this.body;
         this.object3D.position.set(body.position.x/1000, body.position.y/1000, body.position.z/1000);
 
@@ -56,8 +56,7 @@ abstract class BodyObject3D {
                    c.children[0].rotateY(toRad(0.0015));
                 }
             }
-        }))
-        return this;
+        }));
     }    
 }
 
