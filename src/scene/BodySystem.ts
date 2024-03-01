@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Renderer, Scene, TextureLoader, Vector3, WebGLRenderer } from 'three';
 import { Dim, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -15,6 +15,16 @@ import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
 import { VectorComponents } from '../domain/models.ts';
 import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+
+
+
+
+export enum CameraLayer {
+    NameLabel=2,
+    InfoLabel=3
+}
+
 
 export type BodySystemEvent<T> = {
     topic: string;
@@ -54,7 +64,7 @@ export class BodySystem {
     parentElement: HTMLElement;
     lightHelper?: DirectionalLightHelper;
     size!: Dim;
-
+    labelRenderer: CSS2DRenderer;
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.015, showAxes = false, date = Date.now(), castShadows = false}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
@@ -65,9 +75,18 @@ export class BodySystem {
         this.camera = createCamera();
         this.scene = createScene();
         this.renderer = createRenderer();
+
+        document.body.appendChild(this.renderer.domElement);
         parentElement.append(this.renderer.domElement);
+
+        this.labelRenderer = createLabelRender();
+
+//        document.body.appendChild(this.labelRenderer.domElement);
+        parentElement.append(this.labelRenderer.domElement);
+
+
         this.bodyObjects3D = this.createObjects3D(this.bodies);
-        this.controls = createControls(this.camera, this.renderer.domElement);
+        this.controls = createControls(this.camera, this.labelRenderer.domElement);
         this.controls.enabled = false;
         this.target = this.getBody(target);
         targetPosition = targetPosition || new Vector(this.getBody(target).position.x / 1000, 0, 0);
@@ -107,6 +126,22 @@ export class BodySystem {
         options.castShadows = this.areShadowsEnabled();
         options.date = this.clock.getTime();
         return options;
+    }
+
+    isLayerEnabled(layer: CameraLayer): boolean {
+        return this.camera.layers.isEnabled(layer);
+    }
+
+    setLayerEnabled(value: boolean, layer: CameraLayer){
+        if(value){
+            if(!this.isLayerEnabled(layer)){
+                this.camera.layers.enable(layer);
+            }
+        }else{
+            if(this.isLayerEnabled(layer)){
+                this.camera.layers.disable(layer);
+            }
+        }
     }
 
     setCameraUp(v: Vector3 = new Vector3(0, 1, 0)) {
@@ -323,6 +358,7 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(size.w, size.h);
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.labelRenderer.setSize(size.w, size.h);
         this.render();
     }
 
@@ -335,6 +371,7 @@ export class BodySystem {
 
     start() {
         this.clock.enableTimePublisher(true);
+        //this.camera.layers.enableAll();
         this.render();
         const timer = this.clock.startTimer("AnimationTimer");
         this.controls.enabled = true;
@@ -357,6 +394,7 @@ export class BodySystem {
 
     render() {
         this.renderer.render(this.scene, this.camera);
+        this.labelRenderer.render(this.scene, this.camera);
     }
 
 
@@ -415,8 +453,17 @@ function createRenderer(): WebGLRenderer {
     return renderer
 }
 
-function createControls(camera: Camera, canvas: HTMLCanvasElement): OrbitControls {
-    const controls = new OrbitControls(camera, canvas);
+
+function createLabelRender(): CSS2DRenderer {
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+
+    return labelRenderer;
+}
+
+function createControls(camera: Camera, domElement: HTMLElement): OrbitControls {
+    const controls = new OrbitControls(camera, domElement);
     controls.enableDamping = true;
     return controls;
 }

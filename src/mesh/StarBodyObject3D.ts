@@ -40,7 +40,7 @@ const defaultLightProperties: Required<LightProperties> = {
 };
 
 class StarBodyObject3D extends BodyObject3D {
-    object3D: Object3D;
+    // object3D: Object3D;
     pointLight!: PointLight;
     shadowingLight?: DirectionalLight;
     shadowingLightTargetListener: DirectionLightTargetListener;
@@ -75,7 +75,7 @@ class StarBodyObject3D extends BodyObject3D {
         this.flareEffect = new FlareEffect(this);//createFlares(this.pointLight.color);
         this.pointLight.add(surfacemesh);
 
-        const bodymesh = new Group();
+        const bodymesh =this.object3D;
 
         // Align it local axis
         if (this.body.axisDirection !== undefined) {
@@ -92,7 +92,7 @@ class StarBodyObject3D extends BodyObject3D {
         }
 
         bodymesh.add(this.pointLight);
-        this.object3D = bodymesh;
+        
     }
 
     createShadowLight(): DirectionalLight {

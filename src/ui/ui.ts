@@ -1,4 +1,4 @@
-import { BodySystem } from '../scene/BodySystem.ts'
+import { BodySystem, CameraLayer } from '../scene/BodySystem.ts'
 import GUI from 'lil-gui';
 import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
@@ -43,7 +43,10 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         fov: bodySystem.getFov(),
         backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
         showAxes: bodySystem.hasAxesHelper(),
-        // showShadows:  this is whewre I am 
+        
+        showNameLabels: bodySystem.isLayerEnabled(CameraLayer.NameLabel),
+        showInfoLabels: bodySystem.isLayerEnabled(CameraLayer.InfoLabel),
+        
         projectShadows: bodySystem.areShadowsEnabled(),
         showStats: bodySystem.hasStats(),
         saveUISettings() {
@@ -125,6 +128,15 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
             bodySystem.setScale(v);
         });
     
+    const showNameLabelsController = gui.add(options, "showNameLabels").name('Show Names')
+        .onChange((v: boolean) => {
+            bodySystem.setLayerEnabled(v, CameraLayer.NameLabel);
+        });    
+
+    const showInfoLabelsController = gui.add(options, "showInfoLabels").name('Show Info')
+        .onChange((v: boolean) => {
+            bodySystem.setLayerEnabled(v, CameraLayer.InfoLabel);
+        });    
 
     const projectShadowsController = gui.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => {
