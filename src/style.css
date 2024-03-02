@@ -7,6 +7,13 @@ html, body {
   overflow: hidden;
 }
 
+.selectedSystemLabel {
+  color: #217049;
+  font-family: sans-serif;
+  padding: 2px;
+  background: rgba( 0, 0, 0, .6 );  text-align: right;
+}
+
 
 .label {
   color: #979797;
@@ -16,13 +23,6 @@ html, body {
   text-align: right;
 }
 
-.infolabel {
-  color: #979797;
-  font-family: sans-serif;
-  padding: 2px;
-  background: rgba( 0, 0, 0, .6 );
-  text-align: right;
-}
 
 #scene-container {
  /* tell our scene container to take up the full page */

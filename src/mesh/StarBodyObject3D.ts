@@ -5,7 +5,7 @@ import { Mesh, TextureLoader, SphereGeometry, PointLight, Object3D, MeshBasicMat
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
-import { BodySystem } from '../scene/BodySystem.ts';
+import { BodySystem, CameraLayer } from '../scene/BodySystem.ts';
 import { FlareEffect } from './FlareEffect.ts';
 
 
@@ -191,6 +191,11 @@ class StarBodyObject3D extends BodyObject3D {
         super.update();
         this.flareEffect.update();
     }
+
+    planetarySystem(): BodyObject3D{
+        return this;
+    }
+
 }
 
 export { StarBodyObject3D };

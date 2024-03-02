@@ -62,7 +62,7 @@ type RingProperties = {
     colorMapUri?: string;
 };
 
-type BodyType = "star" | "planet" ;
+type BodyType = "star" | "planet" | "moon" ;
 
 
 

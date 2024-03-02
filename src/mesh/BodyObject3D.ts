@@ -72,23 +72,63 @@ abstract class BodyObject3D {
             }
         }));
        
-        this.updateLabels();
+        this.updateLabelsInvoker();
         
     }
-    
+
     /**
-     * Throttle this to 5 times a second, else it would be updated
-     * for every frame.
+     * 
+     * Limit the label updates to 30 per second.
+     * 
      */
-    updateLabels = throttle(200, this, () => {
+    updateLabelsInvoker =  throttle(100, this, () => this.updateLabels());
+    
+
+    updateLabels(){
+
+        console.log("base update labels")
+        // we only show moon/satellite labels if the that system is selected else from a distance they are all in the same 
+        // area and unreadable
+
+        const currentTarget = this.bodySystem.getBodyObject3DTarget();
+        // how do we know this is a moon?
+        // the body has a parent and its not a sun
+        
+        if(this.body.planetarySystem() == currentTarget.body.planetarySystem()){
+            if(this.bodySystem.isLayerEnabled(CameraLayer.NameLabel)){
+                this.labels.name.element.className = 'selectedSystemLabel';                    
+            }
+
+            if(this.bodySystem.isLayerEnabled(CameraLayer.InfoLabel)){
+                this.labels.info.element.className = 'selectedSystemLabel';                    
+            }
+        }else {
+            if(this.bodySystem.isLayerEnabled(CameraLayer.NameLabel)){
+                this.labels.name.element.className = 'label';                    
+            }
+            if(this.bodySystem.isLayerEnabled(CameraLayer.InfoLabel)){
+                this.labels.info.element.className = 'label';                    
+            }
+
+        }
         if(this.bodySystem.isLayerEnabled(CameraLayer.InfoLabel)){
             this.labels.info.element.textContent = formatNumber(this.distanceFromCamera()).concat(" km");
         }
-    });
+    };
 
     distanceFromCamera(): number {
         return this.bodySystem.camera.position.distanceTo(this.object3D.position);
     }
+
+    formattedDistanceFromCamera(): string {
+        return formatNumber(this.distanceFromCamera()).concat(" km");
+
+    }
+
+    planetarySystem(): BodyObject3D{
+        return this;
+    }
+
 
 }
 
@@ -110,7 +150,7 @@ function createLabel(bodyObject3D: BodyObject3D): ObjectLabels{
     bodyNameDiv.style.backgroundColor = 'transparent';
 
     const bodyInfoDiv = document.createElement( 'div' );
-    bodyInfoDiv.className = 'infolabel';
+    bodyInfoDiv.className = 'label';
     bodyInfoDiv.textContent = formatNumber(bodyObject3D.distanceFromCamera()).concat(" km");
     bodyInfoDiv.style.backgroundColor = 'transparent';
 

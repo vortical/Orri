@@ -66,7 +66,7 @@ export class BodySystem {
     size!: Dim;
     labelRenderer: CSS2DRenderer;
 
-    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.015, showAxes = false, date = Date.now(), castShadows = false}: BodySystemOptionsState) {
+    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;
         this.clock = new Clock(date);
