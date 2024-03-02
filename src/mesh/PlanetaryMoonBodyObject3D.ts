@@ -19,7 +19,7 @@ export class PlanetaryMoonBodyObject3D extends PlanetaryBodyObject3D {
             const currentTarget = this.bodySystem.getBodyObject3DTarget();
 
             // busyness as usual!
-            if(this.body.planetarySystem() == currentTarget.body.planetarySystem()){
+            if(this.body.planetarySystem() == currentTarget.body.planetarySystem() && this.distanceFromCamera() < 35000000){
                 this.labels.name.element.textContent = this.getName();
                 super.updateLabels();
             } else {

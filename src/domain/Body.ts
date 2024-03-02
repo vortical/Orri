@@ -160,6 +160,24 @@ class Body {
 
     /**
      * 
+     * A planetary system is a planet with its moons. E.g. Earth planetary system is set
+     * of bodies that include Moon and Earth.
+     * 
+     * @returns Planetary System this body belongs to.
+     */
+    planetarySystem(): Body {
+        switch(this.type){
+            case "planet" : 
+                return this;                
+            case "star":
+                return this;
+            case "moon":
+                return this.parent!;
+        }
+    }
+
+    /**
+     * 
      * @param body 
      * @returns Distance from this body to body 
      */

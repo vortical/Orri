@@ -93,94 +93,6 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
  }
 
 
-// const createObject3D = (body: Body) => {
-//     const materialProperties = meshProperties.solarSystem.find((b) => b.name.toLocaleLowerCase() == body.name.toLowerCase())!;
-//     const widthSegements = 64;
-//     const heightSegments = 48;
-//     const geometry = new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
-//     const material = createBodySurfaceMaterial(materialProperties);
-//     const surfacemesh = new Mesh(geometry, material);
-
-
-//     if (materialProperties.atmosphereUri) {
-//         const altitude = 15; //  km
-//         const atmosphereMesh = new Mesh(
-//             new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR + altitude, widthSegements, heightSegments),
-//             createAtmosphereMateriel(materialProperties.atmosphereUri)
-//         );
-//         // hack hack...  todo: reference the body object 3D into 'parts', not just three.js 3d objects with user data to identify them.
-//         // e.g.: atmosphere, surface (roads etc...) 
-//         atmosphereMesh.userData = {type: "atmosphere"};
-//         // todo: An atmosphere cast shadows upon the surface, That would be cool to consider
-//         atmosphereMesh.receiveShadow = body.receiveShadow;
-//         atmosphereMesh.castShadow = body.castShadow;
-//         surfacemesh.add(atmosphereMesh);
-//     }
-
-//     // todo: give the name to the bodyMesh Object
-//     surfacemesh.name = body.name;
-//     const ringMeshes = createRingMeshes(body);
-//     // const bodymesh = new Object3D();
-//     const bodymesh = new Group();
-    
-//     // TODO: put all this this logic in axis.direction
-//     if(body.axisDirection !== undefined){
-//         // rotate body so axis is normal to its orbital plane (i.e.: equatorial = orbital/ecliptic)
-//         const axis = body.axisDirection!;
-//         bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
-    
-//     }else{
-//         // We tilt the body using the body's obliquity arbitrarily tilt the body using 
-//         const rotation =body.obliquityOrientation();
-//         bodymesh.applyQuaternion(rotation);
-//         const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
-//         bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
-//     }
-    
-//     surfacemesh.receiveShadow = body.receiveShadow;
-//     surfacemesh.castShadow = body.castShadow;
-
-//     bodymesh.add(surfacemesh);
-
-//     ringMeshes?.forEach((ringMesh) => surfacemesh.add(ringMesh))
-//     ringMeshes?.forEach((ringMesh) => ringMesh.rotation.set(-Math.PI/2, 0, 0));
-//     return bodymesh;
-// }    
-
-// type ObjectLabels = {
-//     name: CSS2DObject, 
-//     info: CSS2DObject
-// };
-
-// function formatNumber(n: number): string {
-//     return Math.trunc(n).toLocaleString();
-
-// }
-
-// function createLabel(bodyObject3D: BodyObject3D): ObjectLabels{
-//     const bodyNameDiv = document.createElement( 'div' );
-//     bodyNameDiv.className = 'label';
-//     bodyNameDiv.textContent = bodyObject3D.getName();
-//     bodyNameDiv.style.backgroundColor = 'transparent';
-
-//     const bodyInfoDiv = document.createElement( 'div' );
-//     bodyNameDiv.className = 'infolabel';
-
-//     bodyNameDiv.textContent = formatNumber(bodyObject3D.distanceFromCamera()).concat(" km");
-//     bodyNameDiv.style.backgroundColor = 'transparent';
-
-//     const objectNameLabel = new CSS2DObject( bodyNameDiv );
-//     objectNameLabel.center.set( 0, 1 );
-//     objectNameLabel.layers.set( NAME_LABEL_LAYER);
-
-//     const objectInfoLabel = new CSS2DObject( bodyInfoDiv );
-//     objectNameLabel.center.set( 0, 1 );
-//     objectNameLabel.layers.set( INFO_LABEL_LAYER);
-
-//     return {name: objectNameLabel, info: objectInfoLabel};
-
-// }
-
 
 
 class PlanetaryBodyObject3D extends BodyObject3D {
@@ -247,6 +159,9 @@ class PlanetaryBodyObject3D extends BodyObject3D {
     update(): void {
         super.update();
     }
+
+
+
 }
 
 export { PlanetaryBodyObject3D };
