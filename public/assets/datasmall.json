@@ -56,7 +56,7 @@
         "sideralRotationPeriod": {"hours": 23, "minutes":56, "seconds":4.0905}
     },
     {
-        "type": "planet",
+        "type": "moon",
         "name": "Moon", 
         "parent": "Earth",
         "mass": 7.3477e22, 
@@ -109,7 +109,7 @@
     },
 
     {
-        "type": "planet",
+        "type": "moon",
         "name": "Io", 
         "parent": "Jupiter",
         "mass": 8.932e22, 
@@ -123,7 +123,7 @@
     },
 
     {
-        "type": "planet",
+        "type": "moon",
         "name": "Europa", 
         "parent": "Jupiter",
         "mass": 4.8e22, 
@@ -137,7 +137,7 @@
     },
 
     {
-        "type": "planet",
+        "type": "moon",
         "name": "Ganymede", 
         "parent": "Jupiter",
         "mass": 14.819e22, 
@@ -152,7 +152,7 @@
     },
 
     {
-        "type": "planet",
+        "type": "moon",
         "name": "Callisto", 
         "parent": "Jupiter",
         "mass": 10.76e22, 
