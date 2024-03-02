@@ -10,8 +10,6 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const textureLoader = new TextureLoader();
 
-// const NAME_LABEL_LAYER=1;
-// const INFO_LABEL_LAYER=2;
 
 function createAtmosphereMateriel(textureUri: string) {
     return new MeshPhongMaterial({
@@ -93,12 +91,8 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
  }
 
 
-
-
 class PlanetaryBodyObject3D extends BodyObject3D {
 
-    // object3D: Object3D;
-    // labels: ObjectLabels;
     constructor(body: Body, bodySystem: BodySystem){
         super(body, bodySystem);
 
@@ -152,15 +146,11 @@ class PlanetaryBodyObject3D extends BodyObject3D {
     
         ringMeshes?.forEach((ringMesh) => surfacemesh.add(ringMesh))
         ringMeshes?.forEach((ringMesh) => ringMesh.rotation.set(-Math.PI/2, 0, 0));
-
     }
-
  
     update(): void {
         super.update();
     }
-
-
 
 }
 
