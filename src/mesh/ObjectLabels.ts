@@ -30,7 +30,7 @@ class ObjectLabels{
     setupLabelClickHandler(){
         const handler = () => {
             console.log("Set as target: "+this.bodyObject3D.getName());
-            // this.bodyObject3D.setAsTarget();
+            this.bodyObject3D.setAsTarget()
         };
     
         this.objectNameLabel.element.addEventListener("pointerdown", handler);
