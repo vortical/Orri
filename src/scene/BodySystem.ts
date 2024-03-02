@@ -195,7 +195,7 @@ export class BodySystem {
     }
 
     /**
-     * @returns true if all light sources areShadowsEnabled.
+     * @returns true if some light sources areShadowsEnabled.
      */
     areShadowsEnabled(): boolean {
         const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]

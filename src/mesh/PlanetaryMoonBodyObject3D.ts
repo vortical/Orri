@@ -20,15 +20,15 @@ export class PlanetaryMoonBodyObject3D extends PlanetaryBodyObject3D {
 
             // busyness as usual!
             if(this.body.planetarySystem() == currentTarget.body.planetarySystem() && this.distanceFromCamera() < 35000000){
-                this.labels.name.element.textContent = this.getName();
+                this.labels.objectNameLabel.element.textContent = this.getName();
                 super.updateLabels();
             } else {
                 
                 if(this.bodySystem.isLayerEnabled(CameraLayer.NameLabel)){
-                    this.labels.name.element.textContent = "";
+                    this.labels.objectNameLabel.element.textContent = "";
                 }
                 if(this.bodySystem.isLayerEnabled(CameraLayer.InfoLabel)){
-                    this.labels.info.element.textContent = "";
+                    this.labels.objectInfoLabel.element.textContent = "";
                 }                
             }
         }
