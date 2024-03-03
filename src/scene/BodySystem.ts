@@ -284,7 +284,6 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
     }
 
-
     /**
      * todo, set target vs get target... not same type
      */
@@ -292,69 +291,50 @@ export class BodySystem {
         const targetBody = this.target;
         return this.getBodyObject3D(targetBody.name);
     }
-
-
-
     
     moveToTarget(bodyObject3D: BodyObject3D){
 
         this.controls.enabled = false;
-        
-        const newTargetPosition = bodyObject3D.object3D.position;
-        const currentTargetPosition = this.controls.target.clone(); // if following, then this is same as the target body
-        const currentCameraPosition = this.camera.position;
-        const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition); 
-
-
-        const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition); 
-
-        const distance = currentCameraPosition.distanceTo(currentTargetPosition); 
-    
-        const newTargetUnitVector = newTargetVector.clone().normalize();
-
-
-        const newCameraPos = newTargetPosition.clone().sub(newTargetUnitVector.clone().multiplyScalar(distance));
-
         this.fireBodySelectMessage(bodyObject3D.body);
         
-
+        const newTargetPosition = bodyObject3D.object3D.position;
+        const currentTargetPosition = this.controls.target.clone();
+        
+        
+        
+        const currentCameraPosition = this.camera.position;
+        const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition); 
+        const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition); 
+        const distance = currentCameraPosition.distanceTo(currentTargetPosition);         
+        const newCameraPos = newTargetPosition.clone().sub(newTargetVector.normalize().multiplyScalar(distance));
+                
+        // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
+        const rotationTime = Math.max(
+            Math.abs(currentTargetVector.angleTo(newTargetVector)/Math.PI) * 2000, 
+            1000);
+                
         // this moves the controls to track towards a different 
         // target. It does not move the position of the camera, just
         // the orientation.
-
-
-        // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
-        const angle = currentTargetVector.angleTo(newTargetVector);
-
-    
-        const orientationTime = Math.max(Math.abs(angle/Math.PI) * 2000, 1000);
-
-
         const targetOrientation = new TWEEN
             .Tween(this.controls.target)
-            .to(bodyObject3D.object3D.position, orientationTime)
+            .to(bodyObject3D.object3D.position, rotationTime)
             .easing(TWEEN.Easing.Quintic.In)
             .dynamic(true);
                             
-
         const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
-        // const positionDisplacementTime = (distanceToNewTarget/3 300 000 000) * 1000;
+
         // travel at 1000 times the speed of light or 3 seconds wich ever is the most.
         const positionDisplacementTime = Math.max((distanceToNewTarget/3300000), 3000);
-
         const cameraPosition = new TWEEN
             .Tween(this.camera.position)
             .to(newCameraPos, positionDisplacementTime) // todo: this may be moving...
             .easing(TWEEN.Easing.Quintic.Out);
 
-
         targetOrientation.chain(cameraPosition)
             .onComplete(() => {
                 this.controls.enabled = true;
             }).start();
-
-        
-
     }
 
     fireBodySelectMessage(body: Body){
