@@ -33,6 +33,10 @@ abstract class BodyObject3D {
         this.body = body;
     }
 
+    moveToTarget(){
+        this.bodySystem.moveToTarget(this);
+    }
+
     setAsTarget(){
         this.bodySystem.setTarget(this.body);
     }

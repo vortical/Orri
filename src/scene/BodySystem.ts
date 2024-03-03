@@ -17,6 +17,8 @@ import { VectorComponents } from '../domain/models.ts';
 import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
+import * as TWEEN from '@tweenjs/tween.js';
+
 
 
 
@@ -291,25 +293,95 @@ export class BodySystem {
         return this.getBodyObject3D(targetBody.name);
     }
 
-    /**
-     * todo: this algorythm should be something dynamic/variable
-     * 
-     * @param body 
-     * @param moveToTarget 
-     */
+
+
+    
+    moveToTarget(bodyObject3D: BodyObject3D){
+
+        this.controls.enabled = false;
+        
+        const newTargetPosition = bodyObject3D.object3D.position;
+        const currentTargetPosition = this.controls.target.clone(); // if following, then this is same as the target body
+        const currentCameraPosition = this.camera.position;
+        const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition); 
+
+
+        const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition); 
+
+        const distance = currentCameraPosition.distanceTo(currentTargetPosition); 
+    
+        const newTargetUnitVector = newTargetVector.clone().normalize();
+
+
+        const newCameraPos = newTargetPosition.clone().sub(newTargetUnitVector.clone().multiplyScalar(distance));
+
+        this.fireBodySelectMessage(bodyObject3D.body);
+        
+
+        // this moves the controls to track towards a different 
+        // target. It does not move the position of the camera, just
+        // the orientation.
+
+
+        // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
+        const angle = currentTargetVector.angleTo(newTargetVector);
+
+    
+        const orientationTime = Math.max(Math.abs(angle/Math.PI) * 2000, 1000);
+
+
+        const targetOrientation = new TWEEN
+            .Tween(this.controls.target)
+            .to(bodyObject3D.object3D.position, orientationTime)
+            .easing(TWEEN.Easing.Quintic.In)
+            .dynamic(true);
+                            
+
+        const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
+        // const positionDisplacementTime = (distanceToNewTarget/3 300 000 000) * 1000;
+        // travel at 1000 times the speed of light or 3 seconds wich ever is the most.
+        const positionDisplacementTime = Math.max((distanceToNewTarget/3300000), 3000);
+
+        const cameraPosition = new TWEEN
+            .Tween(this.camera.position)
+            .to(newCameraPos, positionDisplacementTime) // todo: this may be moving...
+            .easing(TWEEN.Easing.Quintic.Out);
+
+
+        targetOrientation.chain(cameraPosition)
+            .onComplete(() => {
+                this.controls.enabled = true;
+            }).start();
+
+        
+
+    }
+
+    fireBodySelectMessage(body: Body){
+        if (this.target != body) {
+            this.target = body;
+            // um if the target is really changed ... then we also fire an event.
+            // this method needs to be modified as its used for both changing the target
+            // and point the camera/controls to the target.
+            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });        
+        }
+    }
+
     setTarget(body: Body | string, moveToTarget: boolean = true) {
         if (typeof body === "string") {
             body = this.getBody(body);
         }
 
-        if (this.target != body) {
-            // um if the target is really changed ... then we also fire an event.
-            // this method needs to be modified as its used for both changing the target
-            // and point the camera/controls to the target.
-            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });
-        }
+        this.fireBodySelectMessage(body);
 
-        this.target = body;
+        // if (this.target != body) {
+        //     // um if the target is really changed ... then we also fire an event.
+        //     // this method needs to be modified as its used for both changing the target
+        //     // and point the camera/controls to the target.
+        //     this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });
+        // }
+
+        // this.target = body;
 
         if (moveToTarget) {
             // keep same distance...
@@ -322,6 +394,29 @@ export class BodySystem {
             // just point controls...
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
         }
+    }
+
+
+    start() {
+        this.clock.enableTimePublisher(true);
+        //this.camera.layers.enableAll();
+        this.render();
+        const timer = this.clock.startTimer("AnimationTimer");
+        this.controls.enabled = true;
+
+        this.renderer.setAnimationLoop(async () => {
+            const delta = timer.getDelta()!;
+            await this.tick(delta);
+            this.controls.update();
+
+            if(this.controls.enabled){
+                this.followTarget(this.target);
+            }
+            TWEEN.update();
+            // this.lightHelper?.update();
+            this.render();
+            this.updateStats();
+        });
     }
 
     setViewPosition(cameraPosition: VectorComponents, target: VectorComponents) {
@@ -369,23 +464,7 @@ export class BodySystem {
         });
     }
 
-    start() {
-        this.clock.enableTimePublisher(true);
-        //this.camera.layers.enableAll();
-        this.render();
-        const timer = this.clock.startTimer("AnimationTimer");
-        this.controls.enabled = true;
 
-        this.renderer.setAnimationLoop(async () => {
-            const delta = timer.getDelta()!;
-            await this.tick(delta);
-            this.followTarget(this.target);
-            this.controls.update();
-            // this.lightHelper?.update();
-            this.render();
-            this.updateStats();
-        });
-    }
 
     stop() {
         this.clock.enableTimePublisher(false);
