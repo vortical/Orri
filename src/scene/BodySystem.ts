@@ -426,6 +426,12 @@ export class BodySystem {
             this.target = body;
             this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });        
         }
+
+        // each target has different radius, we adjust the minimum distance of the mouse orbit controller
+        // to be 2000km above surface.
+
+        const targetBody = this.target;
+        this.controls.minDistance = this.target.radius/1000 + 5000;
     }
 
 
