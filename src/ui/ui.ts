@@ -8,6 +8,8 @@ import { throttle } from "../system/timing.ts";
 import { ClockTimeUpdateHandler } from './ClockTimeUpdateHandler.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { DataService } from '../services/dataservice.ts';
+import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { DistanceUnit, DistanceUnits } from '../system/geometry.ts';
 
 /**
  * A terse UI...
@@ -42,6 +44,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         showNameLabels: bodySystem.isLayerEnabled(CameraLayer.NameLabel),
         showInfoLabels: bodySystem.isLayerEnabled(CameraLayer.InfoLabel),        
         projectShadows: bodySystem.areShadowsEnabled(),
+        distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
         pushStateToLocationBar() {
             const state = bodySystem.getState();
@@ -74,34 +77,48 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         .onFinishChange( (datetime: string|Date) => setSystemTime(datetime));
     
     gui.add(options, "pushStateToLocationBar").name('Push State to Location Bar and History');
+
+    const targetController = gui.add(options, 'target', bodyNames).name("Target")
+        .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
+
+    const timeSettingsfolder = gui.addFolder( 'Timer Settings' );
+
+    timeSettingsfolder.add(options, "setTimeToNow").name('Set Time To "Now"');        
     
-    gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
-    
-    const timeScaleController = gui.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name('Time Scale')
+    const timeScaleController = timeSettingsfolder.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name('Time Scale')
         .onChange((v: number) => bodySystem.setTimeScale(v));
 
-    gui.add(options, "resetTimeScale").name('Reset Time Scale');
+    timeSettingsfolder.add(options, "resetTimeScale").name('Reset Time Scale');
     
-    const targetController = gui.add(options, 'target', bodyNames).name("Target")
-        .onFinishChange((targetName: string) => bodySystem.setTarget(targetName));
     
-    const scaleController = gui.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
+    const viewSettingsfolder = gui.addFolder( 'Views Settings' );
+    
+    const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));
+
+    const fovController = viewSettingsfolder.add(options, "fov", 10, 70, 0.5).name('Field Of Vue')
+        .onChange((v: number) => bodySystem.setFOV(v));
+
+    const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
+            .onChange((v: number) => bodySystem.setAmbiantLightLevel(v));
+
+    viewSettingsfolder.add( options, 'distanceUnits', DistanceUnits )
+        .onChange((v: DistanceUnit) => bodySystem.setDistanceUnit(v));
+            
+            // const scaleController = gui.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
     
     const showNameLabelsController = gui.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));    
 
-    const showInfoLabelsController = gui.add(options, "showInfoLabels").name('Show Info')
+    const showInfoLabelsController = gui.add(options, "showInfoLabels").name('Show Distances')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.InfoLabel));    
+
+    
 
     const projectShadowsController = gui.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
 
-    const fovController = gui.add(options, "fov", 10, 70, 0.5).name('Field Of Vue')
-        .onChange((v: number) => bodySystem.setFOV(v));
     
-    const backgroundLightLevelController = gui.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
-        .onChange((v: number) => bodySystem.setAmbiantLightLevel(v));
     
     const showAxesController = gui.add(options, "showAxes").name('ICRS Axes')
         .onChange((v: boolean) => bodySystem.setAxesHelper(v));
@@ -130,6 +147,8 @@ function formatDistance(distance: number): string {
  */
 class StatusComponent {
 
+    hoveredBody?: BodyObject3D;
+
     constructor(element: HTMLElement, bodySystem: BodySystem) {
         /*
         <div>
@@ -152,27 +171,32 @@ class StatusComponent {
         element.appendChild(statusDivElement);
 
         bodySystem.controls.addEventListener("change", throttle(200, undefined, (e) => {
-            const targetText = `Target distance is ${formatDistance(bodySystem.controls.getDistance())} km`;
+
+            const targetText = `Target distance is ${bodySystem.getDistanceFormatter().format(bodySystem.controls.getDistance())}`;
             targetElement.innerHTML = targetText;
+            updateHoveredElement();
         }));
 
+        const updateHoveredElement = () => {
+            if(this.hoveredBody){
+                hoverElement.textContent = `${this.hoveredBody!.getName()} at ${this.hoveredBody!.cameraDistanceAsString(true)} from surface.`;
+            }
+
+        };
+
         PubSub.subscribe(MOUSE_HOVER_OVER_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-            if (pickEvent.body) {
-                if (pickEvent.body != bodySystem.target) {
-                    const hover_text = `Mouse over ${pickEvent.body!.name} at distance: ${formatDistance(bodySystem.getDistance(pickEvent.body))} km`;
-                    hoverElement.innerHTML = hover_text
-                } else {
-                    const hover_text = `This is your target ${pickEvent.body!.name}`;
-                    hoverElement.innerHTML = hover_text
-                }
+            if (pickEvent.body) {                
+                this.hoveredBody = pickEvent.body;
+                updateHoveredElement();                
             } else {
-                hoverElement.innerHTML = '...';
+                this.hoveredBody = undefined;
+                hoverElement.textContent = "  ";
             }
         });
 
         PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-            if (pickEvent.body && pickEvent.body != bodySystem.target) {
-                bodySystem.setTarget(pickEvent.body, false);
+            if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
+                bodySystem.moveToTarget(pickEvent.body );
             }
         });
     }
