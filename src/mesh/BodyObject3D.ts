@@ -41,6 +41,14 @@ abstract class BodyObject3D {
         this.bodySystem.setTarget(this.body);
     }
 
+    cameraDistanceFromCenter(){
+        return this.bodySystem.camera.position.distanceTo(this.object3D.position)
+    }
+    
+    cameraDistanceFromSurface(){
+        return this.cameraDistanceFromCenter() - (this.body.radius/1000);
+    }
+
     /**
      * Calling this after making changes to the underlying body properties
      * will update the 3d properties of the Obect3D

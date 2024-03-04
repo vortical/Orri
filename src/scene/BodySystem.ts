@@ -295,18 +295,32 @@ export class BodySystem {
     moveToTarget(bodyObject3D: BodyObject3D){
 
         this.controls.enabled = false;
-        this.fireBodySelectMessage(bodyObject3D.body);
+
+        const currentBodyObject3d = this.getBodyObject3DTarget();
+
         
-        const newTargetPosition = bodyObject3D.object3D.position;
+        
         const currentTargetPosition = this.controls.target.clone();
+        const newTargetPosition = bodyObject3D.object3D.position;
         
-        
-        
+    
         const currentCameraPosition = this.camera.position;
+        
         const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition); 
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition); 
-        const distance = currentCameraPosition.distanceTo(currentTargetPosition);         
-        const newCameraPos = newTargetPosition.clone().sub(newTargetVector.normalize().multiplyScalar(distance));
+
+        const newTargetVectorNormal =newTargetVector.clone().normalize();
+
+        // const currentDistanceToCenter = currentCameraPosition.distanceTo(currentTargetPosition);         
+
+        // dont care !!! const currentDistanceToCenter = currentBodyObject3d.distanceFromCamera();
+
+
+        const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
+
+        const totalDistance = currentDistanceToSurface + bodyObject3D.body.radius/1000;
+
+        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
                 
         // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
         const rotationTime = Math.max(
@@ -331,10 +345,13 @@ export class BodySystem {
             .to(newCameraPos, positionDisplacementTime) // todo: this may be moving...
             .easing(TWEEN.Easing.Quintic.Out);
 
-        targetOrientation.chain(cameraPosition)
+        targetOrientation
+            .chain(cameraPosition)
+            .start()
             .onComplete(() => {
                 this.controls.enabled = true;
-            }).start();
+                this.fireBodySelectMessage(bodyObject3D.body);
+            });
     }
 
     fireBodySelectMessage(body: Body){
