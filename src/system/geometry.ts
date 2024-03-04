@@ -10,6 +10,33 @@ function toRad(degrees:number): number{
 
 
 
+const DistanceUnits = {
+  au: {abbrev: "au", conversion: 149597870.691},
+
+  mi: {abbrev: "mi", conversion: 1.609344},
+  km: {abbrev: "km", conversion: 1},
+
+}
+
+type DistanceUnitType = typeof DistanceUnits[keyof typeof DistanceUnits];
+
+/**
+ * Assumes our distances are based in km.
+ * 
+ * @param distance 
+ * @param unit 
+ * @returns A distance based on unit
+ */
+function distanceToUnits(distance: number, unit: DistanceUnitType=DistanceUnits.km): number {
+  return distance/unit.conversion;
+}
+
+
+
+
+
+
+
 // todo: move this directly where its uses
 class Dim {
     w: number;
@@ -72,5 +99,5 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { Dim, toRad, getObjectScreenSize, getMeshScreenSize };
-export type { WindowSizeObserver,  };
+export { Dim, toRad, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits };
+export type { WindowSizeObserver, DistanceUnit };

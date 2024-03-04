@@ -5,9 +5,10 @@ import { Body } from '../domain/Body.ts';
 import { throttle } from "../system/timing.ts";
 import { MOUSE_CLICK_ON_BODY_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
 import { VectorComponents } from "../domain/models.ts";
+import { BodyObject3D } from "../mesh/BodyObject3D.ts";
 
 export type PickerEvent = {
-    body: Body | null;
+    body: BodyObject3D | null;
 }
 
 export class Picker {
@@ -26,12 +27,12 @@ export class Picker {
      * @param v  pointer position between [-1, 1] for x and y 
      * @returns picked body or null
      */
-    pick(v: VectorComponents): Body | null {
+    pick(v: VectorComponents): BodyObject3D | null {
         this.raycaster.setFromCamera(new Vector2(v.x, v.y), this.bodySystem.camera);
         const intersects = this.raycaster.intersectObjects(this.bodySystem.scene.children);
 
         const names = intersects.map((intersected) => intersected.object.name).filter(name => name.length > 0);
-        return names.length > 0 ? this.bodySystem.getBody(names[0]) : null;
+        return names.length > 0 ? this.bodySystem.getBodyObject3D(names[0]) : null;
     }
 
     setEnabled(isEnabled: boolean) {

@@ -9,8 +9,9 @@ class ObjectLabels{
     bodyObject3D: BodyObject3D;
 
     constructor(bodyObject3D: BodyObject3D){
+
         this.objectNameLabel = ObjectLabels.#createLabel(1, bodyObject3D.getName(),CameraLayer.NameLabel);
-        this.objectInfoLabel = ObjectLabels.#createLabel(0, formatNumber(bodyObject3D.distanceFromCamera()).concat(" km"), CameraLayer.InfoLabel);
+        this.objectInfoLabel = ObjectLabels.#createLabel(0, bodyObject3D.cameraDistanceAsString(), CameraLayer.InfoLabel);
 
         this.bodyObject3D = bodyObject3D;
         this.setupLabelClickHandler();
@@ -30,7 +31,8 @@ class ObjectLabels{
     setupLabelClickHandler(){
         const handler = () => {
             console.log("Set as target: "+this.bodyObject3D.getName());
-            this.bodyObject3D.setAsTarget()
+            // this.bodyObject3D.setAsTarget()
+            this.bodyObject3D.moveToTarget();
         };
     
         this.objectNameLabel.element.addEventListener("pointerdown", handler);
@@ -83,7 +85,7 @@ class ObjectLabels{
 
         // update the info label to show the distance from camera for this body
         if (bodySystem.isLayerEnabled(CameraLayer.InfoLabel)) {
-            this.objectInfoLabel.element.textContent = formatNumber(this.bodyObject3D.distanceFromCamera()).concat(" km");
+            this.objectInfoLabel.element.textContent = this.bodyObject3D.cameraDistanceAsString();
         }
     };
  
@@ -98,7 +100,7 @@ class ObjectLabels{
             const currentTarget = bodySystem.getBodyObject3DTarget();
 
             const isMoonPlanetarySystem = this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem();
-            const isDistanceWithinTolerance = this.bodyObject3D.distanceFromCamera() < 35000000;
+            const isDistanceWithinTolerance = this.bodyObject3D.cameraDistance() < 35000000;
 
             // business as usual, ensure the name is set
             if(isMoonPlanetarySystem && isDistanceWithinTolerance){
@@ -120,10 +122,6 @@ class ObjectLabels{
 
     };
   
-}
-
-function formatNumber(n: number): string {
-    return Math.trunc(n).toLocaleString();
 }
 
 

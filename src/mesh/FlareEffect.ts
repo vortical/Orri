@@ -79,7 +79,7 @@ class FlareEffect {
         if(this.lensflare !==  flare){
             if(this.lensflare){
                 this.lensflare.visible = false;
-                console.log("switch flare for scale:"+scale);
+                // console.log("switch flare for scale:"+scale);
             }
             this.lensflare = flare;
             this.lensflare.visible = true;

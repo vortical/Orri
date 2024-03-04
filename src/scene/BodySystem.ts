@@ -1,5 +1,5 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Renderer, Scene, TextureLoader, Vector3, WebGLRenderer } from 'three';
-import { Dim, WindowSizeObserver } from '../system/geometry.ts';
+import { Dim, DistanceUnit, DistanceUnits, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
@@ -17,8 +17,28 @@ import { VectorComponents } from '../domain/models.ts';
 import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
+import * as TWEEN from '@tweenjs/tween.js';
 
 
+
+
+export class DistanceFormatter {
+    
+    distanceUnit: DistanceUnit;
+
+    constructor(unit: DistanceUnit){
+        this.distanceUnit = unit;
+    }
+
+    format(distance: number): string {
+        function formatNumber(n: number, decimals: number = 0): string {
+            return n.toLocaleString(undefined, {maximumFractionDigits: decimals})
+        }
+        
+        const decimals = this.distanceUnit == DistanceUnits.au? 3:0;
+        return formatNumber(distance/this.distanceUnit.conversion, decimals).concat( " ", this.distanceUnit.abbrev);
+    }
+}
 
 export enum CameraLayer {
     NameLabel=2,
@@ -44,7 +64,15 @@ export type BodySystemOptionsState = {
     ambientLightLevel?: number;
     showAxes?: boolean;
     castShadows?: boolean;
+    distanceUnit?: DistanceUnit;
 }
+
+/**
+ * 
+ * 
+ * toconsider: I think this should become a kind offacade...
+ * 
+ */
 
 export class BodySystem {
     bodySystemUpdater: CompositeUpdater = new CompositeUpdater()
@@ -65,10 +93,14 @@ export class BodySystem {
     lightHelper?: DirectionalLightHelper;
     size!: Dim;
     labelRenderer: CSS2DRenderer;
+    distanceformatter: DistanceFormatter
 
-    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false}: BodySystemOptionsState) {
+    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
+            cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
+            ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;
+        this.distanceformatter = new DistanceFormatter(distanceUnit);
         this.clock = new Clock(date);
         this.addUpdater(bodySystemUpdater);
         this.bodies = bodies;
@@ -107,6 +139,17 @@ export class BodySystem {
         this.picker = new Picker(this);
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         this.setShadowsEnabled(castShadows);
+        
+        
+    }
+
+
+    setDistanceUnit(distanceUnit: DistanceUnit){
+        this.distanceformatter = new DistanceFormatter(distanceUnit);
+    }
+
+    getDistanceUnit(): DistanceUnit {
+        return this.distanceformatter.distanceUnit;
     }
 
     setState(state: Required<BodySystemOptionsState>) {
@@ -148,10 +191,18 @@ export class BodySystem {
         this.camera.up.set(v.x, v.y, v.z);
     }
 
+    getDistanceFormatter(): DistanceFormatter {
+        return this.distanceformatter;
+    }
+
     getDistance(targetBody: Body): number {
         const targetPosition = new Vector3(targetBody.position.x, targetBody.position.y, targetBody.position.z);
         // todo: need to deal with those units somehow. Having the view using km and the body itself meters is error prone.
         return this.camera.position.distanceTo(targetPosition.divideScalar(1000));
+    }
+
+    getDistanceFromSurface(bodyObject3D: BodyObject3D){
+        return bodyObject3D.cameraDistanceFromSurface();
     }
 
     // fix... bodyObject3D vs Object3D is not something we should deal with
@@ -282,7 +333,6 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
     }
 
-
     /**
      * todo, set target vs get target... not same type
      */
@@ -290,27 +340,70 @@ export class BodySystem {
         const targetBody = this.target;
         return this.getBodyObject3D(targetBody.name);
     }
+    
+    moveToTarget(bodyObject3D: BodyObject3D){
+        
+        // we won't move to self.
+        if(this.getBodyObject3DTarget() == bodyObject3D){
+            return;
+        }
+        this.controls.enabled = false;
+        
+        const currentBodyObject3d = this.getBodyObject3DTarget();
+        const currentTargetPosition = this.controls.target.clone();
+        const newTargetPosition = bodyObject3D.object3D.position;    
+        const currentCameraPosition = this.camera.position;
+        const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition); 
+        const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition); 
+        const newTargetVectorNormal =newTargetVector.clone().normalize();
+        const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
+        const totalDistance = currentDistanceToSurface + bodyObject3D.body.radius/1000;
+        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
+                
+        // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
+        const rotationTime = Math.max(
+            Math.abs(currentTargetVector.angleTo(newTargetVector)/Math.PI) * 2000, 
+            1000);
+                
+        // Orient the camera towards a different 
+        // target; does not move the position of the camera.
+        const targetOrientation = new TWEEN
+            .Tween(this.controls.target)
+            .to(bodyObject3D.object3D.position, rotationTime)
+            .easing(TWEEN.Easing.Quintic.In)
+            .dynamic(true);
+                            
+        const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
+
+        // Reposition camera: travel at 1000 times the speed of light or slower for 3 seconds wich ever is the most.
+        const positionDisplacementTime = Math.max((distanceToNewTarget/3300000), 3000);
+        const cameraPosition = new TWEEN
+            .Tween(this.camera.position)
+            .to(newCameraPos, positionDisplacementTime) // this may be moving...
+            .easing(TWEEN.Easing.Quintic.InOut);
+
+        targetOrientation
+            .chain(cameraPosition)
+            .start()
+            .onComplete(() => {
+                this.controls.enabled = true;
+                this.setTarget(bodyObject3D.body);
+            });
+    }
 
     /**
-     * todo: this algorythm should be something dynamic/variable
+     * Used for tracking a body. 
      * 
-     * @param body 
+     * If moveToTarget, ensures the camera keeps the same distance and orientation
+     * with the target
+     * 
+     * If lookAtTarget, keep the camera pointed towards the target.
+     * 
+     * @param body
      * @param moveToTarget 
      */
-    setTarget(body: Body | string, moveToTarget: boolean = true) {
-        if (typeof body === "string") {
-            body = this.getBody(body);
-        }
-
-        if (this.target != body) {
-            // um if the target is really changed ... then we also fire an event.
-            // this method needs to be modified as its used for both changing the target
-            // and point the camera/controls to the target.
-            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });
-        }
-
-        this.target = body;
-
+    followTarget(body: Body, lookAtTarget: boolean, moveToTarget: boolean = true) {
+    
         if (moveToTarget) {
             // keep same distance...
             const cameraPosition = this.camera.position.clone();
@@ -321,7 +414,47 @@ export class BodySystem {
         } else {
             // just point controls...
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
+        }                
+    }
+
+    setTarget(body: Body | string) {
+        if (typeof body === "string") {
+            body = this.getBody(body);
         }
+
+        if (this.target != body) {
+            this.target = body;
+            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: this.getBodyObject3D(body.name) } });        
+        }
+
+        // each target has different radius, we adjust the minimum distance of the mouse orbit controller
+        // to be 2000km above surface.
+
+        const targetBody = this.target;
+        this.controls.minDistance = this.target.radius/1000 + 5000;
+    }
+
+
+    start() {
+        this.clock.enableTimePublisher(true);
+        //this.camera.layers.enableAll();
+        this.render();
+        const timer = this.clock.startTimer("AnimationTimer");
+        this.controls.enabled = true;
+
+        this.renderer.setAnimationLoop(async () => {
+            const delta = timer.getDelta()!;
+            await this.tick(delta);
+            this.controls.update();
+
+            if(this.controls.enabled){
+                this.followTarget(this.target);
+            }
+            TWEEN.update();
+            // this.lightHelper?.update();
+            this.render();
+            this.updateStats();
+        });
     }
 
     setViewPosition(cameraPosition: VectorComponents, target: VectorComponents) {
@@ -329,12 +462,6 @@ export class BodySystem {
         this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z!);
     }
 
-    followTarget(body: Body | string) {
-        if (typeof body === "string") {
-            body = this.getBody(body);
-        }
-        this.setTarget(body, true);
-    }
 
     fireEvent(event: BodySystemEvent<BodySelectEventMessageType>) {
         PubSub.publish(event.topic, event.message);
@@ -369,23 +496,7 @@ export class BodySystem {
         });
     }
 
-    start() {
-        this.clock.enableTimePublisher(true);
-        //this.camera.layers.enableAll();
-        this.render();
-        const timer = this.clock.startTimer("AnimationTimer");
-        this.controls.enabled = true;
 
-        this.renderer.setAnimationLoop(async () => {
-            const delta = timer.getDelta()!;
-            await this.tick(delta);
-            this.followTarget(this.target);
-            this.controls.update();
-            // this.lightHelper?.update();
-            this.render();
-            this.updateStats();
-        });
-    }
 
     stop() {
         this.clock.enableTimePublisher(false);

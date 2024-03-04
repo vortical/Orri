@@ -33,8 +33,27 @@ abstract class BodyObject3D {
         this.body = body;
     }
 
+    moveToTarget(){
+        this.bodySystem.moveToTarget(this);
+    }
+
     setAsTarget(){
         this.bodySystem.setTarget(this.body);
+    }
+    
+    
+    cameraDistance(fromSurface: boolean = false){
+        const distance = this.bodySystem.camera.position.distanceTo(this.object3D.position);
+        return fromSurface? distance - (this.body.radius/1000) : distance;
+    }
+
+    cameraDistanceFromSurface(){
+        return this.cameraDistance(true);
+    }
+
+    cameraDistanceAsString(fromSurface: boolean = false): string {
+        const distance = this.cameraDistance(fromSurface);
+        return this.bodySystem.getDistanceFormatter().format(distance);
     }
 
     /**
@@ -71,9 +90,7 @@ abstract class BodyObject3D {
         this.labels.updateBodyLabels();
     };
 
-    distanceFromCamera(): number {
-        return this.bodySystem.camera.position.distanceTo(this.object3D.position);
-    }
+
 
     planetarySystem(): BodyObject3D {
         return this;
