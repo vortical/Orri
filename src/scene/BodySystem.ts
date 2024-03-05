@@ -41,6 +41,12 @@ export class DistanceFormatter {
     }
 }
 
+
+export enum CameraMode {
+    LookAtTarget,
+    FollowTarget,
+    // other
+}
 export enum CameraLayer {
     NameLabel=2,
     InfoLabel=3
@@ -100,6 +106,8 @@ export class BodySystem {
     distanceformatter: DistanceFormatter
     // a single optional Pin.
     locationPin?: LocationPin;
+    cameraMode: CameraMode = CameraMode.FollowTarget;
+
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
@@ -178,9 +186,16 @@ export class BodySystem {
         return this.surfaceViewLocation !== undefined; 
     }
 
+    setCameraMode(cameraMode: CameraMode){
+        this.cameraMode = cameraMode;
+    }
+
+
     setViewFromSurfaceLocation(v: boolean){
         if(v){
             this.surfaceViewLocation = this.getLocationPin();
+            this.surfaceViewLocation?.setCamera();
+
             // do stuff to set the camera position etc...
         }else{
             if (this.isViewFromSurfaceLocation()){
@@ -405,6 +420,15 @@ export class BodySystem {
         return this.getBodyObject3D(targetBody.name);
     }
     
+
+    moveCameraToSurface(locationPin: LocationPin){
+
+      //  this.camera.position = locationPin.remove
+
+
+    }
+
+
     moveToTarget(bodyObject3D: BodyObject3D){
         
         // we won't move to self.
@@ -466,17 +490,21 @@ export class BodySystem {
      * @param body
      * @param moveToTarget 
      */
-    followTarget(body: Body, lookAtTarget: boolean = true, moveToTarget: boolean = true) {
+    followTarget(body: Body) {
     
-        if (moveToTarget) {
+        const mode = this.cameraMode;
+        const lookAtTarget = (mode == CameraMode.FollowTarget) ||  (mode == CameraMode.LookAtTarget);
+        const followTarget = (mode == CameraMode.FollowTarget);
+        
+
+        if (followTarget && lookAtTarget) {
             // keep same distance...
             const cameraPosition = this.camera.position.clone();
             const target = this.controls.target.clone();
             const targetTranslation = cameraPosition.sub(target);
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
             this.camera.position.set(this.controls.target.x + targetTranslation.x, this.controls.target.y + targetTranslation.y, this.controls.target.z + targetTranslation.z);
-        } else {
-            // just point controls...
+        } else if(lookAtTarget) {
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
         }                
     }

@@ -2,6 +2,7 @@ import { Mesh, MeshBasicMaterial, SphereGeometry } from "three";
 import { LatLon } from "../system/geometry";
 import { Body } from '../domain/Body.ts';
 import { BodyObject3D } from "./BodyObject3D.ts";
+import { CameraMode } from "../scene/BodySystem.ts";
 
 export class LocationPin {
     mesh: Mesh;
@@ -23,6 +24,15 @@ export class LocationPin {
         this.bodyObject3D = bodyObject3D;
         this.color = color;
         bodyObject3D.addLocationPin(this);
+    }
+
+
+    setCamera(){
+        const camera = this.bodyObject3D.bodySystem.camera;
+        camera.position.copy(this.getMesh().position);
+        this.bodyObject3D.bodySystem.setCameraMode(CameraMode.LookAtTarget);
+        this.bodyObject3D.getSurfaceMesh().add(camera);
+
     }
 
     getMesh(): Mesh {

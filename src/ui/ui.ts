@@ -149,7 +149,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             if(latlon == undefined){
                 locationController.setValue("'".concat(v,"' is not recognized."));
                 viewFromSurfaceLocationController.enable(false);
-                throw new Error("bad lat, lon format: "+v)
+                return;
 
             }
             bodySystem.setLocation(latlon);
