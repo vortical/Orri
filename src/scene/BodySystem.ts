@@ -67,6 +67,8 @@ export type BodySystemOptionsState = {
     castShadows?: boolean;
     distanceUnit?: DistanceUnit;
     location?: LatLon;
+    showNames?: boolean;
+    showVelocities?: boolean;
 }
 
 /**
@@ -102,6 +104,7 @@ export class BodySystem {
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
             ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km,
+            showNames = false, showVelocities = false,
             location}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;
@@ -146,6 +149,9 @@ export class BodySystem {
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         this.setShadowsEnabled(castShadows);
 
+        this.setLayerEnabled(showNames, CameraLayer.NameLabel);
+        this.setLayerEnabled(showVelocities, CameraLayer.InfoLabel);
+
         if(location){
             // if a location is passed, then we pin it!
             this.setLocation(location);
@@ -161,6 +167,28 @@ export class BodySystem {
     setLocation(latlon: LatLon){
         // just an alias for setting a pin
         this.setLocationPin(new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00"));
+    }
+
+    
+    surfaceViewLocation?: LocationPin;
+
+    isViewFromSurfaceLocation(): boolean {
+        // this might just be a camera.
+
+        return this.surfaceViewLocation !== undefined; 
+    }
+
+    setViewFromSurfaceLocation(v: boolean){
+        if(v){
+            this.surfaceViewLocation = this.getLocationPin();
+            // do stuff to set the camera position etc...
+        }else{
+            if (this.isViewFromSurfaceLocation()){
+                // do stuff to reset the view
+                //to an orbital view
+                this.surfaceViewLocation = undefined;
+            }
+        }
     }
 
     getLocationPin(): LocationPin| undefined{
@@ -200,6 +228,10 @@ export class BodySystem {
         options.showAxes = this.hasAxesHelper();
         options.castShadows = this.areShadowsEnabled();
         options.date = this.clock.getTime();
+
+        options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
+        options.showVelocities = this.isLayerEnabled(CameraLayer.InfoLabel);
+        options.location = this.getLocation();
         return options;
     }
 

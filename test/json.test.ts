@@ -13,7 +13,8 @@ const partial = (f: (...arg: any) => any, ...a: any) => (...others: any) => f.ap
 test('reviver ', () => {
     const x = {
         a: "letter",
-        b: new Vector(1,2,3)
+        b: new Vector(1,2,3),
+        c: 1
     };
 
     const xs1 = JSON.parse(JSON.stringify(x), compositeReviver([

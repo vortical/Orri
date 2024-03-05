@@ -27,6 +27,17 @@ class LatLon {
       this.lon = lon;
   }
 
+  toString(): string {
+    return `${this.lat}, ${this.lon}`;
+  }
+
+  static fromString(s: string): LatLon|undefined {
+    const locationString = s.split(",");
+    const lat = parseFloat(locationString[0]);
+    const lon = parseFloat(locationString[1])
+    return (!isNaN(lat) &&  !isNaN(lon))? new LatLon(lat, lon): undefined;
+  }
+
   /**
    * 
    * @param radius radius of body in km

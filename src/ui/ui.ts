@@ -65,12 +65,16 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         projectShadows: bodySystem.areShadowsEnabled(),
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
-        location: bodySystem.getLocation() || "",
+        location: bodySystem.getLocation()?.toString() || "",
+        viewFromSurfaceLocation: bodySystem.isViewFromSurfaceLocation(),
 
-        pushStateToLocationBar() {
+        pushState() {
             const state = bodySystem.getState();
             LocationBar.pushState(state);
         },
+        reloadState() {
+            LocationBar.reload();
+        },        
         setTimeToNow() {
             timeScaleController.setValue(1);
             setSystemTime(new Date());
@@ -83,11 +87,13 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
                 (l) => {
                     const v = `${l.lat}, ${l.lon}`;
                     locationController.setValue(v);
+                    // not sure we need these calls
                     locationController.updateDisplay();
                     locationController._onFinishChange(v);
                 },
                 () => {
-                    locationController.setValue(`could not set`);
+                    locationController.setValue(`Could not set.`);
+                    // not sure we need this call
                     locationController.updateDisplay();
                 }
             );
@@ -110,7 +116,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('DateTime (editable)'))
         .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
-    gui.add(options, "pushStateToLocationBar").name('Push State to Location Bar and History');
+    gui.add(options, "pushState").name('Push State to Location Bar and History');
+    gui.add(options, "reloadState").name('Reload Pushed State');
 
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
@@ -137,15 +144,32 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)")
         .onFinishChange((v: string) => {
             //"43.302912, -73.6428032"
-            const locationString = v.split(",");
-            const lat = parseFloat(locationString[0]);
-            const lon = parseFloat(locationString[1])
-            bodySystem.setLocation(new LatLon(lat, lon));
+            const latlon = LatLon.fromString(v);
+
+            if(latlon == undefined){
+                locationController.setValue("'".concat(v,"' is not recognized."));
+                viewFromSurfaceLocationController.enable(false);
+                throw new Error("bad lat, lon format: "+v)
+
+            }
+            bodySystem.setLocation(latlon);
+            updateViewFromSufaceController();
         });
 
+    const updateViewFromSufaceController = () => {        
+        viewFromSurfaceLocationController.enable(bodySystem.getLocationPin() != undefined);
+        
+    }
+
     locationFolder.add(options, "getLocation").name('Use Browser Location');
+    const viewFromSurfaceLocationController = locationFolder.add(options, "viewFromSurfaceLocation").name("View From surface location")
+        .onChange((v: boolean) => bodySystem.setViewFromSurfaceLocation(v));
+
+    updateViewFromSufaceController();
+    
 
     const viewSettingsfolder = gui.addFolder('View Settings');
+    
 
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));

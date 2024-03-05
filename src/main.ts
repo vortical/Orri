@@ -7,14 +7,10 @@ import { SimpleUI } from './ui/ui.ts';
 import LocationBar from './ui/LocationBar.ts';
 import { DataService } from './services/dataservice.ts';
 import config from './configuration.ts';
-import { BodiesAtTimeUpdater } from './body/BodiesAtTimeUpdater.ts';
 
 const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const statusElement =document.querySelector<HTMLInputElement>("#status-container")!;
 
-
-// here is an html overlay renderer (CSS2DRenderer)
-//https://threejs.org/examples/#css2d_label
 async function start(){
     const dataService = new DataService(config.spacefield_host, config.baseUrl);
     const bodySystemUpdater = new NBodySystemUpdater();
@@ -23,7 +19,11 @@ async function start(){
     const bodies: Body[] = await dataService.loadSolarSystem(date);
     const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
 
-    // set the up of the viewer to be perpendicular to earth's orbit
+    // Set the up of the viewer to be perpendicular to earth's orbit (the
+    // ecliptic plane). 
+    // TO consider: We could also offer options to change the 
+    // camera up to be based off the normal of any planet's orbital plane or
+    // equatorial plane.
     const earth = bodySystem.getBody("earth");
     bodySystem.setCameraUp(earth.get_orbital_plane_normal());
     const ui = new SimpleUI(statusElement, bodySystem, dataService);
