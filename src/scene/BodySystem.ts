@@ -1,5 +1,5 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Renderer, Scene, TextureLoader, Vector3, WebGLRenderer } from 'three';
-import { Dim, DistanceUnit, DistanceUnits, WindowSizeObserver } from '../system/geometry.ts';
+import { Dim, DistanceUnit, DistanceUnits, LatLon, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
@@ -18,6 +18,7 @@ import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import * as TWEEN from '@tweenjs/tween.js';
+import { LocationPin } from '../mesh/LocationPin.ts';
 
 
 
@@ -65,6 +66,7 @@ export type BodySystemOptionsState = {
     showAxes?: boolean;
     castShadows?: boolean;
     distanceUnit?: DistanceUnit;
+    location?: LatLon;
 }
 
 /**
@@ -94,12 +96,16 @@ export class BodySystem {
     size!: Dim;
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
+    // a single optional Pin.
+    locationPin?: LocationPin;
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
-            ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km}: BodySystemOptionsState) {
+            ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km,
+            location}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;
+        // this.location = location;
         this.distanceformatter = new DistanceFormatter(distanceUnit);
         this.clock = new Clock(date);
         this.addUpdater(bodySystemUpdater);
@@ -139,10 +145,36 @@ export class BodySystem {
         this.picker = new Picker(this);
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         this.setShadowsEnabled(castShadows);
-        
-        
+
+        if(location){
+            // if a location is passed, then we pin it!
+            this.setLocation(location);
+            //this.setLocationPin(new LocationPin(location, this.getBodyObject3D("earth"), "#00FF00"));
+        }        
     }
 
+    getLocation(): LatLon | undefined {
+        // just an alias for the underlying pin
+        return this.getLocationPin()?.latlon;
+    }
+
+    setLocation(latlon: LatLon){
+        // just an alias for setting a pin
+        this.setLocationPin(new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00"));
+    }
+
+    getLocationPin(): LocationPin| undefined{
+        return this.locationPin;
+    }
+
+    setLocationPin(locationPin: LocationPin){
+        const existingLocationPin = this.getLocationPin();
+        if(existingLocationPin){
+            this.locationPin?.remove();
+        }
+
+        this.locationPin = locationPin;
+    }
 
     setDistanceUnit(distanceUnit: DistanceUnit){
         this.distanceformatter = new DistanceFormatter(distanceUnit);
@@ -402,7 +434,7 @@ export class BodySystem {
      * @param body
      * @param moveToTarget 
      */
-    followTarget(body: Body, lookAtTarget: boolean, moveToTarget: boolean = true) {
+    followTarget(body: Body, lookAtTarget: boolean = true, moveToTarget: boolean = true) {
     
         if (moveToTarget) {
             // keep same distance...

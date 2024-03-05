@@ -124,6 +124,9 @@ class StarBodyObject3D extends BodyObject3D {
         return light;
     }
 
+    getSurfaceMesh(): Mesh {
+        return this.surfaceMesh;
+    }
 
     // getLightIntensity(): number {
     //     return this.lightProperties.intensity;

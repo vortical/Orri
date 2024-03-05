@@ -28,15 +28,21 @@ class ObjectLabels{
         return label;
     }
 
+
+
+
     setupLabelClickHandler(){
-        const handler = () => {
-            console.log("Set as target: "+this.bodyObject3D.getName());
+
+        const downhandler = () => {
+            // todo: we should really trigger the click on the 'pointerup' event, if
+            // it was not moved between the pointerdown and pointer up            
             // this.bodyObject3D.setAsTarget()
             this.bodyObject3D.moveToTarget();
         };
-    
-        this.objectNameLabel.element.addEventListener("pointerdown", handler);
-        this.objectInfoLabel.element.addEventListener("pointerdown", handler);
+
+
+        this.objectNameLabel.element.addEventListener("pointerdown", downhandler);
+        this.objectInfoLabel.element.addEventListener("pointerdown", downhandler);
     
     }
 
