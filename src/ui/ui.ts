@@ -1,4 +1,4 @@
-import { BodySystem, CameraLayer } from '../scene/BodySystem.ts'
+import { BodySystem, CameraLayer, CameraMode } from '../scene/BodySystem.ts'
 import GUI, { Controller } from 'lil-gui';
 import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
@@ -67,6 +67,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
         viewFromSurfaceLocation: bodySystem.isViewFromSurfaceLocation(),
+        targetingCameraMode: bodySystem.getTargetingCameraMode(),
+
 
         pushState() {
             const state = bodySystem.getState();
@@ -116,11 +118,18 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('DateTime (editable)'))
         .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
+
+    gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
     gui.add(options, "pushState").name('Push State to Location Bar and History');
     gui.add(options, "reloadState").name('Reload Pushed State');
 
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
+
+    const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraMode).name("Targeting Camera Mode")
+        // .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
+        .onChange((v: CameraMode) => bodySystem.setTargetingCameraMode(v));
+        
 
     const showNameLabelsController = gui.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
@@ -133,7 +142,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const timeSettingsfolder = gui.addFolder('Time Settings');
 
-    timeSettingsfolder.add(options, "setTimeToNow").name('Set Time To "Now"');
+
 
     const timeScaleController = timeSettingsfolder.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name('Time Scale')
         .onChange((v: number) => bodySystem.setTimeScale(v));
@@ -148,7 +157,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
             if(latlon == undefined){
                 locationController.setValue("'".concat(v,"' is not recognized."));
-                viewFromSurfaceLocationController.enable(false);
+                // viewFromSurfaceLocationController.enable(false);
                 return;
 
             }
@@ -157,13 +166,13 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         });
 
     const updateViewFromSufaceController = () => {        
-        viewFromSurfaceLocationController.enable(bodySystem.getLocationPin() != undefined);
+        // viewFromSurfaceLocationController.enable(bodySystem.getLocationPin() != undefined);
         
     }
 
     locationFolder.add(options, "getLocation").name('Use Browser Location');
-    const viewFromSurfaceLocationController = locationFolder.add(options, "viewFromSurfaceLocation").name("View From surface location")
-        .onChange((v: boolean) => bodySystem.setViewFromSurfaceLocation(v));
+    // const viewFromSurfaceLocationController = locationFolder.add(options, "viewFromSurfaceLocation").name("View From surface location")
+    //     .onChange((v: boolean) => bodySystem.setViewFromSurfaceLocation(v));
 
     updateViewFromSufaceController();
     

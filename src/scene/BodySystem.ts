@@ -45,8 +45,10 @@ export class DistanceFormatter {
 export enum CameraMode {
     LookAtTarget,
     FollowTarget,
-    // other
+    ViewTargetFromSurface
 }
+
+
 export enum CameraLayer {
     NameLabel=2,
     InfoLabel=3
@@ -75,6 +77,8 @@ export type BodySystemOptionsState = {
     location?: LatLon;
     showNames?: boolean;
     showVelocities?: boolean;
+    targettingCameraMode?: CameraMode;
+
 }
 
 /**
@@ -106,14 +110,15 @@ export class BodySystem {
     distanceformatter: DistanceFormatter
     // a single optional Pin.
     locationPin?: LocationPin;
-    cameraMode: CameraMode = CameraMode.FollowTarget;
+    // cameraMode: CameraMode = CameraMode.FollowTarget;
+    targettingCameraMode: CameraMode;
 
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
             ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km,
             showNames = false, showVelocities = false,
-            location}: BodySystemOptionsState) {
+            location, targettingCameraMode = CameraMode.FollowTarget}: BodySystemOptionsState) {
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.parentElement = parentElement;
         // this.location = location;
@@ -160,11 +165,26 @@ export class BodySystem {
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showVelocities, CameraLayer.InfoLabel);
 
+        this.targettingCameraMode = targettingCameraMode;
+
         if(location){
             // if a location is passed, then we pin it!
             this.setLocation(location);
             //this.setLocationPin(new LocationPin(location, this.getBodyObject3D("earth"), "#00FF00"));
         }        
+    }
+
+    getTargetingCameraMode(): CameraMode{
+        return this.targettingCameraMode;
+        
+    }
+
+    setTargetingCameraMode(targetingCameraMode: CameraMode){
+        if(this.targettingCameraMode == targetingCameraMode){
+            return;
+        }
+
+        this.targettingCameraMode = targetingCameraMode;
     }
 
     getLocation(): LatLon | undefined {
@@ -178,6 +198,8 @@ export class BodySystem {
     }
 
     
+    // this all old code...surfaceViewLocation is relic stuff
+
     surfaceViewLocation?: LocationPin;
 
     isViewFromSurfaceLocation(): boolean {
@@ -186,25 +208,22 @@ export class BodySystem {
         return this.surfaceViewLocation !== undefined; 
     }
 
-    setCameraMode(cameraMode: CameraMode){
-        this.cameraMode = cameraMode;
-    }
+ 
 
+    // setViewFromSurfaceLocation(v: boolean){
+    //     if(v){
+    //         this.surfaceViewLocation = this.getLocationPin();
+    //         this.surfaceViewLocation?.setCamera();
 
-    setViewFromSurfaceLocation(v: boolean){
-        if(v){
-            this.surfaceViewLocation = this.getLocationPin();
-            this.surfaceViewLocation?.setCamera();
-
-            // do stuff to set the camera position etc...
-        }else{
-            if (this.isViewFromSurfaceLocation()){
-                // do stuff to reset the view
-                //to an orbital view
-                this.surfaceViewLocation = undefined;
-            }
-        }
-    }
+    //         // do stuff to set the camera position etc...
+    //     }else{
+    //         if (this.isViewFromSurfaceLocation()){
+    //             // do stuff to reset the view
+    //             //to an orbital view
+    //             this.surfaceViewLocation = undefined;
+    //         }
+    //     }
+    // }
 
     getLocationPin(): LocationPin| undefined{
         return this.locationPin;
@@ -308,7 +327,7 @@ export class BodySystem {
                         .filter( (bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
         starBodies.forEach(it => it.setShadowsEnabled(value));
 
-        
+        // todo: add this in tools section.
         // if(value){
         //     const light = (this.getBodyObject3D("sun") as StarBodyObject3D).shadowingLight!;
         //     const lightHelper = new DirectionalLightHelper(light, 400000);
@@ -422,6 +441,8 @@ export class BodySystem {
     
 
     moveCameraToSurface(locationPin: LocationPin){
+        // this will use the moveToTarget but the new cameraPosition will be calculated differently.
+        // it will solely be based on the location of the pin...
 
       //  this.camera.position = locationPin.remove
 
@@ -491,8 +512,9 @@ export class BodySystem {
      * @param moveToTarget 
      */
     followTarget(body: Body) {
+        // Rename this to something like updateTargeting
     
-        const mode = this.cameraMode;
+        const mode = this.targettingCameraMode;
         const lookAtTarget = (mode == CameraMode.FollowTarget) ||  (mode == CameraMode.LookAtTarget);
         const followTarget = (mode == CameraMode.FollowTarget);
         
@@ -506,7 +528,17 @@ export class BodySystem {
             this.camera.position.set(this.controls.target.x + targetTranslation.x, this.controls.target.y + targetTranslation.y, this.controls.target.z + targetTranslation.z);
         } else if(lookAtTarget) {
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
-        }                
+        } else if(mode == CameraMode.ViewTargetFromSurface){
+            const cameraPosition = this.camera.position.clone();
+            const target = this.controls.target.clone();
+            this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
+            const locationPin = this.getLocationPin();
+        
+
+            const locationPinPosition = locationPin!.getLocationPinMeshPosition();
+            this.camera.position.set(locationPinPosition.x,locationPinPosition.y, locationPinPosition.z );
+
+        }               
     }
 
     setTarget(body: Body | string) {
@@ -637,7 +669,7 @@ function createScene(): Scene {
     return scene;
 }
 
-function createCamera({ fov = 35, aspectRatio = 1.0, near = 500, far = 13000000000 } = {}): PerspectiveCamera {
+function createCamera({ fov = 35, aspectRatio = 1.0, near = 0.1, far = 13000000000 } = {}): PerspectiveCamera {
     return new PerspectiveCamera(
         fov,
         aspectRatio,
