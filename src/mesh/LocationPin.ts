@@ -27,27 +27,16 @@ export class LocationPin {
     }
 
 
-    getLocationPinMeshPosition(vector = new Vector3()): Vector3 {
+    getLocationPinNormal(): Vector3 {
+        const pinPosition = this.getMesh().getWorldPosition(new Vector3());
+        const centerBodyPosition = this.bodyObject3D.getSurfaceMesh().getWorldPosition(new Vector3());
+        return pinPosition.sub(centerBodyPosition).normalize();
+    }
+
+    getLocationPinWorldPosition(vector = new Vector3()): Vector3 {
         return this.getMesh().getWorldPosition(vector);
     }
 
-    // setCamera(){
-
-    //     // put camera on the LocationPin!
-
-    //     const camera = this.bodyObject3D.bodySystem.camera;
-    //     camera.position.copy(this.getMesh().position);
-    //     // ensure the body system's mode is 'ViewFromLocationPin'
-    //     this.bodyObject3D.bodySystem.setCameraMode(CameraMode.LookAtTarget);
-
-    //     // I don't think this is a good idea, we can easily control the position.
-
-    //     // this.bodyObject3D.getSurfaceMesh().add(camera);
-    // }
-
-    // unsetCamera(){
-    //     //this.bodyObject3D.bodySystem.camera.removeFromParent()
-    // }
 
     getMesh(): Mesh {
         return this.mesh;

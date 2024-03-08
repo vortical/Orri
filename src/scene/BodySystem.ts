@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Renderer, Scene, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, Fog, HemisphereLight, Object3D, PCFShadowMap, PCFSoftShadowMap, PerspectiveCamera, Renderer, Scene, TextureLoader, Vector3, WebGLRenderer } from 'three';
 import { Dim, DistanceUnit, DistanceUnits, LatLon, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -60,6 +60,10 @@ export type BodySystemEvent<T> = {
     message: T;
 };
 
+
+const CAMERA_NEAR = 1000;
+const CAMERA_NEAR_FROM_SURFACE = 1;
+const CAMERA_FAR = 13000000000;
 
 
 export type BodySystemOptionsState = {
@@ -179,12 +183,55 @@ export class BodySystem {
         
     }
 
+    computeDesiredCameraUp(): Vector3 {
+
+        if(this.targettingCameraMode == CameraMode.ViewTargetFromSurface && this.locationPin !== undefined){
+            return this.locationPin?.getLocationPinNormal();
+        }
+
+        return this.getBody("earth").get_orbital_plane_normal()!;
+
+
+    }
+
     setTargetingCameraMode(targetingCameraMode: CameraMode){
         if(this.targettingCameraMode == targetingCameraMode){
             return;
         }
 
+
+        if(this.targettingCameraMode == CameraMode.ViewTargetFromSurface){
+            // we gotta unset a few properties.
+            const earth = this.getBody("earth");
+            // the ecliptic...
+            this.setCameraUp(earth.get_orbital_plane_normal());
+            this.camera.near = CAMERA_NEAR;
+            this.camera.updateProjectionMatrix();
+
+        }
+
         this.targettingCameraMode = targetingCameraMode;
+
+        if(this.targettingCameraMode ==  CameraMode.ViewTargetFromSurface){
+
+            // this needs to be updated...
+            const pinNormal = this.locationPin?.getLocationPinNormal();
+            this.setCameraUp(pinNormal);
+            this.camera.near = CAMERA_NEAR_FROM_SURFACE;
+            this.camera.updateProjectionMatrix();
+        }
+            // we have a fiew things to do here 
+            // (make camera mode a class so it can do its house keeping)
+
+            // 1 ok - set up to be normal to the location pin 
+            // 2 - change the controls to a first person mode 
+            // 3 - don't update the direction, just update the position so the control stays on the pin
+            // 4 - update the up for every frame? 
+            // 5 ok - change the camera's near mode to be 1 km, so that the viewer can see the surface...
+            
+
+
+        
     }
 
     getLocation(): LatLon | undefined {
@@ -285,7 +332,7 @@ export class BodySystem {
         }
     }
 
-    setCameraUp(v: Vector3 = new Vector3(0, 1, 0)) {
+    setCameraUp(v = new Vector3(0, 1, 0)) {
         this.camera.up.set(v.x, v.y, v.z);
     }
 
@@ -529,13 +576,15 @@ export class BodySystem {
         } else if(lookAtTarget) {
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
         } else if(mode == CameraMode.ViewTargetFromSurface){
+
+            this.setCameraUp(this.computeDesiredCameraUp());
             const cameraPosition = this.camera.position.clone();
             const target = this.controls.target.clone();
             this.controls.target.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
             const locationPin = this.getLocationPin();
         
 
-            const locationPinPosition = locationPin!.getLocationPinMeshPosition();
+            const locationPinPosition = locationPin!.getLocationPinWorldPosition();
             this.camera.position.set(locationPinPosition.x,locationPinPosition.y, locationPinPosition.z );
 
         }               
@@ -646,11 +695,14 @@ export class BodySystem {
         );
     }
 }
-
-function createAmbiantLight(ambientLightLevel: number) {
-    const ambientLight = new AmbientLight("white", ambientLightLevel);
+//
+function createAmbiantLight(intensity: number) {
+    
+    const ambientLight = new AmbientLight("white", intensity);
+    
     return ambientLight;
 }
+
 
 function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObserver) {
     window.addEventListener("resize",
@@ -669,7 +721,7 @@ function createScene(): Scene {
     return scene;
 }
 
-function createCamera({ fov = 35, aspectRatio = 1.0, near = 0.1, far = 13000000000 } = {}): PerspectiveCamera {
+function createCamera({ fov = 35, aspectRatio = 1.0, near = CAMERA_NEAR, far = CAMERA_FAR } = {}): PerspectiveCamera {
     return new PerspectiveCamera(
         fov,
         aspectRatio,
