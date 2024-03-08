@@ -19,6 +19,7 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import * as TWEEN from '@tweenjs/tween.js';
 import { LocationPin } from '../mesh/LocationPin.ts';
+import { CSM } from 'three/examples/jsm/Addons.js';
 
 
 
@@ -219,6 +220,11 @@ export class BodySystem {
             this.setCameraUp(pinNormal);
             this.camera.near = CAMERA_NEAR_FROM_SURFACE;
             this.camera.updateProjectionMatrix();
+        } else {
+
+            this.moveToTarget(this.getBodyObject3DTarget());
+
+
         }
             // we have a fiew things to do here 
             // (make camera mode a class so it can do its house keeping)
@@ -487,17 +493,16 @@ export class BodySystem {
     }
     
 
-    moveCameraToSurface(locationPin: LocationPin){
-        // this will use the moveToTarget but the new cameraPosition will be calculated differently.
-        // it will solely be based on the location of the pin...
-
-      //  this.camera.position = locationPin.remove
-
-
-    }
-
+ 
 
     moveToTarget(bodyObject3D: BodyObject3D){
+
+        // we can't pick earth as a target when viewing from's earth surface
+        // create a class for moving things based on camera targetting state etc...
+        if((this.getBodyObject3D("earth") == bodyObject3D) && this.targettingCameraMode == CameraMode.ViewTargetFromSurface) {
+            return; 
+        }
+
         
         // we won't move to self.
         if(this.getBodyObject3DTarget() == bodyObject3D){
@@ -513,38 +518,61 @@ export class BodySystem {
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition); 
         const newTargetVectorNormal =newTargetVector.clone().normalize();
         const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
-        const totalDistance = currentDistanceToSurface + bodyObject3D.body.radius/1000;
+        const totalDistance = Math.min(currentDistanceToSurface + bodyObject3D.body.radius/1000, 500 * bodyObject3D.body.radius/1000) ;
         const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
+
+
+        
                 
         // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
         const rotationTime = Math.max(
             Math.abs(currentTargetVector.angleTo(newTargetVector)/Math.PI) * 2000, 
             1000);
-                
+
+            
+        if(this.targettingCameraMode === CameraMode.ViewTargetFromSurface){
+            // don't move the position... just the lookat.
         // Orient the camera towards a different 
         // target; does not move the position of the camera.
-        const targetOrientation = new TWEEN
-            .Tween(this.controls.target)
-            .to(bodyObject3D.object3D.position, rotationTime)
-            .easing(TWEEN.Easing.Quintic.In)
-            .dynamic(true);
+            const targetOrientation = new TWEEN
+                .Tween(this.controls.target)
+                .to(bodyObject3D.object3D.position, rotationTime)
+                .easing(TWEEN.Easing.Quintic.In)
+                .dynamic(true).start()
+                .onComplete(() => {
+                    this.controls.enabled = true;
+                    this.setTarget(bodyObject3D.body);
+                });
                             
-        const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
 
-        // Reposition camera: travel at 1000 times the speed of light or slower for 3 seconds wich ever is the most.
-        const positionDisplacementTime = Math.max((distanceToNewTarget/3300000), 3000);
-        const cameraPosition = new TWEEN
-            .Tween(this.camera.position)
-            .to(newCameraPos, positionDisplacementTime) // this may be moving...
-            .easing(TWEEN.Easing.Quintic.InOut);
+        }else {
+            // Orient the camera towards a different 
+            // target; does not move the position of the camera.
+            const targetOrientation = new TWEEN
+                .Tween(this.controls.target)
+                .to(bodyObject3D.object3D.position, rotationTime)
+                .easing(TWEEN.Easing.Quintic.In)
+                .dynamic(true);
+                                
+            const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
 
-        targetOrientation
-            .chain(cameraPosition)
-            .start()
-            .onComplete(() => {
-                this.controls.enabled = true;
-                this.setTarget(bodyObject3D.body);
-            });
+            // Reposition camera: travel at 1000 times the speed of light or slower for 3 seconds wich ever is the most.
+            const positionDisplacementTime = Math.max((distanceToNewTarget/3300000), 3000);
+            const cameraPosition = new TWEEN
+                .Tween(this.camera.position)
+                .to(newCameraPos, positionDisplacementTime) // this may be moving...
+                .easing(TWEEN.Easing.Quintic.InOut);
+
+            targetOrientation
+                .chain(cameraPosition)
+                .start()
+                .onComplete(() => {
+                    this.controls.enabled = true;
+                    this.setTarget(bodyObject3D.body);
+                });
+        }
+    
+
     }
 
     /**
@@ -604,6 +632,8 @@ export class BodySystem {
         // to be 2000km above surface.
 
         const targetBody = this.target;
+
+        // move this into appropriate camera targeting state class.
         this.controls.minDistance = this.target.radius/1000 + 5000;
     }
 
