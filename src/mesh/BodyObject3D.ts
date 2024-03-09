@@ -25,7 +25,7 @@ abstract class BodyObject3D {
 
     abstract getSurfaceMesh(): Mesh;
 
-    // }
+
 
     getName(): string {
         return this.body.name;
@@ -44,7 +44,7 @@ abstract class BodyObject3D {
     }
 
     setAsTarget(){
-        this.bodySystem.setTarget(this.body);
+        this.bodySystem.setTarget(this);
     }
     
     

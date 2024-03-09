@@ -1,4 +1,4 @@
-import { BodySystem, CameraLayer, CameraMode } from '../scene/BodySystem.ts'
+import { BodySystem, CameraLayer } from '../scene/BodySystem.ts'
 import GUI, { Controller } from 'lil-gui';
 import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
@@ -10,6 +10,7 @@ import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { DataService } from '../services/dataservice.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
+import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 
 /**
  * A terse UI...
@@ -54,7 +55,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const options = {
         date: "",
-        target: bodySystem.target?.name || "",
+        target: bodySystem.getBodyObject3DTarget().getName() || "",
         timeScale: bodySystem.getTimeScale(),
         sizeScale: 1.0,
         fov: bodySystem.getFov(),
@@ -66,8 +67,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
-        viewFromSurfaceLocation: bodySystem.isViewFromSurfaceLocation(),
-        targetingCameraMode: bodySystem.getTargetingCameraMode(),
+        //viewFromSurfaceLocation: bodySystem.isViewFromSurfaceLocation(),
+        targetingCameraMode: bodySystem.getCameraTargetingMode(),
 
 
         pushState() {
@@ -126,9 +127,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
 
-    const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraMode).name("Targeting Camera Mode")
-        // .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
-        .onChange((v: CameraMode) => bodySystem.setTargetingCameraMode(v));
+    const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraModes).name("Targeting Camera Mode")
+        .onChange((v: CameraMode) => bodySystem.setCameraTargetingMode(v));
         
 
     const showNameLabelsController = gui.add(options, "showNameLabels").name('Show Names')
@@ -183,7 +183,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));
 
-    const fovController = viewSettingsfolder.add(options, "fov", 10, 70, 0.5).name('Field Of Vue')
+    const fovController = viewSettingsfolder.add(options, "fov", 0.5, 100, 0.1).name('Field Of Vue (degrees)')
         .onChange((v: number) => bodySystem.setFOV(v));
 
     const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
@@ -216,8 +216,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
 
 /**
- * A poor man implementation of some status. 
- * todo: This type of information should be setup as an overlay over the 3d canvas. Include body speeds etc...
+ * A poor man implementation of some status.
  */
 class StatusComponent {
 
