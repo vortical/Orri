@@ -28,15 +28,21 @@ class ObjectLabels{
         return label;
     }
 
+
+
+
     setupLabelClickHandler(){
-        const handler = () => {
-            console.log("Set as target: "+this.bodyObject3D.getName());
+
+        const downhandler = () => {
+            // todo: we should really trigger the click on the 'pointerup' event, if
+            // it was not moved between the pointerdown and pointer up            
             // this.bodyObject3D.setAsTarget()
             this.bodyObject3D.moveToTarget();
         };
-    
-        this.objectNameLabel.element.addEventListener("pointerdown", handler);
-        this.objectInfoLabel.element.addEventListener("pointerdown", handler);
+
+
+        this.objectNameLabel.element.addEventListener("pointerdown", downhandler);
+        this.objectInfoLabel.element.addEventListener("pointerdown", downhandler);
     
     }
 
@@ -91,8 +97,10 @@ class ObjectLabels{
  
     updateMoonLabels(){
 
-        // we only show moon/satellite labels if this moon's planetarySystem is selected else from a distance they are all in the same 
-        // area and unreadable
+        // we only show moon/satellite labels if:
+        // this moon's planetarySystem is selected and we are with tolerance distance 
+        // -or-
+        // 
 
         const bodySystem = this.bodyObject3D.bodySystem;
                 
@@ -100,10 +108,13 @@ class ObjectLabels{
             const currentTarget = bodySystem.getBodyObject3DTarget();
 
             const isMoonPlanetarySystem = this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem();
-            const isDistanceWithinTolerance = this.bodyObject3D.cameraDistance() < 35000000;
+            const cameraDistance = this.bodyObject3D.cameraDistance();
 
-            // business as usual, ensure the name is set
-            if(isMoonPlanetarySystem && isDistanceWithinTolerance){
+            // if the planet moon is part of the target system and less than 35M km
+            // - or - 
+            // if its just real close (e.g. 1eM km). This last happens when targetting
+            // Jupiter from the earth surface, we'd still want to see earth's moon labels.
+            if((isMoonPlanetarySystem && cameraDistance < 35e6 ) || cameraDistance < 1e6)  {
                 this.objectNameLabel.element.textContent = this.bodyObject3D.getName();
                 this.updateBodyLabels();
             } else {

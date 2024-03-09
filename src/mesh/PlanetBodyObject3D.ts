@@ -1,11 +1,12 @@
 import { Body } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide, Vector2 } from "three";
+import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide, Vector2, LineBasicMaterial, MeshBasicMaterial, Sphere, Spherical } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { MaterialProperties } from '../domain/models.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { toRad } from '../system/geometry.ts';
 
 
 const textureLoader = new TextureLoader();
@@ -34,6 +35,35 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
     const material = new MeshPhongMaterial(params);
     return material;
 }
+
+// class LatLon {
+//     static LON_OFFSET = 90;
+
+//     lat: number;
+//     lon: number;
+
+//     constructor(lat: number, lon: number){
+//         this.lat = lat;
+//         this.lon = lon;
+//     }
+
+//     toSpherical(body: Body): Spherical {
+//         const phi = toRad(90 - this.lat);  // down from the y axis
+//         const theta = toRad(this.lon+LatLon.LON_OFFSET) // around z axis, from position z 
+//         const sphereCoords = new Spherical(body.radius/1000, phi, theta);
+//         return sphereCoords;    
+//     }
+// };
+
+// function createBodyPinMesh(latlon: LatLon, body: Body, color: string = "#ff0000") {
+//     const pinRadius = 20; 
+//     const geometry = new SphereGeometry(pinRadius, 18, 18);
+//     const materiel = new MeshBasicMaterial({color: color});
+//     const mesh = new Mesh(geometry, materiel);
+//     mesh.position.setFromSpherical(latlon.toSpherical(body));
+    
+//     return mesh;
+// }
 
 
 function   createRingMeshes(body: Body): Mesh[] | undefined {
@@ -93,6 +123,9 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
 
 class PlanetaryBodyObject3D extends BodyObject3D {
 
+    surfaceMesh: Mesh;
+
+
     constructor(body: Body, bodySystem: BodySystem){
         super(body, bodySystem);
 
@@ -143,11 +176,21 @@ class PlanetaryBodyObject3D extends BodyObject3D {
         surfacemesh.castShadow = body.castShadow;
     
         bodymesh.add(surfacemesh);
-    
+        this.surfaceMesh = surfacemesh;
+        
+        // surfacemesh.add(createBodyPinMesh(new LatLon(42.022317,-70.0907579), this.body, "#ff0000"));
+        // surfacemesh.add(createBodyPinMesh(new LatLon(51.4779, 0), this.body, "#ffffff"));
+        // surfacemesh.add(createBodyPinMesh(new LatLon(-47.05486585159087, 167.86749336588346), this.body, "#00ff00"));
+        
+
         ringMeshes?.forEach((ringMesh) => surfacemesh.add(ringMesh))
         ringMeshes?.forEach((ringMesh) => ringMesh.rotation.set(-Math.PI/2, 0, 0));
     }
  
+    getSurfaceMesh(): Mesh {
+        return this.surfaceMesh;
+    }
+
     update(): void {
         super.update();
     }

@@ -2,12 +2,54 @@
 
 // Clean this up, this file is a heterogenous hodgepuge...
 
-import { Mesh, PerspectiveCamera, Sphere, Vector3 } from "three";
+import { Mesh, PerspectiveCamera, Sphere, Spherical, Vector3 } from "three";
 
 function toRad(degrees:number): number{
     return degrees * Math.PI / 180;
 }
 
+
+
+class LatLon {
+  // Not sure this offset applies to all bodies. But it applies to earth's surface mesh.
+  static LON_OFFSET = 90;
+
+  lat: number;
+  lon: number;
+
+  /**
+   * 
+   * @param lat degrees latitude
+   * @param lon degrees longitude
+   */
+  constructor(lat: number, lon: number){
+      this.lat = lat;
+      this.lon = lon;
+  }
+
+  toString(): string {
+    return `${this.lat}, ${this.lon}`;
+  }
+
+  static fromString(s: string): LatLon|undefined {
+    const locationString = s.split(",");
+    const lat = parseFloat(locationString[0]);
+    const lon = parseFloat(locationString[1])
+    return (!isNaN(lat) &&  !isNaN(lon))? new LatLon(lat, lon): undefined;
+  }
+
+  /**
+   * 
+   * @param radius radius of body in km
+   * @returns 
+   */
+  toSpherical(radius: number): Spherical {
+      const phi = toRad(90 - this.lat);  // down from the y axis
+      const theta = toRad(this.lon+LatLon.LON_OFFSET) // around z axis, from position z 
+      const sphereCoords = new Spherical(radius, phi, theta);
+      return sphereCoords;    
+  }
+};
 
 
 const DistanceUnits = {
@@ -18,7 +60,7 @@ const DistanceUnits = {
 
 }
 
-type DistanceUnitType = typeof DistanceUnits[keyof typeof DistanceUnits];
+type DistanceUnit = typeof DistanceUnits[keyof typeof DistanceUnits];
 
 /**
  * Assumes our distances are based in km.
@@ -27,12 +69,9 @@ type DistanceUnitType = typeof DistanceUnits[keyof typeof DistanceUnits];
  * @param unit 
  * @returns A distance based on unit
  */
-function distanceToUnits(distance: number, unit: DistanceUnitType=DistanceUnits.km): number {
+function distanceToUnits(distance: number, unit: DistanceUnit=DistanceUnits.km): number {
   return distance/unit.conversion;
 }
-
-
-
 
 
 
@@ -99,5 +138,5 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { Dim, toRad, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits };
+export { Dim, toRad, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon };
 export type { WindowSizeObserver, DistanceUnit };

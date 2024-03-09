@@ -1,10 +1,11 @@
-import { Group, Object3D } from 'three';
+import { Group, Mesh, Object3D } from 'three';
 import { Body } from '../domain/Body.ts';
 import { toRad } from '../system/geometry.ts';
 import { BodySystem, CameraLayer } from '../scene/BodySystem.ts';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { throttle } from '../system/timing.ts';
 import { ObjectLabels } from './ObjectLabels.ts';
+import { LocationPin } from './LocationPin.ts';
 
 
 abstract class BodyObject3D {
@@ -12,7 +13,8 @@ abstract class BodyObject3D {
     body: Body;
     bodySystem: BodySystem;
     labels: ObjectLabels;
-
+    pins: LocationPin[] = [];
+    
     constructor(body: Body, bodySystem: BodySystem) {
         this.body = body;
         this.bodySystem = bodySystem;
@@ -20,6 +22,10 @@ abstract class BodyObject3D {
         this.labels = new ObjectLabels(this);
         this.object3D.add(...this.labels.getLabels());
     }
+
+    abstract getSurfaceMesh(): Mesh;
+
+
 
     getName(): string {
         return this.body.name;
@@ -38,7 +44,7 @@ abstract class BodyObject3D {
     }
 
     setAsTarget(){
-        this.bodySystem.setTarget(this.body);
+        this.bodySystem.setTarget(this);
     }
     
     
@@ -54,6 +60,24 @@ abstract class BodyObject3D {
     cameraDistanceAsString(fromSurface: boolean = false): string {
         const distance = this.cameraDistance(fromSurface);
         return this.bodySystem.getDistanceFormatter().format(distance);
+    }
+
+    removeLocationPin(locationPin: LocationPin){
+        locationPin.getMesh().removeFromParent();
+        locationPin.getMesh().geometry.dispose();
+        this.pins = this.pins.filter(p => p != locationPin);        
+    }
+
+    addLocationPin(locationPin: LocationPin){
+        this.getSurfaceMesh().add(locationPin.getMesh());
+        this.pins.push(locationPin);        
+    }
+
+    removeAllPins(){
+        this.pins.forEach(p => {
+            p.getMesh().removeFromParent();
+            p.getMesh().geometry.dispose();
+        });
     }
 
     /**
