@@ -8,9 +8,10 @@ interface VectorComponents{
 
 
 interface Axis {
-    rotation: number
+    // rotation based off the 'prime meridian' of the body.
+    rotation?: number
     //ICRS vector of the axis, body spins around this axis
-    direction: VectorComponents
+    direction?: VectorComponents
 }
 
 interface KinematicObject {

@@ -67,9 +67,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
-        //viewFromSurfaceLocation: bodySystem.isViewFromSurfaceLocation(),
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
-
 
         pushState() {
             const state = bodySystem.getState();
@@ -96,8 +94,6 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
                 },
                 () => {
                     locationController.setValue(`Could not set.`);
-                    // not sure we need this call
-                    locationController.updateDisplay();
                 }
             );
         },

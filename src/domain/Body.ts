@@ -81,6 +81,8 @@ class Body {
     rings?: RingProperties[];
     color: string;
 
+    kinematics!: KinematicObject;
+
 
     constructor({ type, name, parent, mass, radius, castShadow=false, receiveShadow=false,position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings }: BodyProperties) {
         this.type = type;
@@ -133,8 +135,12 @@ class Body {
     }
 
 
-    // kinematics should probably include sideral rotation period and sideral rotation angle
+    getKinematics(){
+        return this.kinematics ;
+    }
+
     setKinematics(kinematics: KinematicObject) {
+        this.kinematics = kinematics;
 
         const baseTimeMs = kinematics.datetime.getTime()
 

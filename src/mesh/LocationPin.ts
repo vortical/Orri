@@ -16,7 +16,8 @@ export class LocationPin {
             const geometry = new SphereGeometry(pinRadius, 18, 18);
             const materiel = new MeshBasicMaterial({color: color});
             const mesh = new Mesh(geometry, materiel);
-            mesh.position.setFromSpherical(latlon.toSpherical(bodyObject3D.body.radius/1000));            
+            // we hardcode the elevation to be 100m.
+            mesh.position.setFromSpherical(latlon.toSpherical((bodyObject3D.body.radius+100)/1000));            
             return mesh;
         }        
         this.latlon = latlon;
@@ -44,6 +45,7 @@ export class LocationPin {
 
     remove(){
         this.bodyObject3D.removeLocationPin(this);
+        this.mesh.geometry.dispose();
     }
 
 }

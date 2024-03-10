@@ -20,11 +20,11 @@ class Vector extends Vector3 implements VectorComponents {
      * @param pos2 
      * @returns (pos2 - pos1) vector
      */
-    static substract(pos1: Vector, pos2: Vector): Vector {
+    static substract(pos1: VectorComponents, pos2: VectorComponents): Vector {
         return new Vector(pos2.x - pos1.x, pos2.y - pos1.y, pos2.z - pos1.z);
     }
 
-    static addition(pos1: Vector, pos2: Vector): Vector {
+    static addition(pos1: VectorComponents, pos2: VectorComponents): Vector {
         return new Vector(pos2.x + pos1.x, pos2.y + pos1.y, pos2.z + pos1.z);
     }
 

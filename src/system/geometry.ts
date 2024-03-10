@@ -8,6 +8,10 @@ function toRad(degrees:number): number{
     return degrees * Math.PI / 180;
 }
 
+function toDeg(rad: number): number {
+    return rad * 180 / Math.PI;
+}
+
 
 
 class LatLon {
@@ -138,5 +142,5 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { Dim, toRad, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon };
+export { Dim, toRad, toDeg, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon };
 export type { WindowSizeObserver, DistanceUnit };
