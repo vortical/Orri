@@ -36,8 +36,10 @@ const meshProperties = {
     },
     {
       name: "moon",
-      textureUri: "/assets/textures/planets/moon_1k.jpg",
-      bumpMapUri: "/assets/textures/planets/moon_topo_1k.jpg",
+      textureUri: "/assets/textures/planets/moonmap4k.jpg",
+      bumpMapUri: "/assets/textures/planets/moonbump4k.jpg",
+      // textureUri: "/assets/textures/planets/moon_1k.jpg",
+      // bumpMapUri: "/assets/textures/planets/moon_topo_1k.jpg",
     },
     {
       name: "Mercury",

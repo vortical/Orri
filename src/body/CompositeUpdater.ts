@@ -5,7 +5,7 @@ import { BodySystemUpdater } from "./BodySystemUpdater";
 
 
 /**
- * Just a container of updater acting as a single container.
+ * Just a container of updaters acting as a single updater.
  */
 export class CompositeUpdater implements BodySystemUpdater {
 
