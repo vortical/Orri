@@ -3,6 +3,7 @@
 // Clean this up, this file is a heterogenous hodgepuge...
 
 import { Mesh, PerspectiveCamera, Sphere, Spherical, Vector3 } from "three";
+import { Vector } from "./vecs";
 
 function toRad(degrees:number): number{
     return degrees * Math.PI / 180;
@@ -12,7 +13,14 @@ function toDeg(rad: number): number {
     return rad * 180 / Math.PI;
 }
 
-
+function angleTo(v1: Vector, v2: Vector, plane: Vector): number {  
+  // todo: don't need to normalize
+  const v1Projected = v1.clone().projectOnPlane(plane).normalize()
+  const v2Projected = v2.clone().projectOnPlane(plane).normalize();
+  const angle = v1Projected.angleTo(v2Projected);  
+  const cross = v1Projected.clone().cross(v2Projected);
+  return cross.angleTo(plane) < Math.PI/2 ? angle: Math.PI*2-angle;
+}
 
 class LatLon {
   // Not sure this offset applies to all bodies. But it applies to earth's surface mesh.
@@ -77,9 +85,6 @@ function distanceToUnits(distance: number, unit: DistanceUnit=DistanceUnits.km):
   return distance/unit.conversion;
 }
 
-
-
-
 // todo: move this directly where its uses
 class Dim {
     w: number;
@@ -142,5 +147,5 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { Dim, toRad, toDeg, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon };
+export { Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon };
 export type { WindowSizeObserver, DistanceUnit };

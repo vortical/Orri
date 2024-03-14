@@ -17,6 +17,22 @@ async function start(){
     const options = LocationBar.getState();
     const date = options.date ? new Date(options.date): new Date()
     const bodies: Body[] = await dataService.loadSolarSystem(date);
+
+    // temporary, just want to filter down three logs
+    
+    const warn = console.warn;
+    console.warn = (...data: any[]) => {
+        if(data.length == 1){
+            const message = data[0] as string;
+            if(message.startsWith('THREE.Material: parameter')){
+                return;
+            }
+        }
+        warn(data);
+    }
+        
+
+    
     const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
 
     // Set the up of the viewer to be perpendicular to earth's orbit (the

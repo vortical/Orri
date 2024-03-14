@@ -1,12 +1,9 @@
 import { Body } from "../domain/Body.ts";
 import { BodyProperties, KinematicObject, VectorComponents } from "../domain/models.ts";
-import { Vector } from "../system/vecs.ts";
-
 
 export class DataService {
     host: string;
     assetsBaseUrl: string
-  
   
     /**
      * assetsBaseUrl is location of data on the client. This is temporary until
@@ -71,15 +68,12 @@ export class DataService {
                 b.setKinematics(kinematicObject);
                 return b;
             }));
-
-
         }
 
         const response = await fetch(`${this.assetsBaseUrl}assets/datasmall.json`).catch((err: Error) => {
             console.error(err);
             throw new Error(`Could not load body data: could not fetch data ${err.message}`);
         })
-
 
         const payloadBodies: BodyProperties[] = await response.json().catch((err: Error) => {
             // console.error(err);
@@ -140,3 +134,35 @@ export class DataService {
 
 //     // return transposeSpeedToOrbitalPlane(body);
 // }
+
+
+
+            // // todo: put this in the backend data service
+            // function hackMoonAxisRotation(){
+            //     // find position of moon and earth
+            //     const earthBody = bodiesWithKinematicData.find(b => b.name.toLowerCase() == "earth")!;
+            //     const moonBody =  bodiesWithKinematicData.find(b => b.name.toLowerCase() == "moon")!;
+
+            //     const v: Vector = Vector.substract(moonBody.position,earthBody.position).normalize();
+
+
+
+
+                
+            //     const angle = toDeg(angleTo(new Vector(1,0,0), v,  new Vector(0,1,0)));
+            //     console.log("angle is "+angle);
+
+            //     const kinematics = moonBody.getKinematics();
+            //     kinematics.axis = {direction: kinematics.axis?.direction, rotation: angle}
+            //     // moonBody.setKinematics(kinematics)
+
+
+
+            //     // v is the direction of the face of 
+            //     // what is the 0 direction angle? 
+
+            // }
+            // // The back end only returns rotation  data for earth. We'd like to have rotation data for moon
+            // // (where its prime meridian is facing the earth (not considering libration... etc..))
+          
+            // hackMoonAxisRotation();

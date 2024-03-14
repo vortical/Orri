@@ -11,7 +11,6 @@ import { toRad } from '../system/geometry.ts';
 
 const textureLoader = new TextureLoader();
 
-
 function createAtmosphereMateriel(textureUri: string) {
     return new MeshPhongMaterial({
         map: textureLoader.load(textureUri),
@@ -22,7 +21,6 @@ function createAtmosphereMateriel(textureUri: string) {
 
 function createBodySurfaceMaterial(materialProperties: MaterialProperties): Material {
     
-    
     const params: MeshPhongMaterialParameters = {
         map: materialProperties.textureUri? textureLoader.load(materialProperties.textureUri) : undefined,
         normalMap: materialProperties.normalUri? textureLoader.load(materialProperties.normalUri) : undefined,
@@ -30,40 +28,9 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
         specularMap: materialProperties.specularMapUri? textureLoader.load(materialProperties.specularMapUri) : undefined,
         color: materialProperties.color 
     }
-
-    // const material = new MeshLambertMaterial();
     const material = new MeshPhongMaterial(params);
     return material;
 }
-
-// class LatLon {
-//     static LON_OFFSET = 90;
-
-//     lat: number;
-//     lon: number;
-
-//     constructor(lat: number, lon: number){
-//         this.lat = lat;
-//         this.lon = lon;
-//     }
-
-//     toSpherical(body: Body): Spherical {
-//         const phi = toRad(90 - this.lat);  // down from the y axis
-//         const theta = toRad(this.lon+LatLon.LON_OFFSET) // around z axis, from position z 
-//         const sphereCoords = new Spherical(body.radius/1000, phi, theta);
-//         return sphereCoords;    
-//     }
-// };
-
-// function createBodyPinMesh(latlon: LatLon, body: Body, color: string = "#ff0000") {
-//     const pinRadius = 20; 
-//     const geometry = new SphereGeometry(pinRadius, 18, 18);
-//     const materiel = new MeshBasicMaterial({color: color});
-//     const mesh = new Mesh(geometry, materiel);
-//     mesh.position.setFromSpherical(latlon.toSpherical(body));
-    
-//     return mesh;
-// }
 
 
 function   createRingMeshes(body: Body): Mesh[] | undefined {
@@ -87,9 +54,7 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
             verticePosition.fromBufferAttribute(positions, i);
             const verticeAngle = verticePosition.angleTo(angle);
             const distanceFromCenter = verticePosition.fromBufferAttribute(positions, i).length();
-            mesh.geometry.attributes.uv.setXY(i, Math.abs(distanceFromCenter) < midpoint ? 0 : 1, verticeAngle/Math.PI);
-            
-            
+            mesh.geometry.attributes.uv.setXY(i, Math.abs(distanceFromCenter) < midpoint ? 0 : 1, verticeAngle/Math.PI);            
         }
         return mesh;
     }
@@ -112,14 +77,10 @@ function   createRingMeshes(body: Body): Mesh[] | undefined {
             wireframe: false
         });
       
-        const mesh = new Mesh(geometry, material);
-        // mesh.receiveShadow = body.receiveShadow;
-        // mesh.castShadow = body.castShadow;
-    
+        const mesh = new Mesh(geometry, material);    
         return adjustTextureUV(mesh, (r.minRadius/1000 + r.maxRadius/1000)/2);
     });
  }
-
 
 class PlanetaryBodyObject3D extends BodyObject3D {
 
@@ -132,6 +93,21 @@ class PlanetaryBodyObject3D extends BodyObject3D {
         const materialProperties = meshProperties.solarSystem.find((b) => b.name.toLocaleLowerCase() == body.name.toLowerCase())!;
         const widthSegements = 64;
         const heightSegments = 48;
+
+
+        // TODO: consider having a radius like
+        // const radiusX = body.dimensions[0];
+        // const radiusZ = body.dimensions[1];
+        // const radiusY = body.dimensions[2];
+
+        // const yScale = ry / rx;
+        // const zScale = rz / rx;
+
+        //
+        // const geometry = SphereGeometry(rx, 24, 24);
+        // geometry.scale(1, yScale, zScale);
+        // geometry.rotateX(Math.PI / 2);
+
         const geometry = new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
         const material = createBodySurfaceMaterial(materialProperties);
         const surfacemesh = new Mesh(geometry, material);
@@ -143,10 +119,11 @@ class PlanetaryBodyObject3D extends BodyObject3D {
                 new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR + altitude, widthSegements, heightSegments),
                 createAtmosphereMateriel(materialProperties.atmosphereUri)
             );
-            // hack hack...  todo: reference the body object 3D into 'parts', not just three.js 3d objects with user data to identify them.
+            // hack hack...  
+            //todo: reference the body object 3D into 'parts', not just three.js 3d objects with user data to identify them.
             // e.g.: atmosphere, surface (roads etc...) 
             atmosphereMesh.userData = {type: "atmosphere"};
-            // todo: An atmosphere cast shadows upon the surface, That would be cool to consider
+        
             atmosphereMesh.receiveShadow = body.receiveShadow;
             atmosphereMesh.castShadow = body.castShadow;
             surfacemesh.add(atmosphereMesh);
@@ -155,34 +132,15 @@ class PlanetaryBodyObject3D extends BodyObject3D {
         // todo: give the name to the bodyMesh Object
         surfacemesh.name = body.name;
         const ringMeshes = createRingMeshes(body);
-        // const bodymesh = new Object3D();
-        const bodymesh = this.object3D;
-        
-        // TODO: put all this this logic in axis.direction
-        if(body.axisDirection !== undefined){
-            // rotate body so axis is normal to its orbital plane (i.e.: equatorial = orbital/ecliptic)
-            const axis = body.axisDirection!;
-            bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
-        
-        }else{
-            // We tilt the body using the body's obliquity arbitrarily tilt the body using 
-            const rotation =body.obliquityOrientation();
-            bodymesh.applyQuaternion(rotation);
-            const body_orbital_norm = body.get_orbital_plane_normal() || new Vector3(0,1,0);
-            bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
-        }
-        
+        const bodymesh = this.object3D;        
+        const axis = body.getAxisDirection();
+        bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));        
         surfacemesh.receiveShadow = body.receiveShadow;
         surfacemesh.castShadow = body.castShadow;
-    
         bodymesh.add(surfacemesh);
         this.surfaceMesh = surfacemesh;
-        
-        // surfacemesh.add(createBodyPinMesh(new LatLon(42.022317,-70.0907579), this.body, "#ff0000"));
-        // surfacemesh.add(createBodyPinMesh(new LatLon(51.4779, 0), this.body, "#ffffff"));
-        // surfacemesh.add(createBodyPinMesh(new LatLon(-47.05486585159087, 167.86749336588346), this.body, "#00ff00"));
-        
 
+        // yuck:
         ringMeshes?.forEach((ringMesh) => surfacemesh.add(ringMesh))
         ringMeshes?.forEach((ringMesh) => ringMesh.rotation.set(-Math.PI/2, 0, 0));
     }

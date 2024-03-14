@@ -32,10 +32,6 @@ class Vector extends Vector3 implements VectorComponents {
     static fromVectorComponents(v?: VectorComponents): Vector {
         return v == undefined? new Vector():new Vector(v.x, v.y, v.z)
     }
-
-    static toRad(v: Vector): Vector {
-        return new Vector(toRad(v.x), toRad(v.y), toRad(v.z));
-    }
 }
 
 
