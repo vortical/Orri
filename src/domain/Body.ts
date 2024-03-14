@@ -81,8 +81,10 @@ class Body {
     rings?: RingProperties[];
     color: string;
 
+    kinematics!: KinematicObject;
 
-    constructor({ type, name, parent, mass, radius, castShadow=false, receiveShadow=false,position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings }: BodyProperties) {
+
+    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parent;
@@ -91,7 +93,7 @@ class Body {
         this.radius = radius;
         this.castShadow = castShadow;
         this.receiveShadow = receiveShadow;
-        
+
         this.position = Vector.fromVectorComponents(position)
         this.velocity = Vector.fromVectorComponents(velocity)
         this.orbitInclination = orbitInclination;
@@ -107,40 +109,45 @@ class Body {
     /**
      * @returns The normal to the body's oribital plane (e.g. for earth this is the ecliptic plane)
      */
-    get_orbital_plane_normal() {
-
+    get_orbital_plane_normal(): Vector | undefined {
         if (!this.parent) {
-            // we consider the plane to be based on an orbit around some parent
-            // but we could infer the plane with two velocity vectors...
             return undefined;
         }
 
         const parent = this.parent;
-        const parent_position = parent.position;
-        const parent_velocity = parent.velocity;
-
-        const this_position = this.position;
-        const this_velocity = this.velocity;
-
-        // a- b
-        // const rel_pos = new Vector3().subVectors(this_position, parent_position)
-        // const rel_vel = new Vector3().subVectors(this_velocity, parent_velocity);
-
-        const rel_pos = Vector.substract(parent_position, this_position);
-        const rel_vel = Vector.substract(parent_velocity, this_velocity);
-
-        return new Vector3().crossVectors(rel_pos, rel_vel).normalize();
+        const rel_pos = Vector.substract(parent.position, this.position);
+        const rel_vel = Vector.substract(parent.velocity, this.velocity);
+        return new Vector().crossVectors(rel_pos, rel_vel).normalize();
     }
 
+    getAxisDirection(): Vector {
 
-    // kinematics should probably include sideral rotation period and sideral rotation angle
+        // If an axis was given, then we honor it else we calculate an arbitrary one
+        // based on the obliquity and orbital plane. This will result in a realistic
+        // axis but will not necessarily match for that specific time.
+        if (this.axisDirection !== undefined) {
+            return this.axisDirection;
+        }
+        // Tilt the body using the body's obliquity 
+        const up = new Vector(0, 1, 0).applyQuaternion(this.obliquityOrientation());
+
+        // Another tilt, this one to match the body's orbital plane.
+        const body_orbital_norm = this.get_orbital_plane_normal() || new Vector(0, 1, 0);
+        return up.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector(0, 1, 0), body_orbital_norm));
+    }
+
+    getKinematics(): KinematicObject {
+        return this.kinematics;
+    }
+
     setKinematics(kinematics: KinematicObject) {
+        this.kinematics = kinematics;
 
         const baseTimeMs = kinematics.datetime.getTime()
 
         const baseRotation = toRad(kinematics.axis?.rotation || 0);
 
-        this.axisDirection = kinematics.axis? Vector.fromVectorComponents(kinematics.axis.direction) : undefined;
+        this.axisDirection = kinematics.axis?.direction ? Vector.fromVectorComponents(kinematics.axis.direction) : undefined;
 
         this.velocity = Vector.fromVectorComponents(kinematics.velocity);
         this.position = Vector.fromVectorComponents(kinematics.position);
@@ -166,9 +173,9 @@ class Body {
      * @returns Planetary System this body belongs to.
      */
     planetarySystem(): Body {
-        switch(this.type){
-            case "planet" : 
-                return this;                
+        switch (this.type) {
+            case "planet":
+                return this;
             case "star":
                 return this;
             case "moon":

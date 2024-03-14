@@ -34,7 +34,7 @@ class DirectionLightTargetListener {
 
 const defaultLightProperties: Required<LightProperties> = {
     color: "white",
-    intensity: 1.2,
+    intensity: 1.5,
     distance: 0,
     decay: 0.0
 };

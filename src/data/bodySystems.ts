@@ -3,14 +3,8 @@ import { Quaternion, Vector3 } from 'three';
 import { Body }  from '../domain/Body.ts';
 import { Vector } from '../system/vecs';
 import { toRad } from '../system/geometry';
-// import { createBodies } from "../body/builders.ts";
 import { KinematicObject } from '../domain/models.ts';
 
-
-//https://planet-texture-maps.fandom.com/wiki/Callisto
-// move this to the server, this will be served up
-
-// would be nice to be able to have various resolutions that can be pulled
 
 const meshProperties = {
   solarSystem: [
@@ -24,38 +18,27 @@ const meshProperties = {
       textureUri: "/assets/textures/planets/earthmap4k.jpg",
       bumpMapUri: "/assets/textures/planets/earthbump4k.jpg",
       specularMapUri: "/assets/textures/planets/earthspec4k.jpg",
-      
-      // textureUri: "/assets/textures/planets/8081_earthmap10k.jpg",
-      
-
-      // textureUri: "/assets/textures/planets/earth_atmos_2048.jpg",
-      
-      // normalUri: "/assets/textures/planets/earth_normal_2048.jpg",
-      atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png",
-      // specularMapUri: "/assets/textures/planets/earth_specular_2048.jpg"
+      atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png"
     },
     {
       name: "moon",
-      textureUri: "/assets/textures/planets/moon_1k.jpg",
-      bumpMapUri: "/assets/textures/planets/moon_topo_1k.jpg",
+      textureUri: "/assets/textures/planets/moonmap4k.jpg",
+      bumpMapUri: "/assets/textures/planets/moonbump4k.jpg"
     },
     {
       name: "Mercury",
       textureUri: "/assets/textures/planets/mercurymap.jpg",
       bumpMapUri: "/assets/textures/planets/mercurybump.jpg",
-    
     },
     {
       name: "Venus",
       textureUri: "/assets/textures/planets/venus.jpg",
       bumpMapUri: "/assets/textures/planets/venus_topo.jpg",
-    
     },
     {
       name: "Mars",
       textureUri: "/assets/textures/planets/mars_2k_color.jpg",
       normalUri: "/assets/textures/planets/mars_2k_normal.jpg",
-
     },
     {
       name: "Jupiter",
@@ -76,31 +59,21 @@ const meshProperties = {
       name: "Ganymede",
       textureUri: "/assets/textures/planets/ganymede.jpg",
     },        
-
     {
       name: "Callisto",
       textureUri: "/assets/textures/planets/callisto.jpg",
     },        
 
-
     {
       name: "Saturn",
       textureUri: "/assets/textures/planets/saturn_cassini_2011_texture_map.jpg"
-      
-      
     },    
-
     {
       name: "Uranus",
       textureUri: "/assets/textures/planets/uranus_color.jpg",
       normalUri: "/assets/textures/planets/uranus_norm.jpg",
       bumpMapUri: "/assets/textures/planets/uranus_bw.jpg",
     },    
-
-    // {
-    //   name: "Uranus",
-    //   textureUri: "/assets/textures/planets/uranus.jpg",
-    // },    
     {
       name: "Neptune",
       textureUri: "/assets/textures/planets/neptune.jpg",
@@ -110,10 +83,7 @@ const meshProperties = {
       textureUri: "/assets/textures/planets/pluto_2k.jpg",
       bumpMapUri: "/assets/textures/planets/pluto_topo_2k.jpg",      
     },        
-
-
   ]
-
 }
 
 export { meshProperties };

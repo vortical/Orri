@@ -3,7 +3,7 @@ import { assert, expect, test } from 'vitest';
 
 import { Quaternion, Vector3, Euler } from 'three';
 import { zipCombine , partial} from '../src/system/arrays'
-import { toRad } from '../src/system/geometry';
+import { toRad, toDeg } from '../src/system/geometry';
 import { Vector } from '../src/system/vecs';
 
 test('partial', () => {
@@ -19,6 +19,63 @@ test('partial', () => {
 
 });
 
+
+
+test('tutorial', () => {
+
+
+
+
+        
+});
+
+
+
+
+test('angles', () => {
+
+
+    function angleTo(v1: Vector, v2: Vector, plane: Vector): number {
+
+        // don't reall need to project
+        const v1Projected = v1.clone().projectOnPlane(plane)
+        const v2Projected = v2.clone().projectOnPlane(plane);
+        
+        let angle = v1Projected.angleTo(v2Projected);  
+
+        const cross = v1Projected.clone().cross(v2Projected);
+        
+        return cross.angleTo(plane) < Math.PI/2 ? angle: Math.PI*2-angle;
+    }
+
+
+    // clockwise from x
+    const a = new Vector(1,0,0);
+    const b = new Vector(0,0,-1);
+    const c = new Vector(-1,0,0);
+    const d = new Vector(0,0,1);
+
+
+    const ab = a.clone().applyAxisAngle(new Vector(0, 1, 0), toRad(45)).normalize();
+    const ad = a.clone().applyAxisAngle(new Vector(0, 1, 0), toRad(-45)).normalize();
+
+    const planeNormal = a.clone().cross(b);
+
+    let angle0 = toDeg(angleTo(a, b, planeNormal));
+    let angle1 = toDeg(angleTo(a, ab, planeNormal));
+    let angle2 = toDeg(angleTo(ab, b, planeNormal));
+    let angle3 = toDeg(angleTo(a, c, planeNormal));
+    let angle4 = toDeg(angleTo(ad, ab, planeNormal));
+    let angle5 = toDeg(angleTo(ab, ad, planeNormal));
+    let angle6 = toDeg(angleTo(b, a, planeNormal));
+
+
+
+    console.log(ab);
+    console.log(ad);
+    expect(a).toEqual(a);
+
+});
 
 test('adjust speed', () => {
 
