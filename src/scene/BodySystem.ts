@@ -101,7 +101,7 @@ export class BodySystem {
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
             ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km,
-            showNames = false, showVelocities = false,
+            showNames = true, showVelocities = false,
             location, targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
         
         const targetName = target;
