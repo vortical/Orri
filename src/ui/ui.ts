@@ -50,7 +50,7 @@ function getLocationFromBrowser(): Promise<LatLon> {
 };
 
 function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataService: DataService) {
-    const gui = new GUI().title("Settings");
+    const gui = new GUI().title("Orri");
     const bodyNames = bodySystem.bodies.map((b) => b.name);
 
     const options = {
@@ -115,28 +115,29 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('DateTime (editable)'))
         .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
+    const settings = gui.addFolder('Settings');        
 
-    gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
-    gui.add(options, "pushState").name('Push State to Location Bar and History');
-    gui.add(options, "reloadState").name('Reload Pushed State');
+    settings.add(options, "setTimeToNow").name('Set Time To "Now"');        
+    settings.add(options, "pushState").name('Push State to Location Bar and History');
+    settings.add(options, "reloadState").name('Reload Pushed State');
 
-    const targetController = gui.add(options, 'target', bodyNames).name("Target")
+    const targetController = settings.add(options, 'target', bodyNames).name("Target")
         .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
 
-    const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraModes).name("Targeting Camera Mode")
+    const targetCameraModeController = settings.add(options, 'targetingCameraMode', CameraModes).name("Targeting Camera Mode")
         .onChange((v: CameraMode) => bodySystem.setCameraTargetingMode(v));
         
 
-    const showNameLabelsController = gui.add(options, "showNameLabels").name('Show Names')
+    const showNameLabelsController = settings.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
 
-    const showInfoLabelsController = gui.add(options, "showInfoLabels").name('Show Distances')
+    const showInfoLabelsController = settings.add(options, "showInfoLabels").name('Show Distances')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.InfoLabel));
 
-    const projectShadowsController = gui.add(options, "projectShadows").name('Cast Shadows')
+    const projectShadowsController = settings.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
 
-    const timeSettingsfolder = gui.addFolder('Time Settings');
+    const timeSettingsfolder = settings.addFolder('Time Settings');
 
 
 
@@ -145,7 +146,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     timeSettingsfolder.add(options, "resetTimeScale").name('Reset Time Scale');
 
-    const locationFolder = gui.addFolder('Location Settings');
+    const locationFolder = settings.addFolder('Location Settings');
     const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)")
         .onFinishChange((v: string) => {
             //"43.302912, -73.6428032"
@@ -173,7 +174,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     updateViewFromSufaceController();
     
 
-    const viewSettingsfolder = gui.addFolder('View Settings');
+    const viewSettingsfolder = settings.addFolder('View Settings');
     
 
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
@@ -188,7 +189,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     viewSettingsfolder.add(options, 'distanceUnits', DistanceUnits)
         .onChange((v: DistanceUnit) => bodySystem.setDistanceUnit(v));
 
-    const toolsFolder = gui.addFolder('Tools').close();        
+    const toolsFolder = settings.addFolder('Tools').close();        
 
     const showAxesController = toolsFolder.add(options, "showAxes").name('ICRS Axes')
         .onChange((v: boolean) => bodySystem.setAxesHelper(v));
