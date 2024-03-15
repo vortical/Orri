@@ -210,6 +210,7 @@ export class BodySystem {
         options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
         options.showVelocities = this.isLayerEnabled(CameraLayer.InfoLabel);
         options.location = this.getLocation();
+        options.targettingCameraMode = this.getCameraTargetingMode();
         return options;
     }
 
@@ -237,15 +238,15 @@ export class BodySystem {
         return this.distanceformatter;
     }
 
-    getDistance(targetBody: Body): number {
-        const targetPosition = new Vector3(targetBody.position.x, targetBody.position.y, targetBody.position.z);
-        // todo: need to deal with those units somehow. Having the view using km and the body itself meters is error prone.
-        return this.camera.position.distanceTo(targetPosition.divideScalar(1000));
-    }
+    // getDistance(targetBody: Body): number {
+    //     const targetPosition = new Vector3(targetBody.position.x, targetBody.position.y, targetBody.position.z);
+    //     // todo: need to deal with those units somehow. Having the view using km and the body itself meters is error prone.
+    //     return this.camera.position.distanceTo(targetPosition.divideScalar(1000));
+    // }
 
-    getDistanceFromSurface(bodyObject3D: BodyObject3D){
-        return bodyObject3D.cameraDistanceFromSurface();
-    }
+    // getDistanceFromSurface(bodyObject3D: BodyObject3D){
+    //     return bodyObject3D.cameraDistanceFromSurface();
+    // }
 
     // fix... bodyObject3D vs Object3D is not something we should deal with
     getBodyObject3D(name: string): BodyObject3D {

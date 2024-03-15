@@ -1,5 +1,6 @@
 import { PropertyReviver, ValueReviver, compositeReviver, namedPropertyReviver } from '../domain/reviver.ts';
 import { BodySystemOptionsState } from '../scene/BodySystem.ts'
+import { CameraMode,CameraModes } from '../scene/CameraTargetingState.ts'
 
 import LZString from 'lz-string';
 import { Vector } from '../system/vecs.ts';
@@ -40,6 +41,8 @@ export default class LocationBar {
         // just add filtering revivers for properties that have special revival/marshaling requirements)
         return compositeReviver([
             namedPropertyReviver("location", (v: {lat: number, lon: number}) => new LatLon(v.lat, v.lon)), 
+            namedPropertyReviver("targettingCameraMode", (v: {name: string}) => modeForName(v.name)), 
+
             // don't really have this property... just a place holder
             namedPropertyReviver("bogus_property", (v: VectorComponents) => Vector.fromVectorComponents(v))]);
     }
@@ -57,3 +60,6 @@ export default class LocationBar {
         location.reload();
     }
 };
+
+
+const modeForName = (name:string) => CameraModes[Object.getOwnPropertyNames(CameraModes).filter(x => CameraModes[x].name == name)];
