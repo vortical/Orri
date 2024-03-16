@@ -46,7 +46,8 @@ export class DistanceFormatter {
 
 export enum CameraLayer {
     NameLabel=2,
-    InfoLabel=3
+    InfoLabel=3,
+    ElevationAzimuthLabel=4,
 };
 
 export type BodySystemEvent<T> = {
@@ -96,6 +97,8 @@ export class BodySystem {
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
+    primeMeridianLocationPin ?: LocationPin;
+
     cameraTargetingState: CameraTargetingState;
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
@@ -139,7 +142,9 @@ export class BodySystem {
         this.setShadowsEnabled(castShadows);
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showVelocities, CameraLayer.InfoLabel);
-        
+        this.setLayerEnabled(true, CameraLayer.ElevationAzimuthLabel);
+        this.primeMeridianLocationPin = this.setPrimeMeridian();
+
         if(location){
             this.setLocation(location);
         }        
@@ -166,6 +171,27 @@ export class BodySystem {
         // just an alias for the underlying pin
         return this.getLocationPin()?.latlon;
     }
+
+    getEast(){
+        const meridian = this.primeMeridianLocationPin;
+        const normal = meridian?.getLocationPinNormal();
+        return normal;
+    }
+
+    /**
+     * we set pin at 0,0 on earth to represent its prime meridian, 
+     * this makes it easy to track.
+     * 
+     * @returns 
+     */
+    setPrimeMeridian(){
+        // adds a location at 0,0 on earth
+        const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00");        
+        this.primeMeridianLocationPin?.remove();
+        this.primeMeridianLocationPin = primeMeridianLocationPin;
+        return primeMeridianLocationPin;
+    }
+
 
     setLocation(latlon: LatLon){
         // just an alias for setting a pin, right now we just set those on earth...

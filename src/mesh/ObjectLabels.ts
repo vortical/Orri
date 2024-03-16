@@ -6,12 +6,15 @@ import { CameraLayer } from '../scene/BodySystem';
 class ObjectLabels{
     objectNameLabel: CSS2DObject;
     objectInfoLabel: CSS2DObject;
+    objectExtraLabel: CSS2DObject;
+
     bodyObject3D: BodyObject3D;
 
     constructor(bodyObject3D: BodyObject3D){
 
         this.objectNameLabel = ObjectLabels.#createLabel(1, bodyObject3D.getName(),CameraLayer.NameLabel);
         this.objectInfoLabel = ObjectLabels.#createLabel(0, bodyObject3D.cameraDistanceAsString(), CameraLayer.InfoLabel);
+        this.objectExtraLabel = ObjectLabels.#createLabel(-1, "hello", CameraLayer.ElevationAzimuthLabel);
 
         this.bodyObject3D = bodyObject3D;
         this.setupLabelClickHandler();
@@ -43,11 +46,12 @@ class ObjectLabels{
 
         this.objectNameLabel.element.addEventListener("pointerdown", downhandler);
         this.objectInfoLabel.element.addEventListener("pointerdown", downhandler);
+        this.objectExtraLabel.element.addEventListener("pointerdown", downhandler);
     
     }
 
     getLabels(): CSS2DObject[]{
-        return [this.objectNameLabel, this.objectInfoLabel];
+        return [this.objectNameLabel, this.objectInfoLabel, this.objectExtraLabel];
     }
 
 
@@ -92,6 +96,11 @@ class ObjectLabels{
         // update the info label to show the distance from camera for this body
         if (bodySystem.isLayerEnabled(CameraLayer.InfoLabel)) {
             this.objectInfoLabel.element.textContent = this.bodyObject3D.cameraDistanceAsString();
+        }
+
+        if (bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel)) {
+            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
+            this.objectExtraLabel.element.textContent = altaz?.toString() || "";
         }
     };
  

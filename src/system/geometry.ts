@@ -14,13 +14,31 @@ function toDeg(rad: number): number {
 }
 
 function angleTo(v1: Vector, v2: Vector, plane: Vector): number {  
-  // todo: don't need to normalize
-  const v1Projected = v1.clone().projectOnPlane(plane).normalize()
-  const v2Projected = v2.clone().projectOnPlane(plane).normalize();
+  const v1Projected = v1.clone().projectOnPlane(plane);
+  const v2Projected = v2.clone().projectOnPlane(plane);
   const angle = v1Projected.angleTo(v2Projected);  
   const cross = v1Projected.clone().cross(v2Projected);
   return cross.angleTo(plane) < Math.PI/2 ? angle: Math.PI*2-angle;
 }
+
+
+class AltitudeAzimuth {
+  elevation: number;
+  azimuth: number;
+
+  constructor(elevation: number, azimuth: number){
+    this.elevation = elevation;
+    this.azimuth = azimuth;
+  }
+
+  toString(): string {
+    const northOrSouth = this.elevation<0? "S": "N"
+    const elevationString = Math.abs(this.elevation).toLocaleString(undefined, {maximumFractionDigits: 1});
+    const azimuthString = this.azimuth.toLocaleString(undefined, {maximumFractionDigits: 1});
+    return `${elevationString}\u00B0 ${northOrSouth}, ${azimuthString}\u00B0`;
+  }
+}
+
 
 class LatLon {
   // Not sure this offset applies to all bodies. But it applies to earth's surface mesh.
@@ -35,8 +53,8 @@ class LatLon {
    * @param lon degrees longitude
    */
   constructor(lat: number, lon: number){
-      this.lat = lat;
-      this.lon = lon;
+    this.lat = lat;
+    this.lon = lon;
   }
 
   toString(): string {
@@ -147,5 +165,5 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon };
+export { Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon, AltitudeAzimuth };
 export type { WindowSizeObserver, DistanceUnit };
