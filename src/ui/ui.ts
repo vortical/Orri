@@ -114,7 +114,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         });
     }
 
-    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('DateTime (editable)'))
+    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time(click to edit)'))
         .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
     const settings = gui.addFolder('Settings');        
