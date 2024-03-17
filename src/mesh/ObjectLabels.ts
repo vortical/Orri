@@ -1,6 +1,7 @@
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { BodyObject3D } from './BodyObject3D';
 import { BodySystem, CameraLayer } from '../scene/BodySystem';
+import { AltitudeAzimuth } from '../system/geometry';
 
 class ObjectLabels{
     nameLabel: NameLabel; //CSS2DObject;
@@ -61,7 +62,7 @@ class ObjectLabels{
     };
  
     updateMoonLabels(){
-        // todo: we don't need this method. We should just extend the label classes to have this logic.
+        // todo:No need this method, just extend the label classes to have this logic.
 
         // We show moon labels if this moon's planetarySystem is selected and we are with tolerance distance 
         // -or-
@@ -94,6 +95,7 @@ abstract class Label {
     cameraLayer:  CameraLayer;
     bodySystem: BodySystem;
     bodyObject3D: BodyObject3D;
+    abstract isHeader: boolean;
 
     constructor(cssObject: CSS2DObject, cameraLayer: CameraLayer,  bodyObject3D: BodyObject3D) {
         this.cssObject = cssObject;
@@ -103,7 +105,9 @@ abstract class Label {
     }
 
     setHighlighted(value: boolean){
-        const cssClassName = value ? 'selectedSystemLabel': 'label';
+        const infoClass = this.isHeader ? "": " info"
+        const cssClassName = value ? 'selectedSystemLabel'.concat(infoClass): 'label'.concat(infoClass);
+
         if ( this.cssObject.element.className !== cssClassName){
             this.cssObject.element.className = cssClassName;
         }
@@ -123,6 +127,8 @@ abstract class Label {
 }
 
 class NameLabel extends Label {
+    isHeader: boolean = true;
+
     update(): void{
         if (this.isEnabled()){
             this.setValue(this.bodyObject3D.getName());
@@ -131,6 +137,7 @@ class NameLabel extends Label {
 }
 
 class DistanceLabel extends Label {
+    isHeader: boolean = false;
     update(): void{
         if (this.isEnabled()){
             this.setValue(this.bodyObject3D.cameraDistanceAsString());
@@ -139,11 +146,23 @@ class DistanceLabel extends Label {
 }
 
 class AltitudeAzimuthLabel extends Label {
+    isHeader: boolean = false;
+    previousAltaz?: AltitudeAzimuth;
+
     update(): void{
+
         if (this.isEnabled()){
             const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
+            altaz?.calcTrend(this.previousAltaz);
+            this.previousAltaz = altaz;
+
+
             this.setValue(altaz?.toString() || "");
         }        
+    }
+
+    trend(previous:AltitudeAzimuthLabel){
+
     }
 }
 

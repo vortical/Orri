@@ -14,6 +14,9 @@ html, body {
   background: rgba( 0, 0, 0, .6 );  text-align: right;
 }
 
+.selectedSystemLabel.info {
+  font-size: smaller;
+}
 
 .label {
   color: #979797;
@@ -23,6 +26,9 @@ html, body {
   text-align: right;
 }
 
+.label.info {
+  font-size: smaller;
+}
 
 #scene-container {
  /* tell our scene container to take up the full page */
