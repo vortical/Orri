@@ -1,13 +1,15 @@
-import { Group, Mesh, Object3D } from 'three';
+import { Group, Mesh, Object3D, Vector3 } from 'three';
 import { Body } from '../domain/Body.ts';
-import { toRad } from '../system/geometry.ts';
+import { AltitudeAzimuth, LatLon, angleTo, toDeg, toRad } from '../system/geometry.ts';
 import { BodySystem, CameraLayer } from '../scene/BodySystem.ts';
-import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+// import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { throttle } from '../system/timing.ts';
 import { ObjectLabels } from './ObjectLabels.ts';
 import { LocationPin } from './LocationPin.ts';
+import { Vector } from '../system/vecs.ts';
 
 
+// the name...
 abstract class BodyObject3D {
     object3D: Object3D;
     body: Body;
@@ -20,12 +22,10 @@ abstract class BodyObject3D {
         this.bodySystem = bodySystem;
         this.object3D = new Group();
         this.labels = new ObjectLabels(this);
-        this.object3D.add(...this.labels.getLabels());
+        this.object3D.add(...this.labels.getCSS2DObjects());
     }
 
     abstract getSurfaceMesh(): Mesh;
-
-
 
     getName(): string {
         return this.body.name;
@@ -47,19 +47,41 @@ abstract class BodyObject3D {
         this.bodySystem.setTarget(this);
     }
     
-    
-    cameraDistance(fromSurface: boolean = false){
+    cameraDistance(fromSurface: boolean = false): number {
         const distance = this.bodySystem.camera.position.distanceTo(this.object3D.position);
         return fromSurface? distance - (this.body.radius/1000) : distance;
     }
 
-    cameraDistanceFromSurface(){
+    cameraDistanceFromSurface(): number{
         return this.cameraDistance(true);
     }
 
     cameraDistanceAsString(fromSurface: boolean = false): string {
         const distance = this.cameraDistance(fromSurface);
         return this.bodySystem.getDistanceFormatter().format(distance);
+    }
+
+    altitudeAzimuthFromLocationPin(): AltitudeAzimuth | undefined {
+        // Location pin we are viewing from.
+        const locationPin = this.bodySystem.locationPin;
+        if(!locationPin){
+            return undefined;
+        }
+
+        const east = this.bodySystem.getEast();
+        const objectPos = this.object3D.position;
+        const camera = this.bodySystem.camera;
+        // note: camera and location pin at the same position. Probably
+        // better to use location pin.
+        
+        const cameraPos = camera.position;
+        const up = Vector.fromVectorComponents(camera.up);
+        const targetVector = new Vector().subVectors(objectPos,cameraPos);
+        const phi = 90-toDeg(up.angleTo(targetVector))
+
+        // add 90 cause theta is based off north, whereas we have east.
+        const theta = (toDeg(angleTo(targetVector, east, up)) + 90) % 360;
+        return new AltitudeAzimuth(phi, theta);
     }
 
     removeLocationPin(locationPin: LocationPin){

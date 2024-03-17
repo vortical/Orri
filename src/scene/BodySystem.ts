@@ -46,7 +46,8 @@ export class DistanceFormatter {
 
 export enum CameraLayer {
     NameLabel=2,
-    InfoLabel=3
+    DistanceLabel=3,
+    ElevationAzimuthLabel=4,
 };
 
 export type BodySystemEvent<T> = {
@@ -69,6 +70,7 @@ export type BodySystemOptionsState = {
     location?: LatLon;
     showNames?: boolean;
     showVelocities?: boolean;
+    showAltitudeAzimuth?: boolean;
     targettingCameraMode?: CameraMode;
 };
 
@@ -96,6 +98,8 @@ export class BodySystem {
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
+    primeMeridianLocationPin ?: LocationPin;
+
     cameraTargetingState: CameraTargetingState;
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
@@ -138,8 +142,10 @@ export class BodySystem {
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         this.setShadowsEnabled(castShadows);
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
-        this.setLayerEnabled(showVelocities, CameraLayer.InfoLabel);
-        
+        this.setLayerEnabled(showVelocities, CameraLayer.DistanceLabel);
+        this.setLayerEnabled(true, CameraLayer.ElevationAzimuthLabel);
+        this.primeMeridianLocationPin = this.setPrimeMeridian();
+
         if(location){
             this.setLocation(location);
         }        
@@ -159,6 +165,16 @@ export class BodySystem {
         if (this.cameraTargetingState.cameraMode == cameraMode){
             return;
         }
+
+        if(cameraMode == CameraModes.ViewTargetFromSurface){
+            if(this.getLocationPin() == undefined){
+                throw new Error("No Surface Location set");
+            }
+            if( this.target == this.getBodyObject3D("earth")){
+                throw new Error("Can't view Earth as a target when viewing from surface.");
+            }
+        }
+        
         this.cameraTargetingState = cameraMode.stateBuilder(this);
     }
 
@@ -166,6 +182,27 @@ export class BodySystem {
         // just an alias for the underlying pin
         return this.getLocationPin()?.latlon;
     }
+
+    getEast(){
+        const meridian = this.primeMeridianLocationPin;
+        const normal = meridian?.getLocationPinNormal();
+        return normal;
+    }
+
+    /**
+     * we set pin at 0,0 on earth to represent its prime meridian, 
+     * this makes it easy to track.
+     * 
+     * @returns 
+     */
+    setPrimeMeridian(){
+        // adds a location at 0,0 on earth
+        const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00");        
+        this.primeMeridianLocationPin?.remove();
+        this.primeMeridianLocationPin = primeMeridianLocationPin;
+        return primeMeridianLocationPin;
+    }
+
 
     setLocation(latlon: LatLon){
         // just an alias for setting a pin, right now we just set those on earth...
@@ -208,7 +245,8 @@ export class BodySystem {
         options.date = this.clock.getTime();
 
         options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
-        options.showVelocities = this.isLayerEnabled(CameraLayer.InfoLabel);
+        options.showVelocities = this.isLayerEnabled(CameraLayer.DistanceLabel);
+        options.showAltitudeAzimuth = this.isLayerEnabled(CameraLayer.DistanceLa);
         options.location = this.getLocation();
         options.targettingCameraMode = this.getCameraTargetingMode();
         return options;
@@ -376,6 +414,10 @@ export class BodySystem {
     moveToTarget(bodyObject3D: BodyObject3D){
         if(this.getBodyObject3DTarget() == bodyObject3D){
             return;
+        }
+
+        if(bodyObject3D == this.getBodyObject3D("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface){
+            throw new Error("Can't select Earth as target while viewing from Earth's surface.");
         }
         
         this.cameraTargetingState.moveToTarget(bodyObject3D);

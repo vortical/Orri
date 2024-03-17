@@ -1,6 +1,5 @@
 import { BodyObject3D } from "../mesh/BodyObject3D";
 import { BodySystem } from "./BodySystem";
-import { Body } from '../domain/Body.ts';
 import * as TWEEN from '@tweenjs/tween.js';
 import { Vector3 } from "three";
 
@@ -214,9 +213,11 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
         const locationPinPosition = locationPin!.getLocationPinWorldPosition();
         bodySystem.camera.position.set(locationPinPosition.x,locationPinPosition.y, locationPinPosition.z );
     }
+
 }
 
-interface CameraModeElement {
+
+export interface CameraModeElement {
     name: string,
     stateBuilder: (bodySystem: BodySystem) => CameraTargetingState
 };
