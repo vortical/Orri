@@ -50,8 +50,6 @@ export class ClockTimeUpdateHandler {
     subscribeToClockTime(){
         // time comes in as zulu tz
         this.subscribtion = PubSub.subscribe(SYSTEM_TIME_TOPIC, (msg, timeMs) => {
-            console.log(timeMs);
-            // this.controller.setValue(new Date(timeMs).toISOString().slice(0, -5)+'Z')            
             this.controller.setValue( toIsoString(new Date(timeMs)));
             this.controller.updateDisplay()
         });
