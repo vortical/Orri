@@ -62,7 +62,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
         showAxes: bodySystem.hasAxesHelper(),
         showNameLabels: bodySystem.isLayerEnabled(CameraLayer.NameLabel),
-        showInfoLabels: bodySystem.isLayerEnabled(CameraLayer.InfoLabel),
+        showDistanceLabels: bodySystem.isLayerEnabled(CameraLayer.DistanceLabel),
+        showAltitudeAzimuthLabels: bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel),
         projectShadows: bodySystem.areShadowsEnabled(),
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
@@ -131,9 +132,13 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const showNameLabelsController = settings.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
 
-    const showInfoLabelsController = settings.add(options, "showInfoLabels").name('Show Distances')
-        .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.InfoLabel));
+    const showDistanceLabelsController = settings.add(options, "showDistanceLabels").name('Show Distances')
+        .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.DistanceLabel));
 
+
+    const showAltitudeAzimujthLabelsController = settings.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
+     .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
+        
     const projectShadowsController = settings.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
 

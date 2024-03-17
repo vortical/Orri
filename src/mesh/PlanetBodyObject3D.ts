@@ -92,7 +92,7 @@ class PlanetaryBodyObject3D extends BodyObject3D {
 
         const materialProperties = meshProperties.solarSystem.find((b) => b.name.toLocaleLowerCase() == body.name.toLowerCase())!;
         const widthSegements = 64;
-        const heightSegments = 48;
+        const heightSegments = 64;
 
 
         // TODO: consider having a radius like

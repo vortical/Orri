@@ -1,148 +1,150 @@
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { BodyObject3D } from './BodyObject3D';
-import { CameraLayer } from '../scene/BodySystem';
-
+import { BodySystem, CameraLayer } from '../scene/BodySystem';
 
 class ObjectLabels{
-    objectNameLabel: CSS2DObject;
-    objectInfoLabel: CSS2DObject;
-    objectExtraLabel: CSS2DObject;
-
+    nameLabel: NameLabel; //CSS2DObject;
+    distanceLabel: DistanceLabel;// CSS2DObject;
+    altitudeAzimuthLabel: AltitudeAzimuthLabel;//CSS2DObject;
     bodyObject3D: BodyObject3D;
+    isHighlighted?: boolean;
 
     constructor(bodyObject3D: BodyObject3D){
-
-        this.objectNameLabel = ObjectLabels.#createLabel(1, bodyObject3D.getName(),CameraLayer.NameLabel);
-        this.objectInfoLabel = ObjectLabels.#createLabel(0, bodyObject3D.cameraDistanceAsString(), CameraLayer.InfoLabel);
-        this.objectExtraLabel = ObjectLabels.#createLabel(-1, "hello", CameraLayer.ElevationAzimuthLabel);
-
+        this.nameLabel = new NameLabel(createCSS2DObject(1, bodyObject3D.getName(), CameraLayer.NameLabel), CameraLayer.NameLabel,bodyObject3D);
+        this.distanceLabel = new DistanceLabel(createCSS2DObject(0, "0", CameraLayer.DistanceLabel), CameraLayer.DistanceLabel,bodyObject3D);
+        this.altitudeAzimuthLabel = new AltitudeAzimuthLabel(createCSS2DObject(-1, "23,23", CameraLayer.ElevationAzimuthLabel),CameraLayer.ElevationAzimuthLabel,bodyObject3D);
         this.bodyObject3D = bodyObject3D;
         this.setupLabelClickHandler();
     }
 
-    static #createLabel(center: number, textContent: string, layer: CameraLayer):CSS2DObject {
-        const elementDiv = document.createElement('div');
-        elementDiv.className = 'label';
-        elementDiv.textContent = textContent;
-        elementDiv.style.backgroundColor = 'transparent';
-        const label = new CSS2DObject(elementDiv);
-        label.center.set(0, center);
-        label.layers.set(layer);
-        return label;
+    getCSS2DObjects(): CSS2DObject[] {
+        return this.getLabels().map( (l: Label) => l.cssObject);
     }
 
+    getLabels(): Label[]{
+        return [this.nameLabel, this.distanceLabel, this.altitudeAzimuthLabel];
+    }
 
-
+    setHighlighted(value: boolean) {
+        if (this.isHighlighted !== value){
+            this.isHighlighted = value;
+            this.getLabels().forEach( (label: Label) => label.setHighlighted(value));
+        }
+    }
 
     setupLabelClickHandler(){
 
-        const downhandler = () => {
-            // todo: we should really trigger the click on the 'pointerup' event, if
-            // it was not moved between the pointerdown and pointer up            
-            // this.bodyObject3D.setAsTarget()
+        const downclickhandler = () => {
             this.bodyObject3D.moveToTarget();
         };
 
-
-        this.objectNameLabel.element.addEventListener("pointerdown", downhandler);
-        this.objectInfoLabel.element.addEventListener("pointerdown", downhandler);
-        this.objectExtraLabel.element.addEventListener("pointerdown", downhandler);
-    
+        // This is a poor mans's implementation.
+        // todo: handle this by triggering on the click on the 'pointerup' event, if
+        // it was not moved between the pointerdown and pointer up            
+        this.nameLabel.cssObject.element.addEventListener("pointerdown", downclickhandler);
+        this.distanceLabel.cssObject.element.addEventListener("pointerdown", downclickhandler);
+        this.altitudeAzimuthLabel.cssObject.element.addEventListener("pointerdown", downclickhandler);
     }
 
-    getLabels(): CSS2DObject[]{
-        return [this.objectNameLabel, this.objectInfoLabel, this.objectExtraLabel];
+    isPlanetarySystemSelected(){
+        const currentTarget = this.bodyObject3D.bodySystem.getBodyObject3DTarget();
+        return this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem()
     }
 
+    clearBodyLabels() {
+        this.getLabels().forEach((l: Label) => l.setValue(""));
+    }
 
     updateBodyLabels() {
-        // we only show moon/satellite labels if the that system is selected else from a distance they are all in the same 
-        // area and unreadable
-        const bodySystem = this.bodyObject3D.bodySystem;
-        const currentTarget = bodySystem.getBodyObject3DTarget();
-        const that = this;
-
-        /**
-         * Labels have either a selected css style  or just the regular label style
-         * depending if this body is part of the selected system.
-         * 
-         * @param thisPlaneteraySystem 
-         * @param selectedPlanetarySystem 
-         */
-        function setObjectLabelClass(thisPlaneteraySystem: any, selectedPlanetarySystem: any){
-
-            if (thisPlaneteraySystem == selectedPlanetarySystem) {
-                // set the label class style as selected
-                if (bodySystem.isLayerEnabled(CameraLayer.NameLabel)) {
-                    that.objectNameLabel.element.className = 'selectedSystemLabel';
-                }
-
-                if (bodySystem.isLayerEnabled(CameraLayer.InfoLabel)) {
-                    that.objectInfoLabel.element.className = 'selectedSystemLabel';
-                }
-            } else {
-                // ensure the label class style as the non selected style (i.e. just label)
-                if (bodySystem.isLayerEnabled(CameraLayer.NameLabel)) {
-                    that.objectNameLabel.element.className = 'label';
-                }
-                if (bodySystem.isLayerEnabled(CameraLayer.InfoLabel)) {
-                    that.objectInfoLabel.element.className = 'label';
-                }
-            }
-        }
-
-        setObjectLabelClass(this.bodyObject3D.body.planetarySystem(), currentTarget.body.planetarySystem() );
-
-        // update the info label to show the distance from camera for this body
-        if (bodySystem.isLayerEnabled(CameraLayer.InfoLabel)) {
-            this.objectInfoLabel.element.textContent = this.bodyObject3D.cameraDistanceAsString();
-        }
-
-        if (bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel)) {
-            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
-            this.objectExtraLabel.element.textContent = altaz?.toString() || "";
-        }
+        this.setHighlighted(this.isPlanetarySystemSelected());
+        this.getLabels().forEach((l: Label) => l.update());
     };
  
     updateMoonLabels(){
+        // todo: we don't need this method. We should just extend the label classes to have this logic.
 
-        // we only show moon/satellite labels if:
-        // this moon's planetarySystem is selected and we are with tolerance distance 
+        // We show moon labels if this moon's planetarySystem is selected and we are with tolerance distance 
         // -or-
-        // 
+        // We are simply really close to it
 
-        const bodySystem = this.bodyObject3D.bodySystem;
-                
-        if(bodySystem.isLayerEnabled(CameraLayer.InfoLabel) || bodySystem.isLayerEnabled(CameraLayer.NameLabel)){
-            const currentTarget = bodySystem.getBodyObject3DTarget();
+        const isSystemSelected = this.isPlanetarySystemSelected();
+        const cameraDistance = this.bodyObject3D.cameraDistance();
 
-            const isMoonPlanetarySystem = this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem();
-            const cameraDistance = this.bodyObject3D.cameraDistance();
-
-            // if the planet moon is part of the target system and less than 35M km
-            // - or - 
-            // if its just real close (e.g. 1eM km). This last happens when targetting
-            // Jupiter from the earth surface, we'd still want to see earth's moon labels.
-            if((isMoonPlanetarySystem && cameraDistance < 35e6 ) || cameraDistance < 1e6)  {
-                this.objectNameLabel.element.textContent = this.bodyObject3D.getName();
-                this.updateBodyLabels();
-            } else {
-                if(bodySystem.isLayerEnabled(CameraLayer.NameLabel)){
-                    if(this.objectNameLabel.element.textContent !== ""){
-                        this.objectNameLabel.element.textContent = "";
-                    }
-                }
-                if(bodySystem.isLayerEnabled(CameraLayer.InfoLabel)){
-                    if(this.objectInfoLabel.element.textContent !== ""){
-                        this.objectInfoLabel.element.textContent = "";
-                    }
-                } 
-            }
+        if((isSystemSelected && cameraDistance < 35e6 ) || cameraDistance < 1e6)  {
+            this.updateBodyLabels();
+        } else {
+            this.clearBodyLabels();
         }
-
     };
-  
 }
 
+function createCSS2DObject(center: number, textContent: string, layer: CameraLayer): CSS2DObject {
+    const elementDiv = document.createElement('div');
+    elementDiv.className = 'label';
+    elementDiv.textContent = textContent;
+    elementDiv.style.backgroundColor = 'transparent';
+    const label = new CSS2DObject(elementDiv);
+    label.center.set(0, center);
+    label.layers.set(layer);
+    return label;
+}
+
+abstract class Label {
+    cssObject: CSS2DObject;
+    cameraLayer:  CameraLayer;
+    bodySystem: BodySystem;
+    bodyObject3D: BodyObject3D;
+
+    constructor(cssObject: CSS2DObject, cameraLayer: CameraLayer,  bodyObject3D: BodyObject3D) {
+        this.cssObject = cssObject;
+        this.cameraLayer = cameraLayer;
+        this.bodySystem = bodyObject3D.bodySystem;
+        this.bodyObject3D = bodyObject3D;
+    }
+
+    setHighlighted(value: boolean){
+        const cssClassName = value ? 'selectedSystemLabel': 'label';
+        if ( this.cssObject.element.className !== cssClassName){
+            this.cssObject.element.className = cssClassName;
+        }
+    }
+
+    setValue(value: string) {
+        if( this.bodySystem.isLayerEnabled(this.cameraLayer) && this.cssObject.element.textContent !== value){        
+            this.cssObject.element.textContent = value;
+        }        
+    }
+
+    isEnabled(): boolean {
+        return this.bodySystem.isLayerEnabled(this.cameraLayer);
+    }
+
+    abstract update(): void;
+}
+
+class NameLabel extends Label {
+    update(): void{
+        if (this.isEnabled()){
+            this.setValue(this.bodyObject3D.getName());
+        }
+    }
+}
+
+class DistanceLabel extends Label {
+    update(): void{
+        if (this.isEnabled()){
+            this.setValue(this.bodyObject3D.cameraDistanceAsString());
+        }
+    }
+}
+
+class AltitudeAzimuthLabel extends Label {
+    update(): void{
+        if (this.isEnabled()){
+            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
+            this.setValue(altaz?.toString() || "");
+        }        
+    }
+}
 
 export { ObjectLabels };

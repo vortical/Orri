@@ -22,7 +22,7 @@ abstract class BodyObject3D {
         this.bodySystem = bodySystem;
         this.object3D = new Group();
         this.labels = new ObjectLabels(this);
-        this.object3D.add(...this.labels.getLabels());
+        this.object3D.add(...this.labels.getCSS2DObjects());
     }
 
     abstract getSurfaceMesh(): Mesh;

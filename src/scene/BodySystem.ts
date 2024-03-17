@@ -46,7 +46,7 @@ export class DistanceFormatter {
 
 export enum CameraLayer {
     NameLabel=2,
-    InfoLabel=3,
+    DistanceLabel=3,
     ElevationAzimuthLabel=4,
 };
 
@@ -141,7 +141,7 @@ export class BodySystem {
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
         this.setShadowsEnabled(castShadows);
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
-        this.setLayerEnabled(showVelocities, CameraLayer.InfoLabel);
+        this.setLayerEnabled(showVelocities, CameraLayer.DistanceLabel);
         this.setLayerEnabled(true, CameraLayer.ElevationAzimuthLabel);
         this.primeMeridianLocationPin = this.setPrimeMeridian();
 
@@ -234,7 +234,7 @@ export class BodySystem {
         options.date = this.clock.getTime();
 
         options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
-        options.showVelocities = this.isLayerEnabled(CameraLayer.InfoLabel);
+        options.showVelocities = this.isLayerEnabled(CameraLayer.DistanceLabel);
         options.location = this.getLocation();
         options.targettingCameraMode = this.getCameraTargetingMode();
         return options;

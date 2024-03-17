@@ -6,6 +6,9 @@ import { toRad } from '../system/geometry';
 import { KinematicObject } from '../domain/models.ts';
 
 
+
+// https://sketchfab.com/3d-models/3december-2021-international-space-station-a91871ba086749a492c12976cdcf321b
+
 const meshProperties = {
   solarSystem: [
     {
