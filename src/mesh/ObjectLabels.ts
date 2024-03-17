@@ -2,6 +2,7 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { BodyObject3D } from './BodyObject3D';
 import { BodySystem, CameraLayer } from '../scene/BodySystem';
 import { AltitudeAzimuth } from '../system/geometry';
+import { CameraModes } from '../scene/CameraTargetingState';
 
 class ObjectLabels{
     nameLabel: NameLabel; //CSS2DObject;
@@ -57,6 +58,15 @@ class ObjectLabels{
     }
 
     updateBodyLabels() {
+    
+        if(this.bodyObject3D.bodySystem.isLayerEnabled(CameraLayer.DistanceLabel)){
+            this.distanceLabel.cssObject.center.set(0, 0);
+            this.altitudeAzimuthLabel.cssObject.center.set(0, -1);
+        } else {
+            this.altitudeAzimuthLabel.cssObject.center.set(0, 0);
+        }
+
+        
         this.setHighlighted(this.isPlanetarySystemSelected());
         this.getLabels().forEach((l: Label) => l.update());
     };
@@ -71,7 +81,7 @@ class ObjectLabels{
         const isSystemSelected = this.isPlanetarySystemSelected();
         const cameraDistance = this.bodyObject3D.cameraDistance();
 
-        if((isSystemSelected && cameraDistance < 35e6 ) || cameraDistance < 1e6)  {
+        if((isSystemSelected && cameraDistance < 35e6 ) || cameraDistance < 1e6 || this.bodyObject3D.bodySystem.getBodyObject3DTarget() == this.bodyObject3D )  {
             this.updateBodyLabels();
         } else {
             this.clearBodyLabels();
@@ -152,12 +162,14 @@ class AltitudeAzimuthLabel extends Label {
     update(): void{
 
         if (this.isEnabled()){
-            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
-            altaz?.calcTrend(this.previousAltaz);
-            this.previousAltaz = altaz;
-
-
-            this.setValue(altaz?.toString() || "");
+            if(this.bodySystem.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface){
+                const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
+                altaz?.calcTrend(this.previousAltaz);
+                this.previousAltaz = altaz;
+                this.setValue(altaz?.toString() || "");
+            }else {
+                this.setValue("");
+            }
         }        
     }
 

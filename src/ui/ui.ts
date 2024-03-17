@@ -11,6 +11,7 @@ import { DataService } from '../services/dataservice.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
+import { Toast } from "toaster-js"; 
 
 /**
  * A terse UI...
@@ -123,10 +124,28 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     settings.add(options, "reloadState").name('Reload Pushed State');
 
     const targetController = settings.add(options, 'target', bodyNames).name("Target")
-        .onFinishChange((targetName: string) => bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName)));
+        .onFinishChange((targetName: string) => {
+            try {
+                bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName))
+            }catch(e){
+                targetController.reset();
+                new Toast(e,Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+            }
+        });
 
     const targetCameraModeController = settings.add(options, 'targetingCameraMode', CameraModes).name("Targeting Camera Mode")
-        .onChange((v: CameraMode) => bodySystem.setCameraTargetingMode(v));
+        .onChange((v: CameraMode) => {        
+            try {
+                bodySystem.setCameraTargetingMode(v);
+
+            }catch(e){
+                
+                targetCameraModeController.reset();
+                new Toast(e,Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+
+            }
+            
+        });
         
 
     const showNameLabelsController = settings.add(options, "showNameLabels").name('Show Names')
@@ -135,8 +154,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const showDistanceLabelsController = settings.add(options, "showDistanceLabels").name('Show Distances')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.DistanceLabel));
 
-
-    const showAltitudeAzimujthLabelsController = settings.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
+    const showAltitudeAzimuthController = settings.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
      .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
         
     const projectShadowsController = settings.add(options, "projectShadows").name('Cast Shadows')
@@ -271,7 +289,12 @@ class StatusComponent {
 
         PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
             if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
-                bodySystem.moveToTarget(pickEvent.body);
+                try{
+                    bodySystem.moveToTarget(pickEvent.body);
+
+                }catch(e){
+                    new Toast(e,Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+                }
             }
         });
     }
