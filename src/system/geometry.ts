@@ -74,6 +74,10 @@ class LatLon {
    * @param lon degrees longitude
    */
   constructor(lat: number, lon: number){
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180){
+      throw new Error(`Coordonates out of bounds: ${lat}, ${lon}. Expected values for latitudes: [-90, 90] and longitudes:[-180,180].`);
+    }
+    
     this.lat = lat;
     this.lon = lon;
   }
@@ -82,11 +86,16 @@ class LatLon {
     return `${this.lat}, ${this.lon}`;
   }
 
-  static fromString(s: string): LatLon|undefined {
+  static fromString(s: string): LatLon {
     const locationString = s.split(",");
     const lat = parseFloat(locationString[0]);
-    const lon = parseFloat(locationString[1])
-    return (!isNaN(lat) &&  !isNaN(lon))? new LatLon(lat, lon): undefined;
+    const lon = parseFloat(locationString[1]);
+
+    if(isNaN(lat) || isNaN(lon)){
+      throw new Error(`Invalid coordinates, must be of the form: 'lat, lon' where lat is a number between [-90, 90] and lon between [-180,180].`);
+    } 
+    
+    return new LatLon(lat, lon);
   }
 
   /**

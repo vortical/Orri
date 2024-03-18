@@ -106,7 +106,7 @@ export class BodySystem {
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
             ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km,
             showNames = true, showVelocities = false, showAltitudeAzimuth=true,
-            location, targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
+            location = new LatLon(43.3651712, -73.6231424), targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
         
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
@@ -168,10 +168,10 @@ export class BodySystem {
 
         if(cameraMode == CameraModes.ViewTargetFromSurface){
             if(this.getLocationPin() == undefined){
-                throw new Error("No Surface Location set");
+                throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a surface location set.");
             }
             if( this.target == this.getBodyObject3D("earth")){
-                throw new Error("Can't view Earth as a target when viewing from surface.");
+                throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a target other than Earth.");
             }
         }
         
@@ -197,7 +197,7 @@ export class BodySystem {
      */
     setPrimeMeridian(){
         // adds a location at 0,0 on earth
-        const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00");        
+        const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00", false);        
         this.primeMeridianLocationPin?.remove();
         this.primeMeridianLocationPin = primeMeridianLocationPin;
         return primeMeridianLocationPin;
