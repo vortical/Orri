@@ -12,6 +12,8 @@ import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { Toast } from "toaster-js"; 
+import { call } from 'three/examples/jsm/nodes/Nodes.js';
+
 
 /**
  * A terse UI...
@@ -49,6 +51,20 @@ function getLocationFromBrowser(): Promise<LatLon> {
         }
     });
 };
+
+function withRollback(callback: (v: any)=>void){
+    // Controllers pass in 'this' as their context to onFinishChange/onChange,
+    // we manage the initialValue and call reset when exceptions are encountered.
+    // The reset rolls back the value to initialValue.
+    return function(v: any){
+        try {
+            callback.call(this, v);
+            this.initialValue = v;
+        }catch(e){
+            this.reset();
+        }
+    };
+}
 
 function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataService: DataService) {
     const gui = new GUI().title("Orri");
@@ -123,30 +139,26 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     settings.add(options, "pushState").name('Push State to Location Bar and History');
     settings.add(options, "reloadState").name('Reload Pushed State');
 
+
     const targetController = settings.add(options, 'target', bodyNames).name("Target")
-        .onFinishChange((targetName: string) => {
+        .onFinishChange(withRollback( (targetName) => {
             try {
-                bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName))
+                bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName));
             }catch(e){
-                targetController.reset();
                 new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
+                throw(e);
             }
-        });
+        }));
 
     const targetCameraModeController = settings.add(options, 'targetingCameraMode', CameraModes).name("Targeting Camera Mode")
-        .onChange((v: CameraMode) => {        
+        .onChange(withRollback( (v: CameraMode) => {        
             try {
                 bodySystem.setCameraTargetingMode(v);
-
             }catch(e){
-                
-                targetCameraModeController.reset();
                 new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
-
+                throw(e);
             }
-            
-        });
-        
+        }));
 
     const showNameLabelsController = settings.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
@@ -162,28 +174,24 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const timeSettingsfolder = settings.addFolder('Time Settings');
 
-
-
     const timeScaleController = timeSettingsfolder.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name('Time Scale')
         .onChange((v: number) => bodySystem.setTimeScale(v));
 
     timeSettingsfolder.add(options, "resetTimeScale").name('Reset Time Scale');
 
     const locationFolder = settings.addFolder('Location Settings');
-    const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)")
-        .onFinishChange((v: string) => {
+    const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)").listen()
+        .onFinishChange(withRollback( (v: string) => {
             //"43.302912, -73.6428032"
             try {
                 const latlon = LatLon.fromString(v);
                 bodySystem.setLocation(latlon);
-
+                options.location = bodySystem.getLocation()?.toString() || "";
             }catch(e){
                 new Toast(e.message, Toast.TYPE_WARNING, 6*1000);
-                locationController.reset();
-
+                throw(e);
             }
-
-        });
+        }));
 
 
     locationFolder.add(options, "getLocation").name('Use Browser Location');
@@ -285,7 +293,7 @@ class StatusComponent {
                     bodySystem.moveToTarget(pickEvent.body);
 
                 }catch(e){
-                    new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
+                    // new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
                 }
             }
         });

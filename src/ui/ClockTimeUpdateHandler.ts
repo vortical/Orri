@@ -37,13 +37,15 @@ export class ClockTimeUpdateHandler {
         });
     
         this.controller.onFinishChange((v: string) => {
-            // start listening again to clock
-            this.subscribeToClockTime();
             // only trigger if the value was changed
             if (this.currentValue !== v){
                 this.currentValue = undefined;
                 this._onFinishChange && this._onFinishChange(v);
             }
+
+            // start listening again to clock
+            this.subscribeToClockTime();
+
         });
     }
 
