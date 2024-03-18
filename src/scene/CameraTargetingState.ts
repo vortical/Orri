@@ -160,6 +160,10 @@ export class LookAtTargetCameraMode extends OrbitingCameraMode {
 }
 
 export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingState {
+
+    // see this sky:
+    // https://threejs.org/examples/?q=sky#webgl_shaders_sky
+    
     readonly CAMERA_NEAR = 1;
     bodySystem: BodySystem;
     cameraMode = CameraModes.ViewTargetFromSurface;

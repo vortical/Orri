@@ -203,7 +203,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));
 
-    const fovController = viewSettingsfolder.add(options, "fov", 0.5, 100, 0.1).name('Field Of Vue (degrees)')
+    const fovController = viewSettingsfolder.add(options, "fov", 0.5, 90, 0.1).name('Field Of Vue (degrees)')
         .onChange((v: number) => bodySystem.setFOV(v));
 
     const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
