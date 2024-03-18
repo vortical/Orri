@@ -11,7 +11,7 @@ export interface CameraTargetingState {
 
     cameraMode: CameraMode;
 
-    moveToTarget(bodyObject3D: BodyObject3D): void;
+    moveToTarget(bodyObject3D: BodyObject3D, force: boolean): void;
     // todo: insteal of body...pass in vector3.
     followTarget(bodyObject3D: BodyObject3D): void;
 
@@ -34,6 +34,15 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     constructor(bodySystem: BodySystem) {
         this.bodySystem = bodySystem;
 
+        if(this.bodySystem.getLocationPin()){
+            this.bodySystem.getLocationPin()!.mesh.visible = true;
+        }
+
+        if(!this.bodySystem.controls.enabled ){
+            this.bodySystem.controls.enabled = true;
+        }
+
+        bodySystem.camera.near = this.CAMERA_NEAR;
         // the ecliptic...
         bodySystem.setCameraUp(this.computeDesiredCameraUp());
         
@@ -57,12 +66,12 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     }
 
 
-    moveToTarget(bodyObject3D: BodyObject3D): void {
+    moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
 
         const bodySystem = this.bodySystem;
 
         // we won't move to self.
-        if (bodySystem.getBodyObject3DTarget() == bodyObject3D) {
+        if (bodySystem.getBodyObject3DTarget() == bodyObject3D && !force) {
             return;
         }
 
@@ -157,10 +166,11 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
 
     constructor(bodySystem: BodySystem) {
         this.bodySystem = bodySystem;
-        const pinNormal = bodySystem.locationPin?.getLocationPinNormal();
-        bodySystem.setCameraUp(pinNormal);
-        bodySystem.camera.near = this.CAMERA_NEAR;
-        bodySystem.camera.updateProjectionMatrix();
+        const pinNormal = this.bodySystem.locationPin?.getLocationPinNormal();
+        this.bodySystem.locationPin!.mesh.visible = false;
+        this.bodySystem.setCameraUp(pinNormal);
+        this.bodySystem.camera.near = this.CAMERA_NEAR;
+        this.bodySystem.camera.updateProjectionMatrix();
     }
 
     computeDesiredCameraUp(): Vector3 {
@@ -170,7 +180,9 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
     postTargetSet(bodyObject3D: BodyObject3D) {
     }
 
-    moveToTarget(bodyObject3D: BodyObject3D): void {
+    // force has no effect in this method implementation.
+    moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
+        
         const bodySystem = this.bodySystem;
 
         // If the target body is the same as the one we are sitting on then skip moving.

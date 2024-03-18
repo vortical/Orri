@@ -176,6 +176,7 @@ export class BodySystem {
         }
         
         this.cameraTargetingState = cameraMode.stateBuilder(this);
+        this.cameraTargetingState.moveToTarget(this.getBodyObject3DTarget(), true);
     }
 
     getLocation(): LatLon | undefined {
@@ -207,6 +208,9 @@ export class BodySystem {
     setLocation(latlon: LatLon){
         // just an alias for setting a pin, right now we just set those on earth...
         // would be trivial to set this up to work anywhere.
+        if (this.locationPin?.latlon == latlon){
+            return;
+        }
         this.setLocationPin(new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00"));
     }
 
@@ -411,8 +415,8 @@ export class BodySystem {
         return this.target;
     }
     
-    moveToTarget(bodyObject3D: BodyObject3D){
-        if(this.getBodyObject3DTarget() == bodyObject3D){
+    moveToTarget(bodyObject3D: BodyObject3D, forceMoveCloser = false){
+        if(this.getBodyObject3DTarget() == bodyObject3D && !forceMoveCloser){
             return;
         }
 
@@ -420,7 +424,7 @@ export class BodySystem {
             throw new Error("Can't select Earth as target while viewing from Earth's surface.");
         }
         
-        this.cameraTargetingState.moveToTarget(bodyObject3D);
+        this.cameraTargetingState.moveToTarget(bodyObject3D, forceMoveCloser);
     }
 
     /**
