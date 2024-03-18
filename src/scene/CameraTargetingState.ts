@@ -34,8 +34,12 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     constructor(bodySystem: BodySystem) {
         this.bodySystem = bodySystem;
 
-        if(!bodySystem.controls.enabled ){
-            bodySystem.controls.enabled = true;
+        if(this.bodySystem.getLocationPin()){
+            this.bodySystem.getLocationPin()!.mesh.visible = true;
+        }
+
+        if(!this.bodySystem.controls.enabled ){
+            this.bodySystem.controls.enabled = true;
         }
 
         bodySystem.camera.near = this.CAMERA_NEAR;
@@ -162,15 +166,11 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
 
     constructor(bodySystem: BodySystem) {
         this.bodySystem = bodySystem;
-        const pinNormal = bodySystem.locationPin?.getLocationPinNormal();
-
-        if(bodySystem.controls.enabled ){
-            bodySystem.controls.enabled = false;
-        }
-
-        bodySystem.setCameraUp(pinNormal);
-        bodySystem.camera.near = this.CAMERA_NEAR;
-        bodySystem.camera.updateProjectionMatrix();
+        const pinNormal = this.bodySystem.locationPin?.getLocationPinNormal();
+        this.bodySystem.locationPin!.mesh.visible = false;
+        this.bodySystem.setCameraUp(pinNormal);
+        this.bodySystem.camera.near = this.CAMERA_NEAR;
+        this.bodySystem.camera.updateProjectionMatrix();
     }
 
     computeDesiredCameraUp(): Vector3 {
