@@ -3,6 +3,10 @@ import { BodySystem } from "./BodySystem";
 import * as TWEEN from '@tweenjs/tween.js';
 import { Vector3 } from "three";
 
+
+
+const MAX_DESIRED_TARGET_DISTANCE_TIME_RADIUS = 75;
+
 export interface CameraTargetingState {
 
     cameraMode: CameraMode;
@@ -49,8 +53,6 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
 
     minCameraDistance(bodyObject3D: BodyObject3D){
         const bodyRadius = bodyObject3D.body.radius/1000
-        // const baseRadius =  4000;
-        // const multiplier = 1bodyRadius/baseRadius;
         return bodyRadius + (1.5 * bodyRadius);
     }
 
@@ -74,7 +76,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition);
         const newTargetVectorNormal = newTargetVector.clone().normalize();
         const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
-        const totalDistance = Math.max(Math.min(currentDistanceToSurface + bodyObject3D.body.radius / 1000, 200 * bodyObject3D.body.radius / 1000), this.minCameraDistance(bodyObject3D));
+        const totalDistance = Math.max(Math.min(currentDistanceToSurface + bodyObject3D.body.radius / 1000, MAX_DESIRED_TARGET_DISTANCE_TIME_RADIUS * bodyObject3D.body.radius / 1000), this.minCameraDistance(bodyObject3D));
 
         const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
 
@@ -122,7 +124,7 @@ export class FollowTargetCameraMode extends OrbitingCameraMode {
         super(bodySystem)    
     }
     
-    // todo: insteal of body...pass in vector3.
+
     followTarget(bodyObject3D: BodyObject3D): void {
         const bodySystem = this.bodySystem;
 
@@ -200,7 +202,6 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
             });
     }
 
-    // todo: insteal of body...pass in vector3.
     followTarget(bodyObject3D: BodyObject3D): void {
         const bodySystem = this.bodySystem;
 

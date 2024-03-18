@@ -13,8 +13,6 @@ export  const BodyObject3DFactory  = {
             case "planet":
                 return new PlanetaryBodyObject3D(body, bodySystem);
             case "moon":
-                console.log("Creating moon");
-                
                 return new PlanetaryMoonBodyObject3D(body, bodySystem);
 
             default:

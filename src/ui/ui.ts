@@ -114,7 +114,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         });
     }
 
-    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('DateTime (editable)'))
+    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time(click to edit)'))
         .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
     const settings = gui.addFolder('Settings');        
@@ -129,7 +129,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
                 bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName))
             }catch(e){
                 targetController.reset();
-                new Toast(e,Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+                new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
             }
         });
 
@@ -141,7 +141,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             }catch(e){
                 
                 targetCameraModeController.reset();
-                new Toast(e,Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+                new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
 
             }
             
@@ -173,28 +173,20 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)")
         .onFinishChange((v: string) => {
             //"43.302912, -73.6428032"
-            const latlon = LatLon.fromString(v);
+            try {
+                const latlon = LatLon.fromString(v);
+                bodySystem.setLocation(latlon);
 
-            if(latlon == undefined){
-                locationController.setValue("'".concat(v,"' is not recognized."));
-                // viewFromSurfaceLocationController.enable(false);
-                return;
+            }catch(e){
+                new Toast(e.message, Toast.TYPE_WARNING, 6*1000);
+                locationController.reset();
 
             }
-            bodySystem.setLocation(latlon);
-            updateViewFromSufaceController();
+
         });
 
-    const updateViewFromSufaceController = () => {        
-        // viewFromSurfaceLocationController.enable(bodySystem.getLocationPin() != undefined);
-        
-    }
 
     locationFolder.add(options, "getLocation").name('Use Browser Location');
-    // const viewFromSurfaceLocationController = locationFolder.add(options, "viewFromSurfaceLocation").name("View From surface location")
-    //     .onChange((v: boolean) => bodySystem.setViewFromSurfaceLocation(v));
-
-    updateViewFromSufaceController();
     
 
     const viewSettingsfolder = settings.addFolder('View Settings');
@@ -293,7 +285,7 @@ class StatusComponent {
                     bodySystem.moveToTarget(pickEvent.body);
 
                 }catch(e){
-                    new Toast(e,Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+                    new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
                 }
             }
         });
