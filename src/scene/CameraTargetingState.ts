@@ -239,6 +239,12 @@ export interface CameraModeElement {
     stateBuilder: (bodySystem: BodySystem) => CameraTargetingState
 };
 
+// todo: use enum for modes and a map to hold our builders
+// const cameramodes = new Map<CameraMode, CameraModeElement>([
+//     [LookAtTarget, ]
+// ])
+
+
 export const CameraModes = {
     LookAtTarget: {name: "Look At Target", stateBuilder: (bodySystem: BodySystem) => new LookAtTargetCameraMode(bodySystem) },
     FollowTarget: {name: "Follow Target", stateBuilder: (bodySystem: BodySystem) => new FollowTargetCameraMode(bodySystem) },

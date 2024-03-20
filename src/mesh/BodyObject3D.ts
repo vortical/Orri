@@ -69,17 +69,21 @@ abstract class BodyObject3D {
         }
 
         const east = this.bodySystem.getEast();
+        if (east == undefined){
+            return undefined;
+        }
+
         const objectPos = this.object3D.position;
         const camera = this.bodySystem.camera;
         // note: camera and location pin at the same position. Probably
-        // better to use location pin.
+        // better to leverage location pin as opposed to camera.
         
         const cameraPos = camera.position;
         const up = Vector.fromVectorComponents(camera.up);
         const targetVector = new Vector().subVectors(objectPos,cameraPos);
         const phi = 90-toDeg(up.angleTo(targetVector))
 
-        // add 90 cause theta is based off north, whereas we have east.
+        // Add 90 cause theta (i.e. azimuth) is based off north, whereas we calculated from east.
         const theta = (toDeg(angleTo(targetVector, east, up)) + 90) % 360;
         return new AltitudeAzimuth(phi, theta);
     }

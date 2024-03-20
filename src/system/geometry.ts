@@ -13,7 +13,7 @@ function toDeg(rad: number): number {
     return rad * 180 / Math.PI;
 }
 
-function angleTo(v1: Vector, v2: Vector, plane: Vector): number {  
+function angleTo(v1: Vector3, v2: Vector3, plane: Vector3): number {  
   const v1Projected = v1.clone().projectOnPlane(plane);
   const v2Projected = v2.clone().projectOnPlane(plane);
   const angle = v1Projected.angleTo(v2Projected);  

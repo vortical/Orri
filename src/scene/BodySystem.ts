@@ -144,7 +144,7 @@ export class BodySystem {
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showVelocities, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
-        this.primeMeridianLocationPin = this.setPrimeMeridian();
+        this.primeMeridianLocationPin = this.createPrimeMeridian();
 
         if(location){
             this.setLocation(location);
@@ -184,10 +184,9 @@ export class BodySystem {
         return this.getLocationPin()?.latlon;
     }
 
-    getEast(){
+    getEast(): Vector3 | undefined{
         const meridian = this.primeMeridianLocationPin;
-        const normal = meridian?.getLocationPinNormal();
-        return normal;
+        return meridian?.getLocationPinNormal();
     }
 
     /**
@@ -196,7 +195,7 @@ export class BodySystem {
      * 
      * @returns 
      */
-    setPrimeMeridian(){
+    createPrimeMeridian(){
         // adds a location at 0,0 on earth
         const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00", false);        
         this.primeMeridianLocationPin?.remove();

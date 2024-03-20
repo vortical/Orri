@@ -23,11 +23,21 @@ const meshProperties = {
       specularMapUri: "/assets/textures/planets/earthspec4k.jpg",
       atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png"
     },
+    // https://svs.gsfc.nasa.gov/cgi-bin/details.cgi?aid=4720
+    
+    
     {
       name: "moon",
-      textureUri: "/assets/textures/planets/moonmap4k.jpg",
-      bumpMapUri: "/assets/textures/planets/moonbump4k.jpg"
+      textureUri: "/assets/textures/planets/moon_map_4k.jpg",
+     bumpMapUri: "/assets/textures/planets/moon_bump.jpg",
+     bumpMapScale: 3
+      // bumpMapUri: "/assets/textures/planets/moonbump4k.jpg"
     },
+    // {
+    //   name: "moon",
+    //   textureUri: "/assets/textures/planets/moonmap4k.jpg",
+    //   bumpMapUri: "/assets/textures/planets/moonbump4k.jpg"
+    // },
     {
       name: "Mercury",
       textureUri: "/assets/textures/planets/mercurymap.jpg",
@@ -50,7 +60,7 @@ const meshProperties = {
     {
       name: "Io",
       textureUri: "/assets/textures/planets/io.jpg",
-      normalUri: "/assets/textures/planets/io_1_normal.jpg",
+      normalUri: "/assets/textures/planets/io_normal.jpg",
     },        
 
     {
