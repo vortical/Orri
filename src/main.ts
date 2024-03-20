@@ -1,5 +1,4 @@
-import './style.css'
-
+import './style.css';
 import { BodySystem, BodySystemOptionsState } from './scene/BodySystem.ts'
 import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
 import { Body} from './domain/Body.ts';

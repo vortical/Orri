@@ -11,8 +11,16 @@ import { DataService } from '../services/dataservice.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
+import { INotifyService, NotifyService } from './notify.ts';
 
-import { Toast } from "toaster-js"; 
+// import { Toast } from "toaster-js"; 
+
+
+
+const userNotify: INotifyService = new NotifyService();
+    
+    
+
 
 
 /**
@@ -140,12 +148,19 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     settings.add(options, "reloadState").name('Reload Pushed State');
 
 
+
+
+
+
+
+
+
     const targetController = settings.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback( (targetName) => {
             try {
                 bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName));
             }catch(e){
-                new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
+                userNotify.showWarning("You tried something weird...", (e as Error).message);
                 throw(e);
             }
         }));
@@ -155,7 +170,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             try {
                 bodySystem.setCameraTargetingMode(v);
             }catch(e){
-                new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
+                userNotify.showWarning("You tried something weird...", (e as Error).message);                
                 throw(e);
             }
         }));
@@ -188,7 +203,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
                 bodySystem.setLocation(latlon);
                 options.location = bodySystem.getLocation()?.toString() || "";
             }catch(e){
-                new Toast(e.message, Toast.TYPE_WARNING, 6*1000);
+                userNotify.showWarning("I don't know where to pin your location...", (e as Error).message);
                 throw(e);
             }
         }));
