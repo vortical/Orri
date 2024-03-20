@@ -16,30 +16,14 @@ async function start(){
     const bodySystemUpdater = new NBodySystemUpdater();
     const options = LocationBar.getState();
     const date = options.date ? new Date(options.date): new Date()
-    const bodies: Body[] = await dataService.loadSolarSystem(date);
-
-    // temporary, just want to filter down three logs
-    
-    const warn = console.warn;
-    console.warn = (...data: any[]) => {
-        if(data.length == 1){
-            const message = data[0] as string;
-            if(message.startsWith('THREE.Material: parameter')){
-                return;
-            }
-        }
-        warn(data);
-    }
-        
-
-    
+    const bodies: Body[] = await dataService.loadSolarSystem(date);    
     const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
 
     // Set the up of the viewer to be perpendicular to earth's orbit (the
     // ecliptic plane). 
     // TO consider: We could also offer options to change the 
     // camera up to be based off the normal of any planet's orbital plane or
-    // equatorial plane.
+    // equatorial plane that is selected.
     const earth = bodySystem.getBody("earth");
     bodySystem.setCameraUp(earth.get_orbital_plane_normal());
     const ui = new SimpleUI(statusElement, bodySystem, dataService);

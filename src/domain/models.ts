@@ -36,6 +36,7 @@ type MaterialProperties = {
     name: string;
     textureUri?: string;
     bumpMapUri?: string;
+    bumpMapScale?: number;
     normalUri?: string;
     atmosphereUri?: string;
     specularMapUri?: string;
