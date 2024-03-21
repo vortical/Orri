@@ -8,7 +8,7 @@ html, body {
 }
 
 .selectedSystemLabel {
-  color: #217049;
+  color: #f89406;
   font-family: sans-serif;
   padding: 2px;
   background: rgba( 0, 0, 0, .6 );  text-align: right;
