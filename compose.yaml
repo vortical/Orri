@@ -1,0 +1,14 @@
+# Comments are provided throughout this file to help you get started.
+services:
+  orri:
+    image: orri
+    ports:
+      - 8080:8080
+    volumes:
+      - ~/src/data:/spacefield/data
+  spacefield:
+    image: spacefield
+    ports:
+      - 8000:8000
+    volumes:
+      - ~/src/data:/spacefield/data
