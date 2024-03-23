@@ -1,11 +1,10 @@
-# Comments are provided throughout this file to help you get started.
+version: '3'
 services:
   orri:
     image: orri
     ports:
       - 8080:8080
-    volumes:
-      - ~/src/data:/spacefield/data
+    restart: always      
   spacefield:
     image: spacefield
     ports:
