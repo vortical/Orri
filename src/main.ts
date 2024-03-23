@@ -11,7 +11,7 @@ const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const statusElement =document.querySelector<HTMLInputElement>("#status-container")!;
 
 async function start(){
-    const dataService = new DataService(config.spacefield_host, config.baseUrl);
+    const dataService = new DataService(config.spacefieldBaseURL, config.baseUrl);
     const bodySystemUpdater = new NBodySystemUpdater();
     const options = LocationBar.getState();
     const date = options.date ? new Date(options.date): new Date()

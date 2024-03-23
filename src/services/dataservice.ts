@@ -2,7 +2,7 @@ import { Body } from "../domain/Body.ts";
 import { BodyProperties, KinematicObject, VectorComponents } from "../domain/models.ts";
 
 export class DataService {
-    host: string;
+    spaceFieldBaseURL: string;
     assetsBaseUrl: string
   
     /**
@@ -12,8 +12,8 @@ export class DataService {
      * @param host 
      * @param assetsBaseUrl 
      */
-    constructor(host: string, assetsBaseUrl: string = "/") {
-      this.host = host;
+    constructor(spaceFieldBaseURL: string, assetsBaseUrl: string = "/") {
+      this.spaceFieldBaseURL = spaceFieldBaseURL;
       this.assetsBaseUrl = assetsBaseUrl
     }
     
@@ -29,7 +29,7 @@ export class DataService {
             return {x: v.x, y: v.z, z: -v.y};
         }
 
-        const apiUrl = `http://${this.host}/ephemerids/barycentrics/${name}?time=${time.toISOString()}`;  
+        const apiUrl = `${this.spaceFieldBaseURL}/ephemerids/barycentrics/${name}?time=${time.toISOString()}`;  
         const requestOptions = {
             method: 'GET',
         }; 

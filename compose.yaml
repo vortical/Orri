@@ -1,12 +1,12 @@
 version: '3'
 services:
   orri:
-    image: orri
+    image: vortical/orri
     ports:
       - 8080:8080
     restart: always      
   spacefield:
-    image: spacefield
+    image: vortical/spacefield
     ports:
       - 8000:8000
     volumes:
