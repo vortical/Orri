@@ -4,7 +4,8 @@
 // these are the properties our app uses.
 const config = {
     spacefieldBaseURL: import.meta.env.VITE_SPACEFIELD_BASE_URL,
-    baseUrl: import.meta.env.BASE_URL || "/",
+    baseUrl: import.meta.env.BASE_URL,
+    baseUrlPath: import.meta.env.VITE_BASEURL_PATH 
 
 };
     

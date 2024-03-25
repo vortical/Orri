@@ -1,11 +1,22 @@
-import { TextureLoader } from 'three';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 import { StarBodyObject3D } from './StarBodyObject3D';
 import { Dim, getObjectScreenSize } from '../system/geometry';
+import { textureLoader } from '../services/textureLoader.ts';
 
 
-const textureLoader = new TextureLoader();
 const FLARE_TEXTURE_SIZE = 512;
+
+/**
+ * Lensflare arent the usual mesh with an inherent geometry. They have a static size (they are 2d and designed to 
+ * emulate flare on the camera lens). So we create a set of flares with different sizes (i.e. scales). 
+ *
+ * We determine the desired scales as either log or linear based.
+ *   
+ * For every frame rendered, we determine the desired scale of a flare and ensure it is visible while
+ * disabling other flares.
+ * 
+ *
+ */
 
 function* logSequenceGenerator(start: number, end: number, nbSteps: number): Generator<number> {
     const stepSize = (Math.log(end) - Math.log(start))/(nbSteps - 1);
@@ -14,14 +25,13 @@ function* logSequenceGenerator(start: number, end: number, nbSteps: number): Gen
     }  
 }
 
-// function* linearSequenceGenerator(start: number, end: number, nbSteps: number): Generator<number> {
-//     const stepSize = (end-start)/(nbSteps-1);
-//     for(let i = start; i <= end; i+=stepSize){
-//         yield i;
-//     }    
-// }
+function* linearSequenceGenerator(start: number, end: number, nbSteps: number): Generator<number> {
+    const stepSize = (end-start)/(nbSteps-1);
+    for(let i = start; i <= end; i+=stepSize){
+        yield i;
+    }    
+}
   
-    
 class ScaledLensflare{
     scale: number;
     lensflare: Lensflare;
@@ -32,13 +42,6 @@ class ScaledLensflare{
     }
 }
 
- /**
- * Lensflare arent the usual mesh with an inherent geometry. They have a static size (they are 2d and designed to 
- * emulate flare on the camera lens). So we create a set of flares with different sizes (i.e. scales). 
- * 
- * For every frame rendered, we determine the desired scale of a flare and ensure it is visible while
- * disabling other flares.
- */
 class FlareEffect {
     flares: ScaledLensflare[] = [];
     star: StarBodyObject3D;
@@ -89,7 +92,7 @@ class FlareEffect {
 
 
 function createFlares(color: any, scales: Iterable<number>): ScaledLensflare[] {
-    const textureFlare0 = textureLoader.load( '/assets/textures/lensflare/lensflare0_alpha.png' );
+    const textureFlare0 = textureLoader.load('/assets/textures/lensflare/lensflare0_alpha.png');
     const flares = [];
 
     // create non visible lensflares

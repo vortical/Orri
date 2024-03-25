@@ -29,7 +29,7 @@ export class DataService {
             return {x: v.x, y: v.z, z: -v.y};
         }
 
-        const apiUrl = `${this.spaceFieldBaseURL}/ephemerids/barycentrics/${name}?time=${time.toISOString()}`;  
+        const apiUrl = `${this.spaceFieldBaseURL}/ephemeris/barycentrics/${name}?time=${time.toISOString()}`;  
         const requestOptions = {
             method: 'GET',
         }; 

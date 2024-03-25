@@ -1,14 +1,3 @@
-    
-import { Quaternion, Vector3 } from 'three';
-import { Body }  from '../domain/Body.ts';
-import { Vector } from '../system/vecs';
-import { toRad } from '../system/geometry';
-import { KinematicObject } from '../domain/models.ts';
-
-
-
-// https://sketchfab.com/3d-models/3december-2021-international-space-station-a91871ba086749a492c12976cdcf321b
-
 const meshProperties = {
   solarSystem: [
     {
@@ -24,20 +13,14 @@ const meshProperties = {
       atmosphereUri: "/assets/textures/planets/earth_clouds_2048.png"
     },
     // https://svs.gsfc.nasa.gov/cgi-bin/details.cgi?aid=4720
-    
-    
+        
     {
       name: "moon",
       textureUri: "/assets/textures/planets/moon_map_4k.jpg",
      bumpMapUri: "/assets/textures/planets/moon_bump.jpg",
      bumpMapScale: 3
-      // bumpMapUri: "/assets/textures/planets/moonbump4k.jpg"
+
     },
-    // {
-    //   name: "moon",
-    //   textureUri: "/assets/textures/planets/moonmap4k.jpg",
-    //   bumpMapUri: "/assets/textures/planets/moonbump4k.jpg"
-    // },
     {
       name: "Mercury",
       textureUri: "/assets/textures/planets/mercurymap.jpg",
@@ -52,6 +35,7 @@ const meshProperties = {
       name: "Mars",
       textureUri: "/assets/textures/planets/mars_2k_color.jpg",
       normalUri: "/assets/textures/planets/mars_2k_normal.jpg",
+      normalMapScale: 2,
     },
     {
       name: "Jupiter",
@@ -61,8 +45,8 @@ const meshProperties = {
       name: "Io",
       textureUri: "/assets/textures/planets/io.jpg",
       normalUri: "/assets/textures/planets/io_normal.jpg",
+      normalMapScale: 1,
     },        
-
     {
       name: "Europa",
       textureUri: "/assets/textures/planets/europa.jpg",
@@ -76,7 +60,6 @@ const meshProperties = {
       name: "Callisto",
       textureUri: "/assets/textures/planets/callisto.jpg",
     },        
-
     {
       name: "Saturn",
       textureUri: "/assets/textures/planets/saturn_cassini_2011_texture_map.jpg"

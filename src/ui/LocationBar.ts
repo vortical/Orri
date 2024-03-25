@@ -1,19 +1,18 @@
 import { PropertyReviver, ValueReviver, compositeReviver, namedPropertyReviver } from '../domain/reviver.ts';
 import { BodySystemOptionsState } from '../scene/BodySystem.ts'
-import { CameraMode,CameraModes } from '../scene/CameraTargetingState.ts'
+import { CameraModes } from '../scene/CameraTargetingState.ts'
 
 import LZString from 'lz-string';
 import { Vector } from '../system/vecs.ts';
 import { LatLon } from '../system/geometry.ts';
 import { VectorComponents } from '../domain/models.ts';
 
-
 type ParamName = "zstate" | "state";
 
 /**
  * Manage history based on state being pushed. Users can also copy the location/share it.
  * 
- * State is can be represented as compressed json (zipstate param) or uncompressed (state param).
+ * State is can be represented as either compressed or uncompressed json via either zipstate or state param.
  * 
  */
 export default class LocationBar {
@@ -32,7 +31,7 @@ export default class LocationBar {
         
         const stateParam: ParamName = toCompress? "zstate": "state";
         if (new URLSearchParams(window.location.search).get(stateParam) !== stateString) {
-            window.history.pushState(stateString, "", "/?".concat(stateParam, "=", stateString));
+            window.history.pushState(stateString, "", "?".concat(stateParam, "=", stateString));
         }
     }  
 

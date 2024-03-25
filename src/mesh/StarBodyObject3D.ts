@@ -1,17 +1,16 @@
 import { Body } from '../domain/Body.ts';
 import { LightProperties } from '../domain/models.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, TextureLoader, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group } from "three";
+import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
-import { BodySystem, CameraLayer } from '../scene/BodySystem.ts';
+import { BodySystem } from '../scene/BodySystem.ts';
 import { FlareEffect } from './FlareEffect.ts';
+import { textureLoader } from '../services/textureLoader.ts';
 
 
-const textureLoader = new TextureLoader();
 const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
-
 
 class DirectionLightTargetListener {
     star: StarBodyObject3D;
@@ -59,10 +58,18 @@ class StarBodyObject3D extends BodyObject3D {
 
         // Create the sun mesh
         const geometry = new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
-        const material = new MeshBasicMaterial({
-            map: materialProperties.textureUri ? textureLoader.load(materialProperties.textureUri) : undefined,
-            color: "white",
-        });
+
+        const params: MeshBasicMaterialParameters = {}
+
+        if (materialProperties.textureUri) {
+            params.map = textureLoader.load(materialProperties.textureUri);
+        }
+
+        if (materialProperties.alphaUri) {
+            params.alphaMap = textureLoader.load(materialProperties.alphaUri);
+        }
+
+        const material = new MeshBasicMaterial(params);        
         const surfacemesh = new Mesh(geometry, material);
         surfacemesh.name = name;
         this.surfaceMesh = surfacemesh;

@@ -10,6 +10,8 @@ export default defineConfig(({ command, mode }) => {
     const baseurl_path = env.VITE_BASEURL_PATH;
 
     // The vite config, just the stuff vite needs to serve/build
+    // The base ends up statically replaced and available as import.meta.env.BASE_URL
+    // It it was empty it will be set as '/'
     const vitconfig = {
         base: baseurl_path
     };

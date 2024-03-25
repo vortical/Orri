@@ -1,15 +1,12 @@
 import { Body } from '../domain/Body.ts';
 import { meshProperties } from "../data/bodySystems.ts";
-import { Mesh, Material, TextureLoader, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide, Vector2, LineBasicMaterial, MeshBasicMaterial, Sphere, Spherical } from "three";
+import { Mesh, Material, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide, Vector2, LineBasicMaterial, MeshBasicMaterial, Sphere, Spherical } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { MaterialProperties } from '../domain/models.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
-import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { toRad } from '../system/geometry.ts';
+import { textureLoader } from '../services/textureLoader.ts';
 
-
-const textureLoader = new TextureLoader();
 
 function createAtmosphereMateriel(textureUri: string) {
     return new MeshPhongMaterial({
@@ -29,6 +26,7 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
 
     if (materialProperties.normalUri) {
         params.normalMap = textureLoader.load(materialProperties.normalUri);
+        params.normalScale = materialProperties.normalMapScale ? new Vector2(materialProperties.normalMapScale, materialProperties.normalMapScale) : new Vector2(1,1);
     }
 
     if (materialProperties.bumpMapUri) {
