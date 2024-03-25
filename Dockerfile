@@ -1,7 +1,7 @@
 ############################
 # Build the application
 ############################
-FROM node:16 AS builder
+FROM node:20 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -14,6 +14,7 @@ RUN npm run build
 ############################
 FROM nginx:stable-alpine
 
+ARG BASEURL_PATH
 # # Create a non-privileged user that the app will run under.
 # # See https://docs.docker.com/go/dockerfile-user-best-practices/
 # ARG UID=10001
@@ -29,7 +30,8 @@ FROM nginx:stable-alpine
 #  # swith to the non-privileged user to run the application.
 
 # USER appuser
-COPY --from=builder /app/dist /usr/share/nginx/html
+RUN mkdir -p /app/dist /usr/share/nginx/html/${BASEURL_PATH}
+COPY --from=builder /app/dist /usr/share/nginx/html/${BASEURL_PATH}
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 
