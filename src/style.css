@@ -2,7 +2,7 @@
 html, body {
   /* remove margins and scroll bars */
   margin: 0;
-  
+  background-color: #0A0E20;
   height: 100%;
   overflow: hidden;
 }
@@ -41,7 +41,7 @@ html, body {
   Set the container's background color to the same as the scene's
   background to prevent flashing on load
 */
-background-color: black;   
+background-color: #0A0E20;   
 
 }
 

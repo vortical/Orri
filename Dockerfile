@@ -14,6 +14,11 @@ RUN npm run build
 ############################
 FROM nginx:stable-alpine
 
+
+##
+## Used as the base path of the web app, this should match
+## the VITE_BASEURL_PATH value in the .env[.xxx] environment file which can be an
+## empty string (e.g. for dev)
 ARG BASEURL_PATH
 # # Create a non-privileged user that the app will run under.
 # # See https://docs.docker.com/go/dockerfile-user-best-practices/

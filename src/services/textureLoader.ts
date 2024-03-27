@@ -3,7 +3,7 @@ import { TextureLoader } from 'three';
 import config from '../configuration.ts';
 
 
-// A poor man 'singleton'
+// We want at texture loader to honor the base path of the deployed webapp.
 const textureLoader = new TextureLoader();
 
 // Make sure we don't make the path just be '/' else image.src ends with 'http//' or 'https//'
