@@ -13,6 +13,8 @@ import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
 
+import { ShadowType} from '../mesh/Umbra.ts';
+
 // import { Toast } from "toaster-js"; 
 
 
@@ -90,6 +92,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         showDistanceLabels: bodySystem.isLayerEnabled(CameraLayer.DistanceLabel),
         showAltitudeAzimuthLabels: bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel),
         projectShadows: bodySystem.areShadowsEnabled(),
+        shadowType: bodySystem.getShadowType(),
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
@@ -147,14 +150,6 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     settings.add(options, "pushState").name('Push State to Location Bar and History');
     settings.add(options, "reloadState").name('Reload Pushed State');
 
-
-
-
-
-
-
-
-
     const targetController = settings.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback( (targetName) => {
             try {
@@ -183,9 +178,16 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const showAltitudeAzimuthController = settings.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
      .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
-        
+
+     
+
+
     const projectShadowsController = settings.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
+
+
+    const shadowTypeController = settings.add(options, "shadowType", ShadowType ).name('Shadow Tyoe')
+        .onChange((v: ShadowType) => bodySystem.setShadowType(v));        
 
     const timeSettingsfolder = settings.addFolder('Time Settings');
 
@@ -217,6 +219,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));
+
+
 
     const fovController = viewSettingsfolder.add(options, "fov", 0.5, 90, 0.1).name('Field Of Vue (degrees)')
         .onChange((v: number) => bodySystem.setFOV(v));
@@ -304,12 +308,7 @@ class StatusComponent {
 
         PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
             if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
-                try{
-                    bodySystem.moveToTarget(pickEvent.body);
-
-                }catch(e){
-                    // new Toast(e.message, Toast.TYPE_MESSAGE, 6*1000);
-                }
+                bodySystem.moveToTarget(pickEvent.body);
             }
         });
     }
