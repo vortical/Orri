@@ -19,6 +19,7 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { LocationPin } from '../mesh/LocationPin.ts';
 import { CameraTargetingState, CameraMode, CameraModes } from './CameraTargetingState.ts';
+import { ShadowType } from '../mesh/Umbra.ts';
 
 const CAMERA_NEAR = 1000;
 const CAMERA_NEAR_FROM_SURFACE = 1;
@@ -66,10 +67,11 @@ export type BodySystemOptionsState = {
     ambientLightLevel?: number;
     showAxes?: boolean;
     castShadows?: boolean;
+    shadowType?: ShadowType;
     distanceUnit?: DistanceUnit;
     location?: LatLon;
     showNames?: boolean;
-    showVelocities?: boolean;
+    showDistance?: boolean;
     showAltitudeAzimuth?: boolean;
     targettingCameraMode?: CameraMode;
 };
@@ -78,6 +80,7 @@ export type BodySystemOptionsState = {
  * Our system Facade
  */
 export class BodySystem {
+    shadowType: ShadowType =  ShadowType.Penumbra;
     bodySystemUpdater: CompositeUpdater = new CompositeUpdater()
     bodies: Body[];
     camera: PerspectiveCamera;
@@ -104,8 +107,8 @@ export class BodySystem {
 
     constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
-            ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, distanceUnit = DistanceUnits.km,
-            showNames = true, showVelocities = false, showAltitudeAzimuth=true,
+            ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = false, shadowType= ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
+            showNames = true, showDistance = false, showAltitudeAzimuth=true,
             location = new LatLon(43.3651712, -73.6231424), targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
         
         const targetName = target;
@@ -140,9 +143,10 @@ export class BodySystem {
         this.setSize(canvasSize);
         this.picker = new Picker(this);
         setupResizeHandlers(parentElement, (size: Dim) => this.setSize(size));
+        this.shadowType = shadowType;
         this.setShadowsEnabled(castShadows);
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
-        this.setLayerEnabled(showVelocities, CameraLayer.DistanceLabel);
+        this.setLayerEnabled(showDistance, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
         this.primeMeridianLocationPin = this.createPrimeMeridian();
 
@@ -151,6 +155,15 @@ export class BodySystem {
         }        
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this)
         this.cameraTargetingState.postTargetSet(this.target);
+    }
+
+    setShadowType(shadowType: ShadowType){
+        this.shadowType = shadowType;
+        this.scaleMoonForShadowType()
+    }
+
+    getShadowType(): ShadowType {
+        return this.shadowType;
     }
 
     getCameraTargetingState(): CameraTargetingState{
@@ -245,10 +258,11 @@ export class BodySystem {
         options.ambientLightLevel = this.getAmbiantLightLevel();
         options.showAxes = this.hasAxesHelper();
         options.castShadows = this.areShadowsEnabled();
+        options.shadowType = this.getShadowType();
         options.date = this.clock.getTime();
 
         options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
-        options.showVelocities = this.isLayerEnabled(CameraLayer.DistanceLabel);
+        options.showDistance = this.isLayerEnabled(CameraLayer.DistanceLabel);
         options.showAltitudeAzimuth = this.isLayerEnabled(CameraLayer.ElevationAzimuthLabel);
         options.location = this.getLocation();
         options.targettingCameraMode = this.getCameraTargetingMode();
@@ -440,19 +454,59 @@ export class BodySystem {
         if(bodyObject3D == undefined){
             return;
         }
-
+        
+        
         if (typeof bodyObject3D === "string") {
             bodyObject3D = this.getBodyObject3D(bodyObject3D);
             if(bodyObject3D == undefined){
                 return;
             }
         }
-
+        
+        
+        
         if (this.target != bodyObject3D) {
             this.target = bodyObject3D;
             this.cameraTargetingState.postTargetSet(bodyObject3D);
             this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: bodyObject3D } });        
         }
+        
+        // this.scaleMoonForShadowType();
+        
+    }
+
+
+    /**
+     * this is hack for the april 8th, 2004 eclipse.
+     * 
+     * This program only calculates 'paralel' shadows which shows any area where there is
+     * a partial eclipse, but for this particular eclipse (april 8) folks want to see where there
+     * is a total eclipse, so we 'simulate' where this shadow is. The umbra is easy to calculate:
+     * -  Does the middle of the moon during an eclipse intersect with earth...
+     * 
+     * So, The umbra is  about 100 km radius... I won't even bother calculating this.
+     *
+     */
+    scaleMoonForShadowType(){
+        const shadowType  = this.shadowType;
+        const moon = this.getBodyObject3D("moon");
+
+        if(shadowType == ShadowType.Umbra  && this.getBodyObject3DTarget().getName().toLocaleLowerCase() == "earth" 
+                && this.getBodyObject3DTarget().cameraDistance() < 384400 && moon.cameraDistance() < 384400) {
+            const moon = this.getBodyObject3D("moon");
+            // 100 km diameter for.
+
+            const radius = moon.body.radius;
+            const umbraRadius = 100e3;
+            const scale = umbraRadius/radius;
+
+            moon.scale(scale);
+        }else{
+            const moon = this.getBodyObject3D("moon");
+            moon.scale(this.scale);
+
+        }
+
     }
 
 
@@ -475,6 +529,7 @@ export class BodySystem {
             // this.lightHelper?.update();
             this.render();
             this.updateStats();
+            this.scaleMoonForShadowType()
         });
     }
 
