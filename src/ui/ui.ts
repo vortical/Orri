@@ -141,14 +141,14 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         });
     }
 
-    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time(click to edit)'))
+    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time (click to change)'))
         .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
+
+    gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
 
     const settings = gui.addFolder('Settings');        
 
-    settings.add(options, "setTimeToNow").name('Set Time To "Now"');        
-    settings.add(options, "pushState").name('Push State to Location Bar and History');
-    settings.add(options, "reloadState").name('Reload Pushed State');
+
 
     const targetController = settings.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback( (targetName) => {
@@ -160,7 +160,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             }
         }));
 
-    const targetCameraModeController = settings.add(options, 'targetingCameraMode', CameraModes).name("Targeting Camera Mode")
+    const targetCameraModeController = settings.add(options, 'targetingCameraMode', CameraModes).name("Camera Mode")
         .onChange(withRollback( (v: CameraMode) => {        
             try {
                 bodySystem.setCameraTargetingMode(v);
@@ -170,23 +170,32 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             }
         }));
 
-    const showNameLabelsController = settings.add(options, "showNameLabels").name('Show Names')
+    const fovController = settings.add(options, "fov", 0.05, 90, 0.1).name('Field Of Vue')
+        .onChange((v: number) => bodySystem.setFOV(v));
+
+    const labelsSettingsfolder = settings.addFolder('Labels Settings');
+
+    const showNameLabelsController = labelsSettingsfolder.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
 
-    const showDistanceLabelsController = settings.add(options, "showDistanceLabels").name('Show Distances')
+    const showDistanceLabelsController = labelsSettingsfolder.add(options, "showDistanceLabels").name('Show Distances')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.DistanceLabel));
 
-    const showAltitudeAzimuthController = settings.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
-     .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
+    labelsSettingsfolder.add(options, 'distanceUnits', DistanceUnits)
+        .onChange((v: DistanceUnit) => bodySystem.setDistanceUnit(v));
+   
+    const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
+        .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
 
-     
+
+    const shadowsSettingsfolder = settings.addFolder('Eclipse/shadow Settings');     
 
 
-    const projectShadowsController = settings.add(options, "projectShadows").name('Cast Shadows')
+    const projectShadowsController = shadowsSettingsfolder.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
 
 
-    const shadowTypeController = settings.add(options, "shadowType", ShadowType ).name('Shadow Tyoe')
+    const shadowTypeController = shadowsSettingsfolder.add(options, "shadowType", ShadowType ).name('Shadow Type')
         .onChange((v: ShadowType) => bodySystem.setShadowType(v));        
 
     const timeSettingsfolder = settings.addFolder('Time Settings');
@@ -222,14 +231,10 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
 
 
-    const fovController = viewSettingsfolder.add(options, "fov", 0.5, 90, 0.1).name('Field Of Vue (degrees)')
-        .onChange((v: number) => bodySystem.setFOV(v));
 
     const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
         .onChange((v: number) => bodySystem.setAmbiantLightLevel(v));
 
-    viewSettingsfolder.add(options, 'distanceUnits', DistanceUnits)
-        .onChange((v: DistanceUnit) => bodySystem.setDistanceUnit(v));
 
     const toolsFolder = settings.addFolder('Tools').close();        
 
@@ -238,6 +243,10 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const showStatsController = toolsFolder.add(options, "showStats").name('Perf Stats')
         .onChange((v: boolean) => bodySystem.showStats(v));
+
+    settings.add(options, "pushState").name('Push State to Location Bar and History');
+    settings.add(options, "reloadState").name('Reload Pushed State');
+    
 
     PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event) => {
         if (event.body && options.target != event.body.name) {
