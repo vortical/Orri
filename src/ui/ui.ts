@@ -8,21 +8,16 @@ import { throttle } from "../system/timing.ts";
 import { ClockTimeUpdateHandler } from './ClockTimeUpdateHandler.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { DataService } from '../services/dataservice.ts';
+import { ShadowType } from '../domain/models.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
 
-import { ShadowType} from '../mesh/Umbra.ts';
-
-// import { Toast } from "toaster-js"; 
-
+// import { ShadowType} from '../mesh/Umbra.ts';
 
 
 const userNotify: INotifyService = new NotifyService();
-    
-    
-
 
 
 /**
@@ -148,8 +143,6 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     const settings = gui.addFolder('Settings');        
 
-
-
     const targetController = settings.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback( (targetName) => {
             try {
@@ -187,13 +180,10 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
 
-
     const shadowsSettingsfolder = settings.addFolder('Eclipse/shadow Settings');     
-
 
     const projectShadowsController = shadowsSettingsfolder.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
-
 
     const shadowTypeController = shadowsSettingsfolder.add(options, "shadowType", ShadowType ).name('Shadow Type')
         .onChange((v: ShadowType) => bodySystem.setShadowType(v));        
@@ -222,19 +212,13 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     locationFolder.add(options, "getLocation").name('Use Browser Location');
     
-
     const viewSettingsfolder = settings.addFolder('View Settings');
     
-
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));
 
-
-
-
     const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
         .onChange((v: number) => bodySystem.setAmbiantLightLevel(v));
-
 
     const toolsFolder = settings.addFolder('Tools').close();        
 
@@ -286,6 +270,7 @@ class StatusComponent {
         const statusDivElement = document.createElement('div');
         const targetElement = document.createElement('div');
         const hoverElement = document.createElement('div');
+
         statusDivElement.appendChild(targetElement)
         statusDivElement.appendChild(document.createElement('br'));
         statusDivElement.appendChild(hoverElement);

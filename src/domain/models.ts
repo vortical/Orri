@@ -68,8 +68,6 @@ type RingProperties = {
 type BodyType = "star" | "planet" | "moon" ;
 
 
-
-
 type BodyProperties = {
     type: BodyType;
     name: string;
@@ -118,5 +116,10 @@ type BodyProperties = {
 
 }
 
+export enum ShadowType {
+    Umbra = "Umbra",
+    Penumbra= "Penumbra"
+}
 
-export type { VectorComponents, BodyType, RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod };
+
+export type { VectorComponents, BodyType, RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod, };

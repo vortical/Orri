@@ -13,13 +13,13 @@ import { Vector } from '../system/vecs.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
-import { VectorComponents } from '../domain/models.ts';
+import { VectorComponents, ShadowType } from '../domain/models.ts';
 import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { LocationPin } from '../mesh/LocationPin.ts';
 import { CameraTargetingState, CameraMode, CameraModes } from './CameraTargetingState.ts';
-import { ShadowType } from '../mesh/Umbra.ts';
+// import { ShadowType } from '../mesh/Umbra.ts';
 
 const CAMERA_NEAR = 1000;
 const CAMERA_NEAR_FROM_SURFACE = 1;
@@ -273,16 +273,19 @@ export class BodySystem {
         return this.camera.layers.isEnabled(layer);
     }
 
+    // setLayerEnabled(value: boolean, layer: CameraLayer){
+    //     if(value){
+    //         if(!this.isLayerEnabled(layer)){
+    //             this.camera.layers.enable(layer);
+    //         }
+    //     }else{
+    //         if(this.isLayerEnabled(layer)){
+    //             this.camera.layers.disable(layer);
+    //         }
+    //     }
+    // }
     setLayerEnabled(value: boolean, layer: CameraLayer){
-        if(value){
-            if(!this.isLayerEnabled(layer)){
-                this.camera.layers.enable(layer);
-            }
-        }else{
-            if(this.isLayerEnabled(layer)){
-                this.camera.layers.disable(layer);
-            }
-        }
+        value? this.camera.layers.enable(layer) : this.camera.layers.disable(layer);
     }
 
     setCameraUp(v = new Vector3(0, 1, 0)) {
@@ -293,22 +296,10 @@ export class BodySystem {
         return this.distanceformatter;
     }
 
-    // getDistance(targetBody: Body): number {
-    //     const targetPosition = new Vector3(targetBody.position.x, targetBody.position.y, targetBody.position.z);
-    //     // todo: need to deal with those units somehow. Having the view using km and the body itself meters is error prone.
-    //     return this.camera.position.distanceTo(targetPosition.divideScalar(1000));
-    // }
-
-    // getDistanceFromSurface(bodyObject3D: BodyObject3D){
-    //     return bodyObject3D.cameraDistanceFromSurface();
-    // }
-
-    // fix... bodyObject3D vs Object3D is not something we should deal with
     getBodyObject3D(name: string): BodyObject3D {
         return this.bodyObjects3D.get(name.toLowerCase())!
     }
 
-    //fix...see above
     getBody(name: string): Body {
         return this.bodyObjects3D.get(name.toLowerCase())!.body;
     }
@@ -479,10 +470,9 @@ export class BodySystem {
     /**
      * this is hack for the april 8th, 2004 eclipse.
      * 
-     * This program only calculates 'paralel' shadows which shows any area where there is
-     * a partial eclipse, but for this particular eclipse (april 8) folks want to see where there
-     * is a total eclipse, so we 'simulate' where this shadow is. The umbra is easy to calculate:
-     * -  Does the middle of the moon during an eclipse intersect with earth...
+     * This program calculates 'parallel' shadows which shows any area where there is
+     * a partial eclipse, but to see where there
+     * is a total eclipse we 'simulate' where this shadow is. 
      * 
      * So, The umbra is  about 100 km radius... I won't even bother calculating this.
      *
@@ -512,7 +502,6 @@ export class BodySystem {
 
     start() {
         this.clock.enableTimePublisher(true);
-        //this.camera.layers.enableAll();
         this.render();
         const timer = this.clock.startTimer("AnimationTimer");
         this.controls.enabled = true;
@@ -526,7 +515,6 @@ export class BodySystem {
                 this.followTarget(this.target);
             }
             TWEEN.update();
-            // this.lightHelper?.update();
             this.render();
             this.updateStats();
             this.scaleMoonForShadowType()
