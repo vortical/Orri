@@ -371,6 +371,14 @@ export class BodySystem {
         }
     }
 
+    isPaused(): boolean {
+        return this.clock.isPaused();
+    }
+
+    setPaused(value: boolean): boolean {
+        return this.clock.setPaused(value);
+    }
+    
     getTimeScale(): number {
         return this.clock.scale;
     }
@@ -563,6 +571,7 @@ export class BodySystem {
             resolve(null);
         });
     }
+
 
     stop() {
         this.clock.enableTimePublisher(false);

@@ -114,7 +114,7 @@ export class Timer {
      */
     name: string;
     timestamp!: number;
-    startTime!: number;
+    // startTime!: number;
 
     constructor(clock: Clock, name: string){
         this.clock = clock;
@@ -133,14 +133,14 @@ export class Timer {
         return delta;
     }
 
-    getTime(): number {
-        const now = performance.now();
-        return this.clock.scale * (now - this.startTime);
-    }
+    // getTime(): number {
+    //     const now = performance.now();
+    //     return this.clock.scale * (now - this.startTime);
+    // }
 
     start(): Timer{
-        this.startTime = performance.now();
-        this.timestamp = this.startTime;    
+        // this.startTime = performance.now();
+        this.timestamp = performance.now();    
         return this;
     }
 }
@@ -160,10 +160,13 @@ export class Clock {
     clockTimeMs!: number;
     realTimestampMs!: number;
 
+    _isPaused: boolean = false;
     /**
      * Default scale 1 is 1:1
      */
     scale: number = 1;   
+
+    savedScale: number = 1;
 
     timers = new Map<string, Timer>();
 
@@ -181,6 +184,27 @@ export class Clock {
         // this.clockTimeMs = Date.now();
         // this.realTimestampMs = this.clockTimeMs;
     }
+
+    
+    setPaused(value: boolean): boolean {
+        if(value){
+            if(!this.isPaused()){
+                this.savedScale = this.scale;
+                this.setScale(0);
+                this._isPaused = true;
+            }
+        }else{
+            if(this.isPaused()){
+                this._isPaused = false;
+                this.setScale(this.savedScale);
+            }
+        }
+        return this.isPaused();
+    }
+
+    isPaused(): boolean {
+        return this._isPaused;
+    }
     
     setTime(timeMs: number) {
         this.realTimestampMs = Date.now();
@@ -194,8 +218,12 @@ export class Clock {
     }
 
     setScale(scale: number){
-        this.setTime(this.getTime());
-        this.scale = scale;
+        if(this.isPaused()){
+            this.savedScale = scale;
+        } else {
+            this.setTime(this.getTime());
+            this.scale = scale;
+        }
     }
     
     enableTimePublisher(isEnabled: boolean){

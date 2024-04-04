@@ -46,17 +46,6 @@ background-color: #0A0E20;
 }
 
 
-#bottom-container {
-  position: absolute;
-  bottom: 0; 
-
-
-  opacity: 0.3;
-  color: white; 
-  border-width: 0;           /* Set text color to black */
-  background-color:rgb(51, 50, 48)   /* Set background color to gray */
-  
-}
 
 #system-time {
   left:0;
@@ -76,6 +65,58 @@ background-color: #0A0E20;
   border-width: 0;           /* Set text color to black */
   background-color:rgb(51, 50, 48)   /* Set background color to gray */
 }
+
+
+
+.bottom-container {
+
+  opacity: 0.4;
+  color: white; 
+  -width: 2;
+  border-color:#0056b3;         
+  background-color: #1fe0;  /* fully transparent */  
+}
+
+
+
+
+.bottom-container.positioning {
+  width: 100%;
+  max-height: 50%;
+  position: fixed;
+  bottom: 0;
+  left: 0px;
+  z-index: 1000;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px; 
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.control-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #007BFF;
+  color: #FFFFFF;
+  transition: background-color 0.3s ease;
+}
+
+.control-button:hover {
+  background-color: #0056b3;
+}
+
+.control-button:active {
+  background-color: #004099; /* Darker color when button is pressed */
+}
+
 
 
 

@@ -20,6 +20,56 @@ import { INotifyService, NotifyService } from './notify.ts';
 const userNotify: INotifyService = new NotifyService();
 
 
+
+export class TimeControls {
+    rewindButton: HTMLInputElement;
+    playPauseButton: HTMLInputElement;
+    forwardButton: HTMLInputElement;
+    nowButton: HTMLInputElement;
+    isPaused?: boolean;
+
+    bodySystem: BodySystem;
+    dataService: DataService;
+
+    constructor(bodySystem: BodySystem, dataService: DataService){
+        this.rewindButton = document.querySelector<HTMLInputElement>("#rewindButton")!;
+        this.playPauseButton = document.querySelector<HTMLInputElement>("#playPauseButton")!;
+        this.forwardButton = document.querySelector<HTMLInputElement>("#forwardButton")!;
+        this.nowButton =document.querySelector<HTMLInputElement>("#nowButton")!;
+        this.rewindButton.addEventListener("click", () => this.rewind());
+        this.playPauseButton.addEventListener("click", () => this.playPause());
+        this.forwardButton.addEventListener("click", () => this.forward());
+        this.nowButton.addEventListener("click", () => this.now());
+        
+        this.bodySystem = bodySystem;
+        this.dataService = dataService;
+    }
+    
+
+    rewind(){
+        console.log(`Rewinding...`);
+    }
+
+    playPause(){
+        
+        const isPaused = this.bodySystem.setPaused(!this.bodySystem.isPaused());
+
+        this.playPauseButton.textContent = isPaused? ">": "||";
+        console.log("Play/Pause toggled");
+
+    }
+    forward(){
+        
+        console.log("Forwarding...");
+    }
+    now(){
+        console.log("Now...");
+    }
+
+
+}
+
+
 /**
  * A terse UI...
  */
@@ -29,6 +79,7 @@ export class SimpleUI {
 
         buildLilGui(statusElement, bodySystem, dataService);
         new StatusComponent(statusElement, bodySystem);
+        new TimeControls(bodySystem, dataService);
 
         // // Handle the history back button
         window.addEventListener('popstate', function (event) {
@@ -93,6 +144,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         location: bodySystem.getLocation()?.toString() || "",
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
 
+        
         pushState() {
             const state = bodySystem.getState();
             LocationBar.pushState(state);

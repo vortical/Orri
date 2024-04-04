@@ -7,10 +7,24 @@
   </head>
   <body>
     <div id="scene-container">
-      <div id="bottom-container">
-        <div id="status-container"></div>
-      </div>
+
+
+  </div>
+  
+  <div id="bottom-container" class="bottom-container positioning">
+    <div id="clock-controls" class="controls">
+      tic toc
     </div>
-    <script type="module" src="src/main.ts"></script>
+    <div id="controls" class="controls">
+      <button class="control-button" id="rewindButton">&lt;&lt;</button>
+      <button class="control-button" id="playPauseButton">&gt; or ||</button>
+      <button class="control-button" id="forwardButton">&gt;&gt;</button>
+      <button class="control-button" id="nowButton">&gt;now	&lt;</button>            
+    </div>
+  
+    <div id="status-container">
+    </div>
+  </div>
+  <script type="module" src="src/main.ts"></script>
   </body>
 </html>
