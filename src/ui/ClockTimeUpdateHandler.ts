@@ -20,6 +20,9 @@ function toIsoString(date: Date) {
         ':' + pad(Math.abs(tzo) % 60);
   }
 
+/**
+ * Handles the time input in from the lil-gui UI.
+ */  
 export class ClockTimeUpdateHandler {
     subscribtion: any;
     controller: Controller;

@@ -59,6 +59,29 @@ export function throttle(threshold: number, scope: any | undefined, fn: (...args
     };
 };
 
+/**
+ * Javascript's date toIsoString is borked.
+ * 
+ * @param date 
+ * @returns 
+ */
+export function toIsoString(date: Date) {
+    var tzo = -date.getTimezoneOffset(),
+        dif = tzo >= 0 ? '+' : '-',
+        pad = function(num: number) {
+            return (num < 10 ? '0' : '') + num;
+        };
+  
+    return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes()) +
+        ':' + pad(date.getSeconds()) +
+        dif + pad(Math.floor(Math.abs(tzo) / 60)) +
+        ':' + pad(Math.abs(tzo) % 60);
+}
+
 export enum TimeUnit {
     Milliseconds,
     Seconds,
@@ -151,39 +174,7 @@ export function formatPeriod(period: TimePeriod): string {
     return components.join(", ");
     
 }
-// export function timeMsToUnits(timeMs: number, unit: TimeUnit=TimeUnit.Milliseconds): number {
-//     switch (unit) {
-//         case TimeUnit.Milliseconds:
-//             return timeMs;
-//         case TimeUnit.Seconds:
-//             return timeMs / 1000.0;
-//         case TimeUnit.Minutes:
-//             return timeMs / 60000.0;
-//         case TimeUnit.Hours: 
-//             return timeMs / 3600000.0;
-//         case TimeUnit.Days:
-//             return timeMs / 86400000.0;
-//         default:
-//             throw new Error()
-//     }
-// }
 
-// export function unitsToMs(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): number {
-//     switch(baseUnit){
-//         case TimeUnit.Milliseconds:
-//             return units;
-//         case TimeUnit.Seconds:
-//             return units * 1000.0;
-//         case TimeUnit.Minutes:
-//             return units * 60000.0;
-//         case TimeUnit.Hours: 
-//             return units * 3600000.0;
-//         case TimeUnit.Days:
-//             return units * 86400000.0;
-//         default:
-//             throw new Error()        
-//     }
-// }
 
 
 /**
@@ -195,13 +186,8 @@ export function formatPeriod(period: TimePeriod): string {
 export class Timer {
 
     clock: Clock
-
-    /**
-     * Base unit is 1 ms.
-     */
     name: string;
     timestamp!: number;
-    // startTime!: number;
 
     constructor(clock: Clock, name: string){
         this.clock = clock;
@@ -210,7 +196,7 @@ export class Timer {
 
     /**
      * 
-     * @returns time in clock units
+     * @returns time in ms
      */
     getDelta(): number {        
         // note that the scale could have changed between calls to getDelta, we'd have to account for this...
@@ -219,11 +205,6 @@ export class Timer {
         this.timestamp = now;
         return delta;
     }
-
-    // getTime(): number {
-    //     const now = performance.now();
-    //     return this.clock.scale * (now - this.startTime);
-    // }
 
     start(): Timer{
         // this.startTime = performance.now();
@@ -234,27 +215,36 @@ export class Timer {
 
 
 /**
- * Manages the animation time, can be sped up/slowed down. Can have downstream timers associated to
- * it.
+ * Manages the animation time, can be sped up/slowed down using scales which 
+ * can have positive or negative values. 
  * 
- * Also publishes its current time at each second to a topic: SYSTEM_TIME_TOPIC.
+ * Can have downstream timers associated to it.
+ * 
+ * Also publishes its current time at each realtime second to a topic: SYSTEM_TIME_TOPIC. The 
+ * time is in ms based on the usual the UNIX epoch (January 1, 1970 00:00:00 UTC) .
+ * 
  */
 export class Clock {
     
     /**
-     * ms based on the usual the UNIX epoch (January 1, 1970 00:00:00 UTC) 
+     * clockTimeMs is the scaled time.
      */
     clockTimeMs!: number;
-    realTimestampMs!: number;
-
-    _isPaused: boolean = false;
+    
     /**
-     * Default scale 1 is 1:1
+     * realTimestampMs keeps track of actual time in ms.
+     * 
+     * When scales are changed, the realtime reflects the initial
+     * time when the scale was applied. 
+     * 
+     * Thus clockTimeMs is always:
+     * clockTimeMs + (now-realTimestampMs)*scale
+     * 
      */
+    realTimestampMs!: number;
+    _isPaused: boolean = false;
     scale: number = 1;   
-
     savedScale: number = 1;
-
     timers = new Map<string, Timer>();
 
     /**
@@ -264,15 +254,12 @@ export class Clock {
 
     /**
      * 
-     * @param msToUnit units based on ms. So 1000 msToUnit is a second.
+     * @param msToUnit units based on ms
      */
     constructor(clockTimeMs: number = Date.now() ){
         this.setTime(clockTimeMs);
-        // this.clockTimeMs = Date.now();
-        // this.realTimestampMs = this.clockTimeMs;
     }
 
-    
     setPaused(value: boolean): boolean {
         if(value){
             if(!this.isPaused()){

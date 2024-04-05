@@ -16,6 +16,7 @@ import { INotifyService, NotifyService } from './notify.ts';
 import flatpickr from "flatpickr";
 import { Instance } from 'flatpickr/dist/types/instance';
 import { TimeScaleProvider } from './TimeScaleProvider.ts';
+import { ClockDateTimeInput } from './ClockDateTimeInput.ts';
 
 // import { ShadowType} from '../mesh/Umbra.ts';
 
@@ -51,8 +52,10 @@ export class TimeControls {
     bodySystem: BodySystem;
     dataService: DataService;
     scaleProvider: TimeScaleProvider;
-    flatpicker: Instance;
-    
+    // flatpicker: Instance;
+    // subscribtion: any;
+    clockDateTimeInput: ClockDateTimeInput;
+
     constructor(bodySystem: BodySystem, dataService: DataService){
         this.rewindButton = document.querySelector<HTMLInputElement>("#rewindButton")!;
         this.playPauseButton = document.querySelector<HTMLInputElement>("#playPauseButton")!;
@@ -67,22 +70,9 @@ export class TimeControls {
         this.dataService = dataService;
         this.scaleProvider = new TimeScaleProvider(this.bodySystem.getTimeScale());
 
-        this.flatpicker = flatpickr("#datetimePicker", {
-            enableTime: true,
-            altInput: true,
-            altFormat: "F j, Y H:i:s",
-            dateFormat: "Y-m-d H:i:s",
-            // dateFormat: "Y-m-d H:i",
-
-            time_24hr: false,
-            enableSeconds: true,
-            minDate: new Date("2016-01-01"),
-            maxDate: new Date("2045-12-31"),
-            defaultDate: new Date(bodySystem.clock.getTime())
-        }) as Instance;
-
-        
-        
+        this.clockDateTimeInput = new ClockDateTimeInput("#datetimePicker", bodySystem)
+            .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
+              
     }
     
 
@@ -107,9 +97,13 @@ export class TimeControls {
         console.log("Forwarding..."+this.bodySystem.getTimeScale() );
     }
     now(){
-        console.log("Now...");
+        // Given the bodies move, slowing down the time scale makes for a somewhat smoother transition.
+        // But it would be cool to animate transition/move to new location of the body
+        const scale = this.bodySystem.getTimeScale();
+        this.bodySystem.setTimeScale(1);
+        this.bodySystem.setSystemTime(new Date());
+        this.bodySystem.setTimeScale(scale);
     }
-
 
 }
 
@@ -198,7 +192,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         },        
         setTimeToNow() {
             timeScaleController.setValue(1);
-            setSystemTime(new Date());
+            bodySystem.setSystemTime(new Date());
+            // setSystemTime(new Date());
         },
         resetTimeScale() {
             timeScaleController.setValue(1);
@@ -219,21 +214,22 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         },
     };
 
-    function setSystemTime(datetime: string | Date) {
-        return new Promise(async (resolve) => {
-            try {
-                const time = new Date(datetime);
-                const kinematics = await dataService.loadKinematics(Array.from(bodySystem.bodyObjects3D.keys()), time);
-                bodySystem.addUpdater(new BodiesAtTimeUpdater(kinematics, time));
+    // function setSystemTime(datetime: string | Date) {
+    //     return new Promise(async (resolve) => {
+    //         try {
+    //             const time = new Date(datetime);
+    //             const kinematics = await dataService.loadKinematics(Array.from(bodySystem.bodyObjects3D.keys()), time);
+    //             bodySystem.addUpdater(new BodiesAtTimeUpdater(kinematics, time));
 
-            } catch (e) {
-                console.log(e)
-            }
-        });
-    }
+    //         } catch (e) {
+    //             console.log(e)
+    //         }
+    //     });
+    // }
 
-    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time (click to change)'))
-        .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
+    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time'))
+        .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
+        // .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
     gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
 

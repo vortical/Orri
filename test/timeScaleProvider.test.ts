@@ -122,3 +122,28 @@ test('test scale from a negative value exceeding upper limit', () => {
 
     expect(current).toEqual(-1 * timeScaleProvider.timeScales[timeScaleProvider.timeScales.length - 1]);
 });
+
+
+
+test('functional', () => {
+    
+    type HasName = {
+        name: string,
+        saying?: string
+    };
+
+    const c = function(spec: HasName): any {
+        const that = {
+            getName: () => spec.name,
+            saying: () => `saying ${spec.saying || '...'}`
+        };
+        return that;
+    }
+
+    const m = c({name: "Joe"});
+
+
+
+
+    expect(m.getName()).toEqual("Joe");
+});
