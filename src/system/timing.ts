@@ -81,22 +81,109 @@ export function timePeriodToUnits(timePeriod: TimePeriod, unit: TimeUnit=TimeUni
     return timeMsToUnits(timePeriodToMs(timePeriod), unit);
 }
 
-export function timeMsToUnits(timeMs: number, unit: TimeUnit=TimeUnit.Milliseconds): number {
+export function unitsToTimePeriod(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): TimePeriod{
+
+    const period: TimePeriod = {};
+    const ms = unitsToMs(units, baseUnit);
+
+    period.days = ms/timePeriodToMs({days:1})
+    period.hours = (ms - timePeriodToMs(period))/timePeriodToMs({hours:1})
+    period.minutes = (ms - timePeriodToMs(period))/timePeriodToMs({minutes:1})
+    period.seconds = (ms - timePeriodToMs(period))/timePeriodToMs({seconds:1})
+    period.millis = (ms - timePeriodToMs(period))/timePeriodToMs({millis:1})
+    return period;
+}
+
+
+function convert(units: number, unit: TimeUnit=TimeUnit.Milliseconds, op: (n: number, n2: number) => number): number {
     switch (unit) {
         case TimeUnit.Milliseconds:
-            return timeMs;
+            return units;
         case TimeUnit.Seconds:
-            return timeMs / 1000.0;
+            return op(units, 1000.0);
         case TimeUnit.Minutes:
-            return timeMs / 60000.0;
+            return op(units, 60000.0);
         case TimeUnit.Hours: 
-            return timeMs / 3600000.0;
+            return op(units, 3600000.0);
         case TimeUnit.Days:
-            return timeMs / 86400000.0;
+            return op(units, 86400000.0);
         default:
             throw new Error()
     }
 }
+
+export function timeMsToUnits(timeMs: number, unit: TimeUnit=TimeUnit.Milliseconds): number {
+    return convert(timeMs, unit, (ms, div) => ms / div);
+}
+
+export function unitsToMs(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): number {
+    return convert(units, baseUnit, (units, mult) => units * mult);
+}
+
+export function formatPeriod(period: TimePeriod): string {
+    const components: String[] = [];
+
+    if(period.days==1){
+        components.push(period.days+" day");
+    } 
+    if(period.days && period.days > 1){
+        components.push(period.days+" days");
+    }     
+
+    if(period.hours==1){
+        components.push(period.hours+" hour");
+    } 
+    if(period.hours && period.hours > 1){
+        components.push(period.hours+" hours");
+    }     
+
+    if(period.minutes && period.minutes > 0){
+        components.push(period.minutes+" min");
+    } 
+
+    if(period.seconds && period.seconds > 0){
+        components.push(period.seconds+" sec");
+    } 
+    if(period.millis && period.millis > 0){
+        components.push(period.millis+" ms");
+    }   
+
+    return components.join(", ");
+    
+}
+// export function timeMsToUnits(timeMs: number, unit: TimeUnit=TimeUnit.Milliseconds): number {
+//     switch (unit) {
+//         case TimeUnit.Milliseconds:
+//             return timeMs;
+//         case TimeUnit.Seconds:
+//             return timeMs / 1000.0;
+//         case TimeUnit.Minutes:
+//             return timeMs / 60000.0;
+//         case TimeUnit.Hours: 
+//             return timeMs / 3600000.0;
+//         case TimeUnit.Days:
+//             return timeMs / 86400000.0;
+//         default:
+//             throw new Error()
+//     }
+// }
+
+// export function unitsToMs(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): number {
+//     switch(baseUnit){
+//         case TimeUnit.Milliseconds:
+//             return units;
+//         case TimeUnit.Seconds:
+//             return units * 1000.0;
+//         case TimeUnit.Minutes:
+//             return units * 60000.0;
+//         case TimeUnit.Hours: 
+//             return units * 3600000.0;
+//         case TimeUnit.Days:
+//             return units * 86400000.0;
+//         default:
+//             throw new Error()        
+//     }
+// }
 
 
 /**
@@ -215,6 +302,10 @@ export class Clock {
         const realTimeDelta = Date.now() - this.realTimestampMs;
         const clockTime = this.clockTimeMs + (realTimeDelta) * this.scale;
         return clockTime;
+    }
+
+    getScale():number{
+        return this.isPaused()? this.savedScale: this.scale;        
     }
 
     setScale(scale: number){

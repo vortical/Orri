@@ -378,9 +378,9 @@ export class BodySystem {
     setPaused(value: boolean): boolean {
         return this.clock.setPaused(value);
     }
-    
+
     getTimeScale(): number {
-        return this.clock.scale;
+        return this.clock.getScale();
     }
 
     setTimeScale(timesScale: number) {

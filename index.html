@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Orri</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/themes/dark.css"> -->
   </head>
   <body>
     <div id="scene-container">
@@ -13,16 +15,30 @@
   
   <div id="bottom-container" class="bottom-container positioning">
     <div id="clock-controls" class="controls">
-      tic toc
+      <div id="clock" class="clock-control-item">
+      <input type="text" id="datetimePicker" placeholder="March 22, 2045 21:05:47" value="March 22, 2045 21:00:00">
+
+      </div>
+      <div id="timeScale" class="clock-control-item">
+
+        1 day per second (10x)
+      </div>
+      
     </div>
     <div id="controls" class="controls">
       <button class="control-button" id="rewindButton">&lt;&lt;</button>
-      <button class="control-button" id="playPauseButton">&gt; or ||</button>
+      <button class="control-button" id="playPauseButton">
+      <div class="blink_me">
+        ||
+      </div>  
+        
+      </button>
       <button class="control-button" id="forwardButton">&gt;&gt;</button>
       <button class="control-button" id="nowButton">&gt;now	&lt;</button>            
     </div>
   
     <div id="status-container">
+
     </div>
   </div>
   <script type="module" src="src/main.ts"></script>

@@ -4,7 +4,7 @@ import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
 import LocationBar from './LocationBar.ts';
 import { PickerEvent } from '../scene/Picker.ts';
-import { throttle } from "../system/timing.ts";
+import { TimeUnit, throttle, timePeriodToUnits } from "../system/timing.ts";
 import { ClockTimeUpdateHandler } from './ClockTimeUpdateHandler.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { DataService } from '../services/dataservice.ts';
@@ -13,6 +13,9 @@ import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
+import flatpickr from "flatpickr";
+import { Instance } from 'flatpickr/dist/types/instance';
+import { TimeScaleProvider } from './TimeScaleProvider.ts';
 
 // import { ShadowType} from '../mesh/Umbra.ts';
 
@@ -20,6 +23,23 @@ import { INotifyService, NotifyService } from './notify.ts';
 const userNotify: INotifyService = new NotifyService();
 
 
+// class TimerButtons {
+//     button: HTMLInputElement;
+//     text: string;
+
+//     constructor(button: HTMLInputElement, text: string){
+//         this.button = button;
+//         this.text = text;
+//     }
+
+
+//     toggle(){
+
+//     }
+    
+
+
+// }
 
 export class TimeControls {
     rewindButton: HTMLInputElement;
@@ -30,7 +50,9 @@ export class TimeControls {
 
     bodySystem: BodySystem;
     dataService: DataService;
-
+    scaleProvider: TimeScaleProvider;
+    flatpicker: Instance;
+    
     constructor(bodySystem: BodySystem, dataService: DataService){
         this.rewindButton = document.querySelector<HTMLInputElement>("#rewindButton")!;
         this.playPauseButton = document.querySelector<HTMLInputElement>("#playPauseButton")!;
@@ -43,24 +65,46 @@ export class TimeControls {
         
         this.bodySystem = bodySystem;
         this.dataService = dataService;
+        this.scaleProvider = new TimeScaleProvider(this.bodySystem.getTimeScale());
+
+        this.flatpicker = flatpickr("#datetimePicker", {
+            enableTime: true,
+            altInput: true,
+            altFormat: "F j, Y H:i:s",
+            dateFormat: "Y-m-d H:i:s",
+            // dateFormat: "Y-m-d H:i",
+
+            time_24hr: false,
+            enableSeconds: true,
+            minDate: new Date("2016-01-01"),
+            maxDate: new Date("2045-12-31"),
+            defaultDate: new Date(bodySystem.clock.getTime())
+        }) as Instance;
+
+        
+        
     }
     
 
     rewind(){
-        console.log(`Rewinding...`);
+        this.bodySystem.setTimeScale(this.scaleProvider.prev());
+        console.log(`Rewinding...${this.bodySystem.getTimeScale()}`);
     }
 
     playPause(){
         
         const isPaused = this.bodySystem.setPaused(!this.bodySystem.isPaused());
 
-        this.playPauseButton.textContent = isPaused? ">": "||";
+        this.playPauseButton.innerHTML = isPaused? '<div class="blink">&gt;</div>': "||";
         console.log("Play/Pause toggled");
 
     }
     forward(){
-        
-        console.log("Forwarding...");
+
+        this.bodySystem.setTimeScale(this.scaleProvider.next());
+
+
+        console.log("Forwarding..."+this.bodySystem.getTimeScale() );
     }
     now(){
         console.log("Now...");
