@@ -1,10 +1,10 @@
 import { BodySystem, CameraLayer } from '../scene/BodySystem.ts'
 import GUI, { Controller } from 'lil-gui';
 import PubSub from 'pubsub-js';
-import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
+import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC, TIME_SCALE_TOPIC } from '../system/event-types.ts';
 import LocationBar from './LocationBar.ts';
 import { PickerEvent } from '../scene/Picker.ts';
-import { TimeUnit, throttle, timePeriodToUnits } from "../system/timing.ts";
+import { TimeUnit, formatPeriod, throttle, timeEquals, timePeriodToUnits, unitsToTimePeriod } from "../system/timing.ts";
 import { ClockTimeUpdateHandler } from './ClockTimeUpdateHandler.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { DataService } from '../services/dataservice.ts';
@@ -24,86 +24,97 @@ import { ClockDateTimeInput } from './ClockDateTimeInput.ts';
 const userNotify: INotifyService = new NotifyService();
 
 
-// class TimerButtons {
-//     button: HTMLInputElement;
-//     text: string;
+// for targets and modes: 
+// https://codepen.io/sean_codes/pen/WdzgdY
 
-//     constructor(button: HTMLInputElement, text: string){
-//         this.button = button;
-//         this.text = text;
-//     }
-
-
-//     toggle(){
-
-//     }
-    
-
-
-// }
 
 export class TimeControls {
     rewindButton: HTMLInputElement;
     playPauseButton: HTMLInputElement;
     forwardButton: HTMLInputElement;
     nowButton: HTMLInputElement;
-    isPaused?: boolean;
+    resetTimeScaleButton: HTMLInputElement;
+    timeScaleLabel: HTMLDivElement;
 
+    isPaused?: boolean;
     bodySystem: BodySystem;
     dataService: DataService;
     scaleProvider: TimeScaleProvider;
-    // flatpicker: Instance;
-    // subscribtion: any;
     clockDateTimeInput: ClockDateTimeInput;
 
+    timescaleSubscribtion: any;
+
     constructor(bodySystem: BodySystem, dataService: DataService){
+        this.timeScaleLabel = document.querySelector<HTMLInputElement>("#timeScale")!;
         this.rewindButton = document.querySelector<HTMLInputElement>("#rewindButton")!;
         this.playPauseButton = document.querySelector<HTMLInputElement>("#playPauseButton")!;
         this.forwardButton = document.querySelector<HTMLInputElement>("#forwardButton")!;
-        this.nowButton =document.querySelector<HTMLInputElement>("#nowButton")!;
+        this.nowButton = document.querySelector<HTMLInputElement>("#nowButton")!;
+        this.resetTimeScaleButton = document.querySelector<HTMLInputElement>("#resetTimeScaleButton")!;
+
         this.rewindButton.addEventListener("click", () => this.rewind());
         this.playPauseButton.addEventListener("click", () => this.playPause());
         this.forwardButton.addEventListener("click", () => this.forward());
         this.nowButton.addEventListener("click", () => this.now());
-        
+        this.resetTimeScaleButton.addEventListener("click", () => this.resetTimeScale());
+
+        this.subscribeToTimeScale();
+
         this.bodySystem = bodySystem;
         this.dataService = dataService;
         this.scaleProvider = new TimeScaleProvider(this.bodySystem.getTimeScale());
 
         this.clockDateTimeInput = new ClockDateTimeInput("#datetimePicker", bodySystem)
             .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
-              
     }
     
-
     rewind(){
         this.bodySystem.setTimeScale(this.scaleProvider.prev());
-        console.log(`Rewinding...${this.bodySystem.getTimeScale()}`);
     }
 
     playPause(){
-        
         const isPaused = this.bodySystem.setPaused(!this.bodySystem.isPaused());
-
         this.playPauseButton.innerHTML = isPaused? '<div class="blink">&gt;</div>': "||";
-        console.log("Play/Pause toggled");
-
     }
     forward(){
-
         this.bodySystem.setTimeScale(this.scaleProvider.next());
-
-
-        console.log("Forwarding..."+this.bodySystem.getTimeScale() );
     }
     now(){
         // Given the bodies move, slowing down the time scale makes for a somewhat smoother transition.
         // But it would be cool to animate transition/move to new location of the body
+        const now = new Date();
+        const systemTime = new Date(this.bodySystem.clock.getTime());
+        
+        if (timeEquals(now, systemTime, TimeUnit.Seconds)){
+            
+            console.log("time equals\n"+now+"\n"+systemTime);
+            return;
+        }        
+        console.log("time not equals\n"+now+"\n"+systemTime);
+        
         const scale = this.bodySystem.getTimeScale();
         this.bodySystem.setTimeScale(1);
-        this.bodySystem.setSystemTime(new Date());
+        this.bodySystem.setSystemTime(now);
         this.bodySystem.setTimeScale(scale);
     }
+    resetTimeScale(){
+        this.scaleProvider.setCurrentScale(1);
+        this.bodySystem.setTimeScale(this.scaleProvider.current());        
+    }
+
+
+    subscribeToTimeScale(){
+        this.timescaleSubscribtion = PubSub.subscribe(TIME_SCALE_TOPIC, (msg, scale) => {
+            const timePeriod = unitsToTimePeriod(scale, TimeUnit.Seconds);            
+            this.timeScaleLabel.textContent = formatPeriod(timePeriod).concat(` (${scale.toLocaleString()}x)`);
+
+        });
+    }
+
+    unsubscribeToTimeScale() {
+        PubSub.unsubscribe(this.timescaleSubscribtion);
+    }
+    
 
 }
 
@@ -214,22 +225,9 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         },
     };
 
-    // function setSystemTime(datetime: string | Date) {
-    //     return new Promise(async (resolve) => {
-    //         try {
-    //             const time = new Date(datetime);
-    //             const kinematics = await dataService.loadKinematics(Array.from(bodySystem.bodyObjects3D.keys()), time);
-    //             bodySystem.addUpdater(new BodiesAtTimeUpdater(kinematics, time));
-
-    //         } catch (e) {
-    //             console.log(e)
-    //         }
-    //     });
-    // }
-
+ 
     const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time'))
         .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
-        // .onFinishChange((datetime: string | Date) => setSystemTime(datetime));
 
     gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
 

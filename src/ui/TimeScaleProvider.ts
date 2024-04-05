@@ -27,7 +27,7 @@ export class TimeScaleProvider {
         this.setCurrentScale(scale);
     }
 
-    setCurrentScale(scale: number){
+    setCurrentScale(scale: number): TimeScaleProvider{
         const sign = Math.sign(scale);
         let index = this.timeScales.findIndex((v, i) => v > sign*scale);
         if(index == -1){
@@ -41,6 +41,7 @@ export class TimeScaleProvider {
         }
         index = Math.max(index-1, 0);        
         this.currentIndex = sign*index;
+        return this;
     }
 
     current(): number {

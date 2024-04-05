@@ -125,15 +125,6 @@ background-color: #0A0E20;
 
 }
 
-/* #datetimePicker {
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  background-color: #007BFF;
-  color: #FFFFFF;
-
-} */
 .controls {
   display: flex;
   justify-content: center;

@@ -1,5 +1,5 @@
 import { TimePeriod } from "../domain/models";
-import { SYSTEM_TIME_TOPIC } from "./event-types";
+import { SYSTEM_TIME_TOPIC, TIME_SCALE_TOPIC } from "./event-types";
 
 export function delay(i: number): Promise<void> {
     return new Promise((resolve, reject) => setTimeout(() => resolve(), i))
@@ -90,6 +90,25 @@ export enum TimeUnit {
     Days
 }
 
+/**
+ * Compares the dates based on the resolution. 
+ * 
+ * E.g.: if resolution TimeUnit.Minutes then they are equal if they have less
+ * than a minute difference.
+ * 
+ * 
+ * @param date1 
+ * @param date2 
+ * @param resolution A timeUnit
+ * @returns 
+ */
+export function timeEquals(date1: Date, date2: Date, resolution: TimeUnit): boolean {
+    const timeMs = convert(1, resolution, (units, mult) => units * mult);
+    return Math.abs(date1.getTime() - date2.getTime()) < timeMs;
+}
+
+
+
 export function timePeriodToMs(timePeriod: TimePeriod): number {
     const daysToMillis = (days?: number) => days? days * hoursToMillis(24) : 0
     const hoursToMillis = (hours?: number) => hours? hours * minutesToMillis(60) : 0;
@@ -109,11 +128,11 @@ export function unitsToTimePeriod(units: number, baseUnit: TimeUnit=TimeUnit.Mil
     const period: TimePeriod = {};
     const ms = unitsToMs(units, baseUnit);
 
-    period.days = ms/timePeriodToMs({days:1})
-    period.hours = (ms - timePeriodToMs(period))/timePeriodToMs({hours:1})
-    period.minutes = (ms - timePeriodToMs(period))/timePeriodToMs({minutes:1})
-    period.seconds = (ms - timePeriodToMs(period))/timePeriodToMs({seconds:1})
-    period.millis = (ms - timePeriodToMs(period))/timePeriodToMs({millis:1})
+    period.days = Math.floor(ms/timePeriodToMs({days:1}));
+    period.hours = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({hours:1}));
+    period.minutes = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({minutes:1}));
+    period.seconds = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({seconds:1}));
+    period.millis = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({millis:1}));
     return period;
 }
 
@@ -143,32 +162,76 @@ export function unitsToMs(units: number, baseUnit: TimeUnit=TimeUnit.Millisecond
     return convert(units, baseUnit, (units, mult) => units * mult);
 }
 
-export function formatPeriod(period: TimePeriod): string {
+export type PeriodPropertyNames = {
+    day: string
+    days: string,
+    hour: string,
+    hours: string,
+    minute: string,
+    minutes: string,
+    second: string,
+    seconds: string,
+    milli: string,
+    millis: string
+}
+
+const defaultPeriodPropertyNames: PeriodPropertyNames = {
+    day: "day",
+    days: "days",
+    hour: "hr",
+    hours: "hr",
+    minute: "min",
+    minutes: "min",
+    second: "s",
+    seconds: "s",
+    milli: "ms",
+    millis: "ms"
+};
+
+export function formatPeriod(period: TimePeriod, periodPropertyNames: PeriodPropertyNames=defaultPeriodPropertyNames): string {
+
+    const propertyNames = {...defaultPeriodPropertyNames,...periodPropertyNames};
+
     const components: String[] = [];
 
     if(period.days==1){
-        components.push(period.days+" day");
+        components.push(period.days.toString().concat(propertyNames.day));
     } 
+
     if(period.days && period.days > 1){
-        components.push(period.days+" days");
+        components.push(period.days.toString().concat(propertyNames.days));        
     }     
 
     if(period.hours==1){
-        components.push(period.hours+" hour");
+        components.push(period.hours.toString().concat(propertyNames.hour));
     } 
+    
     if(period.hours && period.hours > 1){
-        components.push(period.hours+" hours");
+        components.push(period.hours.toString().concat(propertyNames.hours));
     }     
 
-    if(period.minutes && period.minutes > 0){
-        components.push(period.minutes+" min");
+    if(period.minutes==1){
+        components.push(period.minutes.toString().concat(propertyNames.minute));
+    }
+
+    if(period.minutes && period.minutes > 1){
+        components.push(period.minutes.toString().concat(propertyNames.minutes));        
     } 
 
-    if(period.seconds && period.seconds > 0){
-        components.push(period.seconds+" sec");
+    if(period.seconds == 1){
+        components.push(period.seconds.toString().concat(propertyNames.second));                
+    }
+    
+    if(period.seconds && period.seconds > 1){
+        components.push(period.seconds.toString().concat(propertyNames.seconds));                
     } 
-    if(period.millis && period.millis > 0){
-        components.push(period.millis+" ms");
+
+    if(period.millis == 1){
+        components.push(period.millis.toString().concat(propertyNames.milli));                        
+    }
+
+    if(period.millis && period.millis > 1){
+        components.push(period.millis.toString().concat(propertyNames.millis));                        
     }   
 
     return components.join(", ");
@@ -252,6 +315,9 @@ export class Clock {
      */
     timePublisherId: any = undefined;
 
+    
+    
+
     /**
      * 
      * @param msToUnit units based on ms
@@ -294,13 +360,18 @@ export class Clock {
     getScale():number{
         return this.isPaused()? this.savedScale: this.scale;        
     }
+    
+    publishTimeScale = throttle(200, undefined, (scale: number) => PubSub.publish(TIME_SCALE_TOPIC, scale)); 
 
     setScale(scale: number){
         if(this.isPaused()){
             this.savedScale = scale;
+            this.publishTimeScale(this.savedScale);
+            
         } else {
             this.setTime(this.getTime());
             this.scale = scale;
+            this.publishTimeScale(this.scale);            
         }
     }
     
@@ -344,3 +415,5 @@ export class Clock {
         return this.timers.get(timerId)?.getDelta();
     }
 }
+
+
