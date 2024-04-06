@@ -45,18 +45,10 @@ background-color: #0A0E20;
 
 }
 
-
-#bottom-container {
-  position: absolute;
-  bottom: 0; 
-
-
-  opacity: 0.3;
-  color: white; 
-  border-width: 0;           /* Set text color to black */
-  background-color:rgb(51, 50, 48)   /* Set background color to gray */
-  
+.lil-gui {
+  --name-width: 35%;
 }
+
 
 #system-time {
   left:0;
@@ -79,6 +71,112 @@ background-color: #0A0E20;
 
 
 
+.bottom-container {
+
+  opacity: 0.5;
+  background-color: #1fe0;  /* fully transparent */  
+}
+
+.bottom-container.positioning {
+  width: 100%;
+  max-height: 40%;
+  position: fixed;
+  bottom: 0;
+  left: 0px;
+  z-index: 1000;
+}
+
+
+.blink {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.clock-control-item {
+  padding: 10px 10px;
+  font-size: 16px;
+  flex: 2;
+  border: solid #007BFF;
+  border-radius: 4px;
+  color: #FFFFFF;
+  max-width: fit-content;
+
+}
+
+.clock-control-item:nth-of-type(2) {
+
+  flex: 1;
+  
+  
+
+}
+
+
+#clock > input[type='text'] { 
+  font-size: 16px; 
+  font-family: sans-serif; 
+  border: 0;
+  
+  color: white; 
+  background-color: #1fe0
+
+}
+
+.status-bar {
+  display: flex;
+  justify-content: left;
+  align-items:center;
+  gap: 12px; 
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.status-item {
+  padding: 10px 20px;
+  font-size: 16px;
+  min-width: 20%;
+  min-height: 1.5em; 
+  border: none;
+  background-color: #1fe0;
+  color: #FFFFFF;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px; 
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.control-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #007BFF;
+  color: #FFFFFF;
+  transition: background-color 0.3s ease;
+}
+
+.control-button:hover {
+  background-color: #0056b3;
+}
+
+.control-button:active {
+  background-color: #004099; /* Darker color when button is pressed */
+}
+
+
+
+
 .notice {
   cursor: pointer;
   box-sizing: border-box;
@@ -90,6 +188,7 @@ background-color: #0A0E20;
   background: #eeeeee;
   box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.02), 0 6.7px 5.3px rgba(0, 0, 0, 0.028), 0 12.5px 10px rgba(0, 0, 0, 0.035), 0 22.3px 17.9px rgba(0, 0, 0, 0.042), 0 41.8px 33.4px rgba(0, 0, 0, 0.05), 0 100px 80px rgba(0, 0, 0, 0.07);
   transition: 0.2s ease-in;
+  
 }
 @media (min-width:640px) {
   .notice {
@@ -139,6 +238,7 @@ background-color: #0A0E20;
   right: 0;
   align-items: center;
   justify-content: center;
+  z-index: 2000;
 }
 @media (min-width:640px) {
   .notice-container {

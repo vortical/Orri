@@ -16,7 +16,7 @@ async function start(){
     const options = LocationBar.getState();
     const date = options.date ? new Date(options.date): new Date()
     const bodies: Body[] = await dataService.loadSolarSystem(date);    
-    const bodySystem = new BodySystem(mainElement, bodies, bodySystemUpdater, options);
+    const bodySystem = new BodySystem(mainElement, bodies, dataService, bodySystemUpdater, options);
 
     // Set the up of the viewer to be perpendicular to earth's orbit (the
     // ecliptic plane). 

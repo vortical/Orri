@@ -19,6 +19,8 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { LocationPin } from '../mesh/LocationPin.ts';
 import { CameraTargetingState, CameraMode, CameraModes } from './CameraTargetingState.ts';
+import { DataService } from '../services/dataservice.ts';
+import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 // import { ShadowType } from '../mesh/Umbra.ts';
 
 const CAMERA_NEAR = 1000;
@@ -80,6 +82,7 @@ export type BodySystemOptionsState = {
  * Our system Facade
  */
 export class BodySystem {
+    dataService: DataService;
     shadowType: ShadowType =  ShadowType.Penumbra;
     bodySystemUpdater: CompositeUpdater = new CompositeUpdater()
     bodies: Body[];
@@ -105,14 +108,15 @@ export class BodySystem {
 
     cameraTargetingState: CameraTargetingState;
 
-    constructor(parentElement: HTMLElement, bodies: Body[], bodySystemUpdater: BodySystemUpdater, { 
+    constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, { 
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
             ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType= ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
-            showNames = true, showDistance = false, showAltitudeAzimuth=true,
+            showNames = true, showDistance = true, showAltitudeAzimuth=true,
             location = new LatLon(43.3651712, -73.6231424), targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
         
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
+        this.dataService = dataService;
         this.parentElement = parentElement;
         this.distanceformatter = new DistanceFormatter(distanceUnit);
         this.clock = new Clock(date);
@@ -156,6 +160,18 @@ export class BodySystem {
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this)
         this.cameraTargetingState.postTargetSet(this.target);
     }
+
+    setSystemTime(datetime: string | Date) {
+        return new Promise(async (resolve) => {
+            try {
+                const time = new Date(datetime);
+                const kinematics = await this.dataService.loadKinematics(Array.from(this.bodyObjects3D.keys()), time);
+                this.addUpdater(new BodiesAtTimeUpdater(kinematics, time));
+            } catch (e) {
+                console.log(e)
+            }
+        });
+    }    
 
     setShadowType(shadowType: ShadowType){
         this.shadowType = shadowType;
@@ -371,8 +387,16 @@ export class BodySystem {
         }
     }
 
+    isPaused(): boolean {
+        return this.clock.isPaused();
+    }
+
+    setPaused(value: boolean): boolean {
+        return this.clock.setPaused(value);
+    }
+
     getTimeScale(): number {
-        return this.clock.scale;
+        return this.clock.getScale();
     }
 
     setTimeScale(timesScale: number) {
@@ -563,6 +587,7 @@ export class BodySystem {
             resolve(null);
         });
     }
+
 
     stop() {
         this.clock.enableTimePublisher(false);
