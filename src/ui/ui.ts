@@ -35,8 +35,8 @@ export class TimeControls {
     nowButton: HTMLInputElement;
     resetTimeScaleButton: HTMLInputElement;
     timeScaleLabel: HTMLDivElement;
+    timeScalePeriodLabel: HTMLDivElement;
 
-    isPaused?: boolean;
     bodySystem: BodySystem;
     dataService: DataService;
     scaleProvider: TimeScaleProvider;
@@ -45,6 +45,7 @@ export class TimeControls {
     timescaleSubscribtion: any;
 
     constructor(bodySystem: BodySystem, dataService: DataService){
+        this.timeScalePeriodLabel = document.querySelector<HTMLInputElement>("#timeScalePeriod")!;
         this.timeScaleLabel = document.querySelector<HTMLInputElement>("#timeScale")!;
         this.rewindButton = document.querySelector<HTMLInputElement>("#rewindButton")!;
         this.playPauseButton = document.querySelector<HTMLInputElement>("#playPauseButton")!;
@@ -72,6 +73,10 @@ export class TimeControls {
         this.bodySystem.setTimeScale(this.scaleProvider.prev());
     }
 
+    isPaused(): boolean{
+        return this.bodySystem.isPaused();
+    }
+
     playPause(){
         const isPaused = this.bodySystem.setPaused(!this.bodySystem.isPaused());
         this.playPauseButton.innerHTML = isPaused? '<div class="blink">&gt;</div>': "||";
@@ -91,7 +96,7 @@ export class TimeControls {
             return;
         }        
         console.log("time not equals\n"+now+"\n"+systemTime);
-        
+
         const scale = this.bodySystem.getTimeScale();
         this.bodySystem.setTimeScale(1);
         this.bodySystem.setSystemTime(now);
@@ -106,8 +111,8 @@ export class TimeControls {
     subscribeToTimeScale(){
         this.timescaleSubscribtion = PubSub.subscribe(TIME_SCALE_TOPIC, (msg, scale) => {
             const timePeriod = unitsToTimePeriod(scale, TimeUnit.Seconds);            
-            this.timeScaleLabel.textContent = formatPeriod(timePeriod).concat(` (${scale.toLocaleString()}x)`);
-
+            this.timeScalePeriodLabel.textContent = formatPeriod(timePeriod);
+            this.timeScaleLabel.textContent = scale.toLocaleString().concat('X');
         });
     }
 
@@ -127,13 +132,19 @@ export class SimpleUI {
     constructor(statusElement: HTMLElement, bodySystem: BodySystem, dataService: DataService) {
 
         buildLilGui(statusElement, bodySystem, dataService);
-        new StatusComponent(statusElement, bodySystem);
+        // new StatusComponent(statusElement, bodySystem);
         new TimeControls(bodySystem, dataService);
 
         // // Handle the history back button
         window.addEventListener('popstate', function (event) {
             if (event.state) {
                 location.href = location.href;
+            }
+        });
+
+        PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
+            if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
+                bodySystem.moveToTarget(pickEvent.body);
             }
         });
 
@@ -176,9 +187,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const bodyNames = bodySystem.bodies.map((b) => b.name);
 
     const options = {
-        date: "",
+
         target: bodySystem.getBodyObject3DTarget().getName() || "",
-        timeScale: bodySystem.getTimeScale(),
         sizeScale: 1.0,
         fov: bodySystem.getFov(),
         backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
@@ -201,14 +211,6 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         reloadState() {
             LocationBar.reload();
         },        
-        setTimeToNow() {
-            timeScaleController.setValue(1);
-            bodySystem.setSystemTime(new Date());
-            // setSystemTime(new Date());
-        },
-        resetTimeScale() {
-            timeScaleController.setValue(1);
-        },
         getLocation() {
             getLocationFromBrowser().then(
                 (l) => {
@@ -226,14 +228,14 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     };
 
  
-    const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time'))
-        .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
+    // const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time'))
+    //     .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
 
-    gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
+    // gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
 
-    const settings = gui.addFolder('Settings');        
+    // const settings = gui.addFolder('Settings');        
 
-    const targetController = settings.add(options, 'target', bodyNames).name("Target")
+    const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback( (targetName) => {
             try {
                 bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName));
@@ -243,7 +245,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             }
         }));
 
-    const targetCameraModeController = settings.add(options, 'targetingCameraMode', CameraModes).name("Camera Mode")
+    const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraModes).name("Camera Mode")
         .onChange(withRollback( (v: CameraMode) => {        
             try {
                 bodySystem.setCameraTargetingMode(v);
@@ -253,10 +255,11 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             }
         }));
 
-    const fovController = settings.add(options, "fov", 0.05, 90, 0.1).name('Field Of Vue')
+    const fovController = gui.add(options, "fov", 0.05, 90, 0.1).name('Field Of Vue')
         .onChange((v: number) => bodySystem.setFOV(v));
 
-    const labelsSettingsfolder = settings.addFolder('Labels Settings');
+    const labelsSettingsfolder = gui.addFolder('Labels Settings');
+    labelsSettingsfolder.close();
 
     const showNameLabelsController = labelsSettingsfolder.add(options, "showNameLabels").name('Show Names')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
@@ -270,7 +273,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
 
-    const shadowsSettingsfolder = settings.addFolder('Eclipse/shadow Settings');     
+    const shadowsSettingsfolder = gui.addFolder('Eclipse/shadow Settings');     
 
     const projectShadowsController = shadowsSettingsfolder.add(options, "projectShadows").name('Cast Shadows')
         .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
@@ -278,17 +281,10 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const shadowTypeController = shadowsSettingsfolder.add(options, "shadowType", ShadowType ).name('Shadow Type')
         .onChange((v: ShadowType) => bodySystem.setShadowType(v));        
 
-    const timeSettingsfolder = settings.addFolder('Time Settings');
 
-    const timeScaleController = timeSettingsfolder.add(options, "timeScale", 0.1, 3600 * 24 * 30, 1).name('Time Scale')
-        .onChange((v: number) => bodySystem.setTimeScale(v));
-
-    timeSettingsfolder.add(options, "resetTimeScale").name('Reset Time Scale');
-
-    const locationFolder = settings.addFolder('Location Settings');
+    const locationFolder = gui.addFolder('Location Settings');
     const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)").listen()
         .onFinishChange(withRollback( (v: string) => {
-            //"43.302912, -73.6428032"
             try {
                 const latlon = LatLon.fromString(v);
                 bodySystem.setLocation(latlon);
@@ -302,7 +298,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     locationFolder.add(options, "getLocation").name('Use Browser Location');
     
-    const viewSettingsfolder = settings.addFolder('View Settings');
+    const viewSettingsfolder = gui.addFolder('View Settings');
     
     const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
         .onChange((v: number) => bodySystem.setScale(v));
@@ -310,7 +306,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
         .onChange((v: number) => bodySystem.setAmbiantLightLevel(v));
 
-    const toolsFolder = settings.addFolder('Tools').close();        
+    const toolsFolder = gui.addFolder('Tools').close();        
 
     const showAxesController = toolsFolder.add(options, "showAxes").name('ICRS Axes')
         .onChange((v: boolean) => bodySystem.setAxesHelper(v));
@@ -318,8 +314,8 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     const showStatsController = toolsFolder.add(options, "showStats").name('Perf Stats')
         .onChange((v: boolean) => bodySystem.showStats(v));
 
-    settings.add(options, "pushState").name('Push State to Location Bar and History');
-    settings.add(options, "reloadState").name('Reload Pushed State');
+    gui.add(options, "pushState").name('Push State to Location Bar and History');
+    gui.add(options, "reloadState").name('Reload Pushed State');
     
 
     PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event) => {
@@ -337,63 +333,51 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
 
 
-/**
- * A poor man implementation of some status.
- */
-class StatusComponent {
+// /**
+//  * A poor man implementation of some status.
+//  */
+// class StatusComponent {
 
-    hoveredBody?: BodyObject3D;
+//     hoveredBody?: BodyObject3D;
 
-    constructor(element: HTMLElement, bodySystem: BodySystem) {
-        /*
-        <div>
-            <div>
-                target distance = ...
-            </div>
-            <br>
-            <div>
-                Mouse over xxx at distance = ...
-            </div>
-        </div>
-        */
+//     constructor(element: HTMLElement, bodySystem: BodySystem) {
+//         /*
+//         <div>
+//             <div>
+//                 Mouse over xxx at distance = ...
+//             </div>
+//         </div>
+//         */
 
-        const statusDivElement = document.createElement('div');
-        const targetElement = document.createElement('div');
-        const hoverElement = document.createElement('div');
+//         const statusDivElement= document.querySelector<HTMLInputElement>("#status1")!;
+        
 
-        statusDivElement.appendChild(targetElement)
-        statusDivElement.appendChild(document.createElement('br'));
-        statusDivElement.appendChild(hoverElement);
-        element.appendChild(statusDivElement);
+        
 
-        bodySystem.controls.addEventListener("change", throttle(200, undefined, (e) => {
+        
+        
 
-            const targetText = `Target distance is ${bodySystem.getDistanceFormatter().format(bodySystem.controls.getDistance())}`;
-            targetElement.innerHTML = targetText;
-            updateHoveredElement();
-        }));
+//         const updateHoveredElement = () => {
+//             if (this.hoveredBody) {
+//                 statusDivElement.textContent = `${this.hoveredBody!.getName()} at ${this.hoveredBody!.cameraDistanceAsString(true)} from surface.`;
+//             }
 
-        const updateHoveredElement = () => {
-            if (this.hoveredBody) {
-                hoverElement.textContent = `${this.hoveredBody!.getName()} at ${this.hoveredBody!.cameraDistanceAsString(true)} from surface.`;
-            }
+//         };
 
-        };
+//         PubSub.subscribe(MOUSE_HOVER_OVER_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
+//             if (pickEvent.body) {
+//                 this.hoveredBody = pickEvent.body;
+//                 updateHoveredElement();
+//             } else {
+//                 this.hoveredBody = undefined;
+//                 statusDivElement.textContent = "  ";
+//             }
+//         });
 
-        PubSub.subscribe(MOUSE_HOVER_OVER_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-            if (pickEvent.body) {
-                this.hoveredBody = pickEvent.body;
-                updateHoveredElement();
-            } else {
-                this.hoveredBody = undefined;
-                hoverElement.textContent = "  ";
-            }
-        });
-
-        PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-            if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
-                bodySystem.moveToTarget(pickEvent.body);
-            }
-        });
-    }
-}
+//         PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
+//             if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
+//                 bodySystem.moveToTarget(pickEvent.body);
+//             }
+//         });
+//     }
+// }

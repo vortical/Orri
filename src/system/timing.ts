@@ -93,7 +93,7 @@ export enum TimeUnit {
 /**
  * Compares the dates based on the resolution. 
  * 
- * E.g.: if resolution TimeUnit.Minutes then they are equal if they have less
+ * E.g.: if resolution TimeUnit.Minutes then they are equal i they have less
  * than a minute difference.
  * 
  * 
@@ -104,6 +104,7 @@ export enum TimeUnit {
  */
 export function timeEquals(date1: Date, date2: Date, resolution: TimeUnit): boolean {
     const timeMs = convert(1, resolution, (units, mult) => units * mult);
+    // return Math.floor(date1.getTime()/timeMs) === Math.floor(date2.getTime()/timeMs);
     return Math.abs(date1.getTime() - date2.getTime()) < timeMs;
 }
 
@@ -330,13 +331,13 @@ export class Clock {
         if(value){
             if(!this.isPaused()){
                 this.savedScale = this.scale;
-                this.setScale(0);
+                this.setScale(0, false);
                 this._isPaused = true;
             }
         }else{
             if(this.isPaused()){
                 this._isPaused = false;
-                this.setScale(this.savedScale);
+                this.setScale(this.savedScale, false);
             }
         }
         return this.isPaused();
@@ -363,15 +364,16 @@ export class Clock {
     
     publishTimeScale = throttle(200, undefined, (scale: number) => PubSub.publish(TIME_SCALE_TOPIC, scale)); 
 
-    setScale(scale: number){
+    setScale(scale: number, notify: boolean = true){
         if(this.isPaused()){
             this.savedScale = scale;
-            this.publishTimeScale(this.savedScale);
+            notify && this.publishTimeScale(this.savedScale);
+            
             
         } else {
             this.setTime(this.getTime());
             this.scale = scale;
-            this.publishTimeScale(this.scale);            
+            notify && this.publishTimeScale(this.scale);            
         }
     }
     

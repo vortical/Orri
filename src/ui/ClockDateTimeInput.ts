@@ -25,9 +25,10 @@ export class ClockDateTimeInput {
         this.bodySystem = bodySystem;
         this.flatpicker = flatpickr("#datetimePicker", {
             enableTime: true,
+            disableMobile: true,
             altInput: true,
-            altFormat: "F j, Y    h:i:S K",
-            dateFormat: "Y-m-d H:i:s",
+            altFormat: "M j, Y  H:i:S",
+            // dateFormat: "Y-m-d H:i:s",
             time_24hr: false,
             enableSeconds: true,
             minDate: new Date("2016-01-01"),
