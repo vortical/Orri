@@ -1,6 +1,14 @@
 import { TimePeriod } from "../domain/models";
 import { SYSTEM_TIME_TOPIC, TIME_SCALE_TOPIC } from "./event-types";
 
+
+
+const SECOND_TO_MS = 1000;
+const MINUTE_TO_MS = 60 * SECOND_TO_MS; 
+const HOUR_TO_MS = 60 * MINUTE_TO_MS;
+const DAY_TO_MS = 24 * HOUR_TO_MS;
+
+
 export function delay(i: number): Promise<void> {
     return new Promise((resolve, reject) => setTimeout(() => resolve(), i))
 };
@@ -93,31 +101,25 @@ export enum TimeUnit {
 /**
  * Compares the dates based on the resolution. 
  * 
- * E.g.: if resolution TimeUnit.Minutes then they are equal i they have less
+ * E.g.: if resolution TimeUnit.Minutes then they are equal if they have less
  * than a minute difference.
- * 
  * 
  * @param date1 
  * @param date2 
- * @param resolution A timeUnit
+ * @param resolution
  * @returns 
  */
 export function timeEquals(date1: Date, date2: Date, resolution: TimeUnit): boolean {
     const timeMs = convert(1, resolution, (units, mult) => units * mult);
-    // return Math.floor(date1.getTime()/timeMs) === Math.floor(date2.getTime()/timeMs);
     return Math.abs(date1.getTime() - date2.getTime()) < timeMs;
 }
 
-
-
 export function timePeriodToMs(timePeriod: TimePeriod): number {
-    const daysToMillis = (days?: number) => days? days * hoursToMillis(24) : 0
-    const hoursToMillis = (hours?: number) => hours? hours * minutesToMillis(60) : 0;
-    const minutesToMillis = (minutes?: number) => minutes? minutes * secondsToMillis(60): 0;
-    const secondsToMillis = (seconds?: number) => seconds? seconds * 1000: 0;
-    const millisToMills = (millis? :number) => millis? millis : 0;
-
-    return daysToMillis(timePeriod.days) + hoursToMillis(timePeriod.hours)+minutesToMillis(timePeriod.minutes)+secondsToMillis(timePeriod.seconds) + millisToMills(timePeriod.millis);
+    return (timePeriod.days? timePeriod.days * DAY_TO_MS : 0) 
+            + (timePeriod.hours? timePeriod.hours * HOUR_TO_MS : 0)
+            + (timePeriod.minutes? timePeriod.minutes * MINUTE_TO_MS : 0) 
+            + (timePeriod.seconds? timePeriod.seconds * SECOND_TO_MS : 0) 
+            + (timePeriod.millis? timePeriod.millis : 0);
 }
 
 export function timePeriodToUnits(timePeriod: TimePeriod, unit: TimeUnit=TimeUnit.Milliseconds): number {
@@ -125,31 +127,46 @@ export function timePeriodToUnits(timePeriod: TimePeriod, unit: TimeUnit=TimeUni
 }
 
 export function unitsToTimePeriod(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): TimePeriod{
-
     const period: TimePeriod = {};
+    
     const ms = unitsToMs(units, baseUnit);
+    const floor = units >= 0 ? Math.floor: Math.ceil; 
 
-    period.days = Math.floor(ms/timePeriodToMs({days:1}));
-    period.hours = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({hours:1}));
-    period.minutes = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({minutes:1}));
-    period.seconds = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({seconds:1}));
-    period.millis = Math.floor((ms - timePeriodToMs(period))/timePeriodToMs({millis:1}));
+    period.days = floor(ms / DAY_TO_MS);
+    period.hours = floor((ms - timePeriodToMs(period)) / HOUR_TO_MS);
+    period.minutes = floor((ms - timePeriodToMs(period)) / MINUTE_TO_MS);
+    period.seconds = floor((ms - timePeriodToMs(period)) / SECOND_TO_MS);
+    period.millis = floor(ms - timePeriodToMs(period));
     return period;
 }
 
+// export function unitsToTimePeriod(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): TimePeriod{
+//     const period: TimePeriod = {};
+//     const sign = units < 0? -1: 1;
+//     const ms = Math.abs(unitsToMs(units, baseUnit));
+
+//     const floor = sign > 0 ? Math.floor: Math.ceil; 
+
+//     period.days = sign * Math.floor(ms / DAY_TO_MS);
+//     period.hours = sign * Math.floor((ms - timePeriodToMs(period)) / HOUR_TO_MS);
+//     period.minutes = sign * Math.floor((ms - timePeriodToMs(period)) / MINUTE_TO_MS);
+//     period.seconds = sign * Math.floor((ms - timePeriodToMs(period)) / SECOND_TO_MS);
+//     period.millis = sign * Math.floor(ms - timePeriodToMs(period));
+//     return period;
+// }
 
 function convert(units: number, unit: TimeUnit=TimeUnit.Milliseconds, op: (n: number, n2: number) => number): number {
     switch (unit) {
         case TimeUnit.Milliseconds:
             return units;
         case TimeUnit.Seconds:
-            return op(units, 1000.0);
+            return op(units, SECOND_TO_MS);
         case TimeUnit.Minutes:
-            return op(units, 60000.0);
+            return op(units, MINUTE_TO_MS);
         case TimeUnit.Hours: 
-            return op(units, 3600000.0);
+            return op(units, HOUR_TO_MS);
         case TimeUnit.Days:
-            return op(units, 86400000.0);
+            return op(units, DAY_TO_MS);
         default:
             throw new Error()
     }
@@ -195,43 +212,43 @@ export function formatPeriod(period: TimePeriod, periodPropertyNames: PeriodProp
 
     const components: String[] = [];
 
-    if(period.days==1){
+    if(period.days==1 || period.days == -1){
         components.push(period.days.toString().concat(propertyNames.day));
     } 
 
-    if(period.days && period.days > 1){
+    if(period.days && Math.abs(period.days) > 1){
         components.push(period.days.toString().concat(propertyNames.days));        
     }     
 
-    if(period.hours==1){
+    if(period.hours==1 || period.hours== -1){
         components.push(period.hours.toString().concat(propertyNames.hour));
     } 
     
-    if(period.hours && period.hours > 1){
+    if(period.hours && Math.abs(period.hours) > 1){
         components.push(period.hours.toString().concat(propertyNames.hours));
     }     
 
-    if(period.minutes==1){
+    if(period.minutes == 1 || period.minutes == -1){
         components.push(period.minutes.toString().concat(propertyNames.minute));
     }
 
-    if(period.minutes && period.minutes > 1){
+    if(period.minutes && Math.abs(period.minutes) > 1){
         components.push(period.minutes.toString().concat(propertyNames.minutes));        
     } 
 
-    if(period.seconds == 1){
+    if(period.seconds == 1 || period.seconds == -1){
         components.push(period.seconds.toString().concat(propertyNames.second));                
     }
     
-    if(period.seconds && period.seconds > 1){
+    if(period.seconds && Math.abs(period.seconds) > 1){
         components.push(period.seconds.toString().concat(propertyNames.seconds));                
     } 
 
-    if(period.millis == 1){
+    if(period.millis == 1 || period.millis == -1){
         components.push(period.millis.toString().concat(propertyNames.milli));                        
     }
 
-    if(period.millis && period.millis > 1){
+    if(period.millis && Math.abs(period.millis) > 1){
         components.push(period.millis.toString().concat(propertyNames.millis));                        
     }   
 
