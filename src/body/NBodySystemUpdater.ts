@@ -4,13 +4,63 @@ import { zipCombine } from '../system/arrays.ts';
 import { Clock, TimeUnit, timeMsToUnits } from '../system/timing.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { VectorComponents } from '../domain/models.ts';
+import { max } from 'three/examples/jsm/nodes/Nodes.js';
+
+
+type UpdaterLoopParam = {
+  iterations: number,
+  timestep: number
+};
+
+type loopParamProvider = (timestepMs: number) => UpdaterLoopParam;
+
+
+/**
+ * Generally, for celestial bodies, a step of about 600 seconds is pretty stable
+ * break down the update so that we don't exceed maxStableTimestepMs per update.
+ * if this is exceeded, then break down the update into 'iterations' loops.
+ *
+ * @param timestepMs 
+ * @returns 
+ */
+const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam => {
+  if (timestepMs == 0){
+    return {iterations: 0, timestep: 0 }
+  }
+
+  const maxStableTimestepMs = 200 * 1000; // make this adjustable.
+  const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
+  return { timestep: timestepMs / iterations, iterations: iterations};
+}
+
+/**
+ * Use this for satellites etc... 
+ * 
+ * It optimizes the resource available (i.e: the number of iterations). So given a desiredTimestep and
+ * a maxIterations.  It will attempt to minimize the timestep size once the timestep argument exceeds
+ * the desiredTimeStep. 
+ * 
+ * @param timestepMs 
+ */
+const desiredLoopParamProviderProvider = (timestepMs: number): UpdaterLoopParam => {
+  if (timestepMs == 0){
+    return {iterations: 0, timestep: 0 }
+  }
+
+  const maxIterations = 100; 
+  const desiredTimestepMs = 1 * 1000;
+  const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
+  const desiredStepFactor = Math.ceil(desiredIterations/maxIterations);
+  const iterations = Math.ceil(Math.abs(timestepMs)/(desiredTimestepMs * desiredStepFactor));
+  return {iterations: iterations, timestep: timestepMs/iterations };
+}
 
 /**
  * Each body in a system influences all other bodies, regardless of size and distance. 
  * If there are m bodies, there will be m*(m-1) forces taken into account...
  * 
  * Todo: Introduce a few different implementations, each with their own use cases:
- * - using center of mass/barycenters
+ * - using center of mass/barycenters (this would be best)
  * - using parent/child hierachies where a child's acceleration comes only from its parent/grandparents and siblings. This
  *   would be quite pertinent in the case of our solar system (i.e.: this way we'd not introduce earth's contribution to io's orbit anmd view versa)
  */
@@ -30,17 +80,15 @@ class NBodySystemUpdater implements BodySystemUpdater {
    * @returns 
    */
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
-    // Generally, for celestial bodies, a step of about 600 seconds is pretty stable (make this configurable)
-    // break down the update so that we don't exceed maxStableTimestepMs per update.
-    // if this is exceeded, then break down the update into 'iterations' loops.
 
-    const maxStableTimestepMs = 200 * 1000; // make this adjustable.
-    const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
-    const stableTimeStep = timestepMs / iterations;
+    // const { timestep, iterations} = defaulUpdaterLoopParamProvider(timestepMs);
+    const { timestep, iterations} = desiredLoopParamProviderProvider(timestepMs);
+    // console.log("timestep: "+Math.floor(timestep) +", Iterations: "+iterations);
+
     const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
 
     for (let i = 0; i < iterations; i++) {
-      this.updateBodyProperties(bodies, stableTimeStep);
+      this.updateBodyProperties(bodies, timestep);
     }
 
     bodies.forEach((body) => {
