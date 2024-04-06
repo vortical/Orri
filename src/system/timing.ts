@@ -364,16 +364,21 @@ export class Clock {
     
     publishTimeScale = throttle(200, undefined, (scale: number) => PubSub.publish(TIME_SCALE_TOPIC, scale)); 
 
-    setScale(scale: number, notify: boolean = true){
+    setScale(scale: number, isNotify: boolean = true){
         if(this.isPaused()){
+            // While paused, our scale is actually 0
+            // savedScale holds the non paused scale value which will
+            // be restored when no longer paused.
             this.savedScale = scale;
-            notify && this.publishTimeScale(this.savedScale);
+            isNotify && this.publishTimeScale(this.savedScale);
             
             
         } else {
+            // set a new baseline time from which this scale
+            // will be based from.
             this.setTime(this.getTime());
             this.scale = scale;
-            notify && this.publishTimeScale(this.scale);            
+            isNotify && this.publishTimeScale(this.scale);            
         }
     }
     

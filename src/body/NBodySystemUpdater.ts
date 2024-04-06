@@ -34,8 +34,8 @@ class NBodySystemUpdater implements BodySystemUpdater {
     // break down the update so that we don't exceed maxStableTimestepMs per update.
     // if this is exceeded, then break down the update into 'iterations' loops.
 
-    const maxStableTimestepMs = 600 * 1000; // make this adjustable.
-    const iterations = Math.ceil(timestepMs / maxStableTimestepMs);
+    const maxStableTimestepMs = 200 * 1000; // make this adjustable.
+    const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
     const stableTimeStep = timestepMs / iterations;
     const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
 
