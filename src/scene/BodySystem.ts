@@ -112,7 +112,7 @@ export class BodySystem {
             cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
             ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType= ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
             showNames = true, showDistance = true, showAltitudeAzimuth=true,
-            location = new LatLon(43.3651712, -73.6231424), targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
+            location, targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
         
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);

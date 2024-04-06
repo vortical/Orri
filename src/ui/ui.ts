@@ -228,20 +228,17 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
                     locationController._onFinishChange(v);
                 },
                 () => {
-                    locationController.setValue(`Could not set.`);
+                    // just set an arbitrary one: NYC
+                    locationController.setValue(`40.7128, -74.0060`);
                 }
             );
         },
     };
 
+    if(bodySystem.getLocation() == undefined){
+        options.getLocation();
+    }
  
-    // const dateController = new ClockTimeUpdateHandler(gui.add(options, "date").name('Time'))
-    //     .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
-
-    // gui.add(options, "setTimeToNow").name('Set Time To "Now"');        
-
-    // const settings = gui.addFolder('Settings');        
-
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback( (targetName) => {
             try {
