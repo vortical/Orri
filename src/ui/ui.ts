@@ -65,8 +65,10 @@ export class TimeControls {
         this.dataService = dataService;
         this.scaleProvider = new TimeScaleProvider(this.bodySystem.getTimeScale());
 
+        this.updateLabels();
         this.clockDateTimeInput = new ClockDateTimeInput("#datetimePicker", bodySystem)
             .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
+
     }
     
     rewind(){
@@ -77,10 +79,17 @@ export class TimeControls {
         return this.bodySystem.isPaused();
     }
 
+    updateLabels(){
+        const isPaused = this.isPaused();
+        this.playPauseButton.innerHTML = isPaused? '<div class="blink">&gt;</div>': "||";
+        this.timeScaleLabel.innerHTML = isPaused? '<div class="blink">Paused</div>': this.bodySystem.getTimeScale().toLocaleString().concat('X');
+    }
+
     playPause(){
         const isPaused = this.bodySystem.setPaused(!this.bodySystem.isPaused());
-        this.playPauseButton.innerHTML = isPaused? '<div class="blink">&gt;</div>': "||";
+        this.updateLabels();
     }
+
     forward(){
         this.bodySystem.setTimeScale(this.scaleProvider.next());
     }
@@ -112,15 +121,13 @@ export class TimeControls {
         this.timescaleSubscribtion = PubSub.subscribe(TIME_SCALE_TOPIC, (msg, scale) => {
             const timePeriod = unitsToTimePeriod(scale, TimeUnit.Seconds);            
             this.timeScalePeriodLabel.textContent = formatPeriod(timePeriod);
-            this.timeScaleLabel.textContent = scale.toLocaleString().concat('X');
+            this.timeScaleLabel.innerHTML = this.isPaused()? '<div class="blink">Paused</div>': scale.toLocaleString().concat('X');
         });
     }
 
     unsubscribeToTimeScale() {
         PubSub.unsubscribe(this.timescaleSubscribtion);
     }
-    
-
 }
 
 

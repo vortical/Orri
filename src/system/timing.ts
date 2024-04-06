@@ -140,21 +140,6 @@ export function unitsToTimePeriod(units: number, baseUnit: TimeUnit=TimeUnit.Mil
     return period;
 }
 
-// export function unitsToTimePeriod(units: number, baseUnit: TimeUnit=TimeUnit.Milliseconds): TimePeriod{
-//     const period: TimePeriod = {};
-//     const sign = units < 0? -1: 1;
-//     const ms = Math.abs(unitsToMs(units, baseUnit));
-
-//     const floor = sign > 0 ? Math.floor: Math.ceil; 
-
-//     period.days = sign * Math.floor(ms / DAY_TO_MS);
-//     period.hours = sign * Math.floor((ms - timePeriodToMs(period)) / HOUR_TO_MS);
-//     period.minutes = sign * Math.floor((ms - timePeriodToMs(period)) / MINUTE_TO_MS);
-//     period.seconds = sign * Math.floor((ms - timePeriodToMs(period)) / SECOND_TO_MS);
-//     period.millis = sign * Math.floor(ms - timePeriodToMs(period));
-//     return period;
-// }
-
 function convert(units: number, unit: TimeUnit=TimeUnit.Milliseconds, op: (n: number, n2: number) => number): number {
     switch (unit) {
         case TimeUnit.Milliseconds:

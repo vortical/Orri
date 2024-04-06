@@ -80,11 +80,8 @@ class NBodySystemUpdater implements BodySystemUpdater {
    * @returns 
    */
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
-
     // const { timestep, iterations} = defaulUpdaterLoopParamProvider(timestepMs);
     const { timestep, iterations} = desiredLoopParamProviderProvider(timestepMs);
-    // console.log("timestep: "+Math.floor(timestep) +", Iterations: "+iterations);
-
     const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
 
     for (let i = 0; i < iterations; i++) {
