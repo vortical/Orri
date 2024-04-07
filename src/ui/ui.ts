@@ -23,6 +23,21 @@ import { ClockDateTimeInput } from './ClockDateTimeInput.ts';
 
 const userNotify: INotifyService = new NotifyService();
 
+export function getLocation() : Promise<LatLon | undefined>{
+    return getLocationFromBrowser().then(
+        (l) => {
+            const v = `${l.lat}, ${l.lon}`;
+            const latlon = new LatLon(l.lat, l.lon);
+            return latlon;
+
+        },
+        () => {
+            return undefined;
+        }
+    );
+};
+
+
 
 // for targets and modes: 
 // https://codepen.io/sean_codes/pen/WdzgdY
@@ -330,6 +345,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     bodySystem.setTarget(targetController.getValue())
 
+    gui.close();
     return gui;
 }
 
