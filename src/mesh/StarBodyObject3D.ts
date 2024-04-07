@@ -104,7 +104,9 @@ class StarBodyObject3D extends BodyObject3D {
 
     createShadowLight(): DirectionalLight {
 
-        const SHADOW_MAP_SIZE = 2048 * 16;
+        // const SHADOW_MAP_SIZE = 2048 * 16;
+        // const SHADOW_MAP_SIZE = 4096;
+        const SHADOW_MAP_SIZE = 4096;
 
         const { color, intensity } = this.lightProperties;
         const light = new DirectionalLight(color, intensity);
@@ -117,8 +119,8 @@ class StarBodyObject3D extends BodyObject3D {
         light.shadow.camera.right = shadowCameraSize;
 
         light.shadow.bias = 0.0001;
-        light.shadow.radius = 3;
-        light.shadow.blurSamples = 8;
+        light.shadow.radius = 2;
+        // light.shadow.blurSamples = 4;
 
         light.shadow.mapSize.width = SHADOW_MAP_SIZE;
         light.shadow.mapSize.height = SHADOW_MAP_SIZE;
