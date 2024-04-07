@@ -86,7 +86,11 @@ class LatLon {
     return `${this.lat}, ${this.lon}`;
   }
 
-  static fromString(s: string): LatLon {
+  static fromString(s: string): LatLon|undefined {
+    if(s == undefined || s.trim().length == 0){
+      return undefined;
+    }
+
     const locationString = s.split(",");
     const lat = parseFloat(locationString[0]);
     const lon = parseFloat(locationString[1]);

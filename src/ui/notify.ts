@@ -1,27 +1,23 @@
 /** 
- * From https://codepen.io/shunty/pen/podKayQ
  * 
- * A 'toast'-like popup notification service. There are loads on GitHub etc but many
-use JQuery and others don't play well with the Content-Security-Policy header so we'll make
-our own. We can also cut out a lot of the options that many others provide because we're
-going to fix the popup to be bottom right with fixed size etc (or bottom middle on 
-narrower screens).
-Based on:
-https://github.com/CodeSeven/toastr/   // The original - but using JQuery
-https://github.com/paper-development/vanilla-toasts
-and closely based on:
-https://codepen.io/mrtrimble/pen/mdEgzzR
-https://webcodeflow.com/toast-notification-popup/
+ * Mostly from https://codepen.io/mrtrimble/pen/mdEgzzR 
+ * Which itself is Based on:
+ * https://github.com/CodeSeven/toastr/   // The original - but using JQuery
+ * https://github.com/paper-development/vanilla-toasts
+ * and closely based on:
+ * 
+ * https://webcodeflow.com/toast-notification-popup/
+ * From https://codepen.io/shunty/pen/podKayQ
+ */
 
-Changed the word 'toast' to 'notify' or 'notice' because Bootstrap contains several .toast styles
-that conflict.
-
-We use FontAwesome based icons and include 'fa' classes but FA isn't a dependency.
-*/
-
-// SVG icon data for each type of notification
-// Copied from FontAwesome v5, https://fontawesome.com/
-// https://github.com/FortAwesome/Font-Awesome/blob/5.x/metadata/icons.json
+/**
+ * SVG icon data for each type of notification Copied from FontAwesome v5 
+ * We include 'fa' css classes but FA isn't a dependency.
+ * https://fontawesome.com/
+ * https://github.com/FortAwesome/Font-Awesome/blob/5.x/metadata/icons.json
+ *  
+ * 
+ */ 
 // fa-info-circle
 const InfoPathData = 'M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z';
 // fa-exclamation-triangle
@@ -31,10 +27,9 @@ const SuccessPathData = 'M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 
 // fa-exclamation-circle
 const ErrorPathData = 'M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zm-248 50c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z';
 
-// Timeouts - how long the notifications stay visible for
-const DefaultFadeTimeout = 5000; // Time in ms before the notification is automatically removed
-const WarnFadeTimeout = 6500; // Bit longer for warnings
-const ErrorFadeTimeout = 8000; // Even longer for errors
+const DefaultFadeTimeout = 5000; 
+const WarnFadeTimeout = 8500; 
+const ErrorFadeTimeout = 10000; 
 
 
 export interface INotifyService {

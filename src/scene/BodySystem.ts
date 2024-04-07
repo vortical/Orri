@@ -232,21 +232,20 @@ export class BodySystem {
         return primeMeridianLocationPin;
     }
 
-
-    setLocation(latlon: LatLon){
+    setLocation(latlon: LatLon|undefined){
         // just an alias for setting a pin, right now we just set those on earth...
         // would be trivial to set this up to work anywhere.
         if (this.locationPin?.latlon == latlon){
             return;
         }
-        this.setLocationPin(new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00"));
+        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00"): undefined);
     }
 
     getLocationPin(): LocationPin| undefined{
         return this.locationPin;
     }
 
-    setLocationPin(locationPin: LocationPin){        
+    setLocationPin(locationPin: LocationPin|undefined){        
         this.locationPin?.remove();
         this.locationPin = locationPin;
     }
