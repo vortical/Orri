@@ -18,17 +18,16 @@ type ParamName = "zstate" | "state";
 export default class LocationBar {
 
     static getState(): BodySystemOptionsState {
-        return LocationBar.mapURLSearchParamsToState(new URLSearchParams(window.location.search))
+        return LocationBar.mapURLSearchParamsToState(new URLSearchParams(decodeURI(window.location.search)))
     }
 
     static pushState(state: BodySystemOptionsState, toCompress=false) {
         
         const jsonString = JSON.stringify(state);
-        const stateString = toCompress? LZString.compressToEncodedURIComponent(jsonString): jsonString;   
 
-        // strangely, the compressToEncodedURIComponent seems longer
-        console.log("Compressed to: "+stateString.length/jsonString.length);
-        
+        // strangely, the compressToEncodedURIComponent seems longer. So compression is an option.
+        const stateString = toCompress? LZString.compressToEncodedURIComponent(jsonString): encodeURI(jsonString);   
+
         const stateParam: ParamName = toCompress? "zstate": "state";
         if (new URLSearchParams(window.location.search).get(stateParam) !== stateString) {
             window.history.pushState(stateString, "", "?".concat(stateParam, "=", stateString));
@@ -60,7 +59,9 @@ export default class LocationBar {
     }
 };
 
-
-
-const modeForName = (name:string) => CameraModes[Object.getOwnPropertyNames(CameraModes).filter((x) => CameraModes[x as keyof typeof CameraModes].name == name)[0]as keyof typeof CameraModes];
+const modeForName = (name:string) => 
+    CameraModes[
+        Object.getOwnPropertyNames(CameraModes)
+        .filter((x) => CameraModes[x as keyof typeof CameraModes].name == name)[0] as keyof typeof CameraModes
+    ];
 

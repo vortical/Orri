@@ -20,7 +20,7 @@ async function start(){
 
     // Set the up of the viewer to be perpendicular to earth's orbit (the
     // ecliptic plane). 
-    // TO consider: We could also offer options to change the 
+    // We could also offer options to change the 
     // camera up to be based off the normal of any planet's orbital plane or
     // equatorial plane that is selected.
     const earth = bodySystem.getBody("earth");
