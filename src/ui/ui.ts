@@ -167,8 +167,8 @@ function getLocationFromBrowser(): Promise<LatLon> {
                 (position: any) => {
                     resolve(new LatLon(position.coords.latitude, position.coords.longitude))
                 },
-                () => {
-                    reject("Unable to retrieve your location")
+                (e) => {
+                    reject(e.message);
                 }
             );
         }
@@ -227,9 +227,12 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
                     locationController.updateDisplay();
                     locationController._onFinishChange(v);
                 },
-                () => {
-                    // just set an arbitrary one: NYC
-                    locationController.setValue(`40.7128, -74.0060`);
+                (e) => {
+                    
+                    userNotify.showWarning("Could not get your location!", e.toString().concat(", You will need to add you coordinates manually in the settings."))
+                    gui.open();
+                                     
+                    locationController.setValue('');
                 }
             );
         },
@@ -259,8 +262,25 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
             }
         }));
 
+
+    const locationController = gui.add(options, "location").name("Coordinates (lat, lon)").listen()
+            .onFinishChange(withRollback( (v: string) => {
+                try {
+                    const latlon = LatLon.fromString(v);
+                    bodySystem.setLocation(latlon);
+                    options.location = bodySystem.getLocation()?.toString() || "";
+                }catch(e){
+                    userNotify.showWarning("Can't process your location!", (e as Error).message);
+                    throw(e);
+                }
+            }));
+    gui.add(options, "getLocation").name('Use Browser Location');
+
+    // https://mylocation.org/
+    
     const fovController = gui.add(options, "fov", 0.05, 90, 0.1).name('Field Of Vue')
         .onChange((v: number) => bodySystem.setFOV(v));
+
 
     const labelsSettingsfolder = gui.addFolder('Labels Settings');
     labelsSettingsfolder.close();
@@ -286,21 +306,9 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
         .onChange((v: ShadowType) => bodySystem.setShadowType(v));        
 
 
-    const locationFolder = gui.addFolder('Location Settings');
-    const locationController = locationFolder.add(options, "location").name("Coordinates (lat, lon)").listen()
-        .onFinishChange(withRollback( (v: string) => {
-            try {
-                const latlon = LatLon.fromString(v);
-                bodySystem.setLocation(latlon);
-                options.location = bodySystem.getLocation()?.toString() || "";
-            }catch(e){
-                userNotify.showWarning("I don't know where to pin your location...", (e as Error).message);
-                throw(e);
-            }
-        }));
 
 
-    locationFolder.add(options, "getLocation").name('Use Browser Location');
+        
     
     const viewSettingsfolder = gui.addFolder('View Settings');
     
@@ -330,7 +338,6 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
 
     bodySystem.setTarget(targetController.getValue())
     gui.close()
-
     return gui;
 }
 

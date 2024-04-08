@@ -30,7 +30,7 @@ async function start(){
 }
 
 try {
-    console.log(`Starting with config: \n${JSON.stringify(config)}`);
+    console.log(`Config: \n${JSON.stringify(config)}`);
     start();
 }catch(err: any) {
     console.error("Could not start application:"+ err.message)

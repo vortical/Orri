@@ -4,6 +4,10 @@
 
 import { Mesh, PerspectiveCamera, Sphere, Spherical, Vector3 } from "three";
 import { Vector } from "./vecs";
+// import { convert } from 'geo-coordinates-parser' //ES6
+
+import * as coords from 'coordinate-parser';
+
 
 function toRad(degrees:number): number{
     return degrees * Math.PI / 180;
@@ -86,21 +90,34 @@ class LatLon {
     return `${this.lat}, ${this.lon}`;
   }
 
+
   static fromString(s: string): LatLon|undefined {
     if(s == undefined || s.trim().length == 0){
       return undefined;
     }
-
-    const locationString = s.split(",");
-    const lat = parseFloat(locationString[0]);
-    const lon = parseFloat(locationString[1]);
-
-    if(isNaN(lat) || isNaN(lon)){
-      throw new Error(`Invalid coordinates, must be of the form: 'lat, lon' where lat is a number between [-90, 90] and lon between [-180,180].`);
-    } 
-    
-    return new LatLon(lat, lon);
+    try{
+      const converted = new coords(s);
+      return new LatLon(converted.getLatitude(), converted.getLongitude());
+    }catch (e: any){
+      throw new Error(`Invalid coordinates: ${e.message}`);
+    }
   }
+
+  // static fromString(s: string): LatLon|undefined {
+  //   if(s == undefined || s.trim().length == 0){
+  //     return undefined;
+  //   }
+
+  //   const locationString = s.split(",");
+  //   const lat = parseFloat(locationString[0]);
+  //   const lon = parseFloat(locationString[1]);
+
+  //   if(isNaN(lat) || isNaN(lon)){
+  //     throw new Error(`Invalid coordinates, must be of the form: 'lat, lon' where lat is a number between [-90, 90] and lon between [-180,180].`);
+  //   } 
+    
+  //   return new LatLon(lat, lon);
+  // }
 
   /**
    * 
