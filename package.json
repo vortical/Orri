@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@tweenjs/tween.js": "^23.1.1",
-    "coordinate-parser": "^1.0.7",
     "flatpickr": "^4.6.13",
     "geo-coordinates-parser": "^1.6.6",
     "lil-gui": "^0.19.1",
