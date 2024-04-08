@@ -329,6 +329,7 @@ function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataSer
     });
 
     bodySystem.setTarget(targetController.getValue())
+    gui.close()
 
     return gui;
 }
