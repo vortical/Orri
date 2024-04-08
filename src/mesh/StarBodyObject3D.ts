@@ -106,7 +106,7 @@ class StarBodyObject3D extends BodyObject3D {
 
         // const SHADOW_MAP_SIZE = 2048 * 16;
         // const SHADOW_MAP_SIZE = 4096;
-        const SHADOW_MAP_SIZE = 4096;
+        const SHADOW_MAP_SIZE = 4096 * 2;
 
         const { color, intensity } = this.lightProperties;
         const light = new DirectionalLight(color, intensity);
