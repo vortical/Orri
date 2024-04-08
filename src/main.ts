@@ -2,11 +2,10 @@ import './style.css';
 import { BodySystem, BodySystemOptionsState } from './scene/BodySystem.ts'
 import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
 import { Body} from './domain/Body.ts';
-import { SimpleUI, getLocation } from './ui/ui.ts';
+import { SimpleUI } from './ui/ui.ts';
 import LocationBar from './ui/LocationBar.ts';
 import { DataService } from './services/dataservice.ts';
 import config from './configuration.ts';
-import { CameraModes } from './scene/CameraTargetingState.ts';
 
 const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
 const statusElement =document.querySelector<HTMLInputElement>("#status-container")!;
@@ -16,17 +15,6 @@ async function start(){
     const bodySystemUpdater = new NBodySystemUpdater();
     const options = LocationBar.getState();
     const date = options.date ? new Date(options.date): new Date()
-
-    if (options.location == undefined){
-        try {
-            const latlong = await getLocation();
-            options.location = latlong;
-        }catch(err){
-            if (options.targettingCameraMode == CameraModes.ViewTargetFromSurface){
-                options.targettingCameraMode = CameraModes.LookAtTarget;
-            }            
-        }
-    }
     const bodies: Body[] = await dataService.loadSolarSystem(date);    
     const bodySystem = new BodySystem(mainElement, bodies, dataService, bodySystemUpdater, options);
 
