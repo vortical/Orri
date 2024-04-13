@@ -1,6 +1,5 @@
 import { Body } from '../domain/Body.ts';
 import { LightProperties } from '../domain/models.ts';
-import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
@@ -54,7 +53,7 @@ class StarBodyObject3D extends BodyObject3D {
         this.shadowingLightTargetListener = new DirectionLightTargetListener(this);
         const widthSegements = 64;
         const heightSegments = 32;
-        const materialProperties = meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
+        const materialProperties = body.textures;//meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
 
         // Create the sun mesh
         const geometry = new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
@@ -102,10 +101,7 @@ class StarBodyObject3D extends BodyObject3D {
         
     }
 
-    createShadowLight(): DirectionalLight {
-
-        // const SHADOW_MAP_SIZE = 2048 * 16;
-        // const SHADOW_MAP_SIZE = 4096;
+    createShadowLight(): DirectionalLight {        
         const SHADOW_MAP_SIZE = 4096 * 2;
 
         const { color, intensity } = this.lightProperties;
@@ -136,14 +132,6 @@ class StarBodyObject3D extends BodyObject3D {
     getSurfaceMesh(): Mesh {
         return this.surfaceMesh;
     }
-
-    // getLightIntensity(): number {
-    //     return this.lightProperties.intensity;
-    // }
-
-    // setLightIntensity(level: number){        
-    //     this.lightProperties.intensity = level;        
-    // }
 
     areShadowsEnabled(): boolean {
         return this.shadowingLight !== undefined;
