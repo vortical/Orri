@@ -8,14 +8,11 @@ const FLARE_TEXTURE_SIZE = 512;
 
 /**
  * Lensflare arent the usual mesh with an inherent geometry. They have a static size (they are 2d and designed to 
- * emulate flare on the camera lens). So we create a set of flares with different sizes (i.e. scales). 
- *
- * We determine the desired scales as either log or linear based.
- *   
- * For every frame rendered, we determine the desired scale of a flare and ensure it is visible while
- * disabling other flares.
+ * emulate flare on the camera lens) and always face the camera. 
  * 
- *
+ * We create a set of flares with different sizes (i.e. scales).
+ *   
+ * For every frame rendered, we determine the scaled flare to make visible depending on distance to sun.
  */
 
 function* logSequenceGenerator(start: number, end: number, nbSteps: number): Generator<number> {
@@ -50,7 +47,7 @@ class FlareEffect {
     constructor(star: StarBodyObject3D){
         this.star = star;
 
-        // just using log scale is better
+        // I think the log scale is better, we should ditch the linearSequenceGenerator.
         this.flares = createFlares(star.pointLight.color, logSequenceGenerator(0.015, 20, 60));
         this.star.pointLight.add(...(this.flares.map(it => it.lensflare)));
     }
@@ -66,7 +63,7 @@ class FlareEffect {
         function computeFlareScaleForStarSize(bodysizePixels: Dim): number {
             // the flare texture size is 512, and the center part of it (i.e. 2/29 or ~7%) represents the 
             // central part around actual body.
-            // So given a passed in body size, we determine the scale value of this texture.
+            // So given a bodysizePixels size, we determine the scale value of this texture.
             const centerBodySize = FLARE_TEXTURE_SIZE * 2/29; // ~35 pixels - 7%
             const scale = Math.max(bodysizePixels.w, bodysizePixels.h) / centerBodySize;
             return scale;
@@ -82,7 +79,6 @@ class FlareEffect {
         if(this.lensflare !==  flare){
             if(this.lensflare){
                 this.lensflare.visible = false;
-                // console.log("switch flare for scale:"+scale);
             }
             this.lensflare = flare;
             this.lensflare.visible = true;
@@ -95,7 +91,7 @@ function createFlares(color: any, scales: Iterable<number>): ScaledLensflare[] {
     const textureFlare0 = textureLoader.load('/assets/textures/lensflare/lensflare0_alpha.png');
     const flares = [];
 
-    // create non visible lensflares
+    // create all possible lensflares but don't make them visible.
     for(const scale of scales){        
         const lensflare = new Lensflare();
         lensflare.addElement( new LensflareElement( textureFlare0, 512 * scale, 0, color ) );

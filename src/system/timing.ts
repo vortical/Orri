@@ -244,10 +244,7 @@ export function formatPeriod(period: TimePeriod, periodPropertyNames: PeriodProp
 
 
 /**
- * A timer associated to a clock. 
- * 
- * This timer is used internally to determine the time delta between each animation loop with a clock
- * that can be sped/slowed up/down.
+ * A timer associated to a clock. If clock is sped/slowed/paused via its scale: so is the timer .
  */
 export class Timer {
 
@@ -265,7 +262,6 @@ export class Timer {
      * @returns time in ms
      */
     getDelta(): number {        
-        // note that the scale could have changed between calls to getDelta, we'd have to account for this...
         const now = performance.now();
         const delta = this.clock.scale * (now - this.timestamp);
         this.timestamp = now;
@@ -273,7 +269,6 @@ export class Timer {
     }
 
     start(): Timer{
-        // this.startTime = performance.now();
         this.timestamp = performance.now();    
         return this;
     }
@@ -287,7 +282,7 @@ export class Timer {
  * Can have downstream timers associated to it.
  * 
  * Also publishes its current time at each realtime second to a topic: SYSTEM_TIME_TOPIC. The 
- * time is in ms based on the usual the UNIX epoch (January 1, 1970 00:00:00 UTC) .
+ * time is in ms based on UNIX epoch.
  * 
  */
 export class Clock {
@@ -298,7 +293,7 @@ export class Clock {
     clockTimeMs!: number;
     
     /**
-     * realTimestampMs keeps track of actual time in ms.
+     * realTimestampMs keeps track of real time in ms.
      * 
      * When scales are changed, the realtime reflects the initial
      * time when the scale was applied. 
@@ -330,6 +325,11 @@ export class Clock {
     }
 
     setPaused(value: boolean): boolean {
+        // When we pause,save the scale's 'unpaused' value and set scale to 0, 
+        // To unpause, we assign the saved value to the scale.
+        //
+        // TODO: Clean this up by creating 2 'state classes': 
+        // class PausedClockState and NonPausedClockState to handle the pause and setScale methods.
         if(value){
             if(!this.isPaused()){
                 this.savedScale = this.scale;

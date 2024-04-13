@@ -1,5 +1,4 @@
 import { Body } from '../domain/Body.ts';
-import { meshProperties } from "../data/bodySystems.ts";
 import { Mesh, Material, SphereGeometry, MeshPhongMaterialParameters, MeshPhongMaterial, Object3D, RingGeometry, MeshLambertMaterial, DoubleSide, Vector3, Quaternion, IcosahedronGeometry, Group, FrontSide, BackSide, Vector2, LineBasicMaterial, MeshBasicMaterial, Sphere, Spherical } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
@@ -47,7 +46,7 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
 
 
 function createRingMeshes(body: Body): Mesh[] | undefined {
-    // we support rings with parts with different rotational periods, but need to generate imagery for this.
+    // We could support rings with parts with different rotational periods, but need to generate imagery for this.
     // https://astronomy.stackexchange.com/questions/25405/what-are-the-periods-of-saturns-rings
     // https://en.wikipedia.org/wiki/Rings_of_Saturn#Major_subdivisions
 
@@ -103,23 +102,19 @@ class PlanetaryBodyObject3D extends BodyObject3D {
     constructor(body: Body, bodySystem: BodySystem) {
         super(body, bodySystem);
 
-        const materialProperties = meshProperties.solarSystem.find((b) => b.name.toLocaleLowerCase() == body.name.toLowerCase())!;
+        const materialProperties = body.textures; 
         const widthSegements = 64;
         const heightSegments = 64;
 
-
-        // TODO: consider having a radius like
+        // TODO: we should support varying dimensions.
         // const radiusX = body.dimensions[0];
         // const radiusZ = body.dimensions[1];
         // const radiusY = body.dimensions[2];
-
-        // const yScale = ry / rx;
-        // const zScale = rz / rx;
-
-        //
-        // const geometry = SphereGeometry(rx, 24, 24);
+        // const yScale = radiusY / radiusX;
+        // const zScale = radiusZ / radiusX;
+        // const geometry = SphereGeometry(radiusX, widthSegements, heightSegments);
         // geometry.scale(1, yScale, zScale);
-        // geometry.rotateX(Math.PI / 2);
+    
 
         const geometry = new SphereGeometry(body.radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
         const material = createBodySurfaceMaterial(materialProperties);

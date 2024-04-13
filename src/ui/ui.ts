@@ -136,10 +136,9 @@ export class TimeControls {
  */
 export class SimpleUI {
 
-    constructor(statusElement: HTMLElement, bodySystem: BodySystem, dataService: DataService) {
+    constructor(bodySystem: BodySystem, dataService: DataService) {
 
-        buildLilGui(statusElement, bodySystem, dataService);
-        // new StatusComponent(statusElement, bodySystem);
+        buildLilGui(bodySystem, dataService);
         new TimeControls(bodySystem, dataService);
 
         // // Handle the history back button
@@ -189,7 +188,7 @@ function withRollback(callback: (v: any)=>void){
     };
 }
 
-function buildLilGui(statusElement: HTMLElement, bodySystem: BodySystem, dataService: DataService) {
+function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     const gui = new GUI().title("Orri");
     const bodyNames = bodySystem.bodies.map((b) => b.name);
 

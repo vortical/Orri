@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vector } from '../system/vecs.ts';
-import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents } from './models.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties } from './models.ts';
 import { timePeriodToMs } from '../system/timing.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
@@ -82,9 +82,10 @@ class Body {
     color: string;
 
     kinematics!: KinematicObject;
+    textures: MaterialProperties;
 
 
-    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings }: BodyProperties) {
+    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings, textures }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parent;
@@ -103,7 +104,7 @@ class Body {
         this.lightProperties = lightProperties;
         this.rings = rings;
         this.color = color;
-
+        this.textures = textures;
     }
 
     /**
@@ -124,7 +125,7 @@ class Body {
 
         // If an axis was given, then we honor it else we calculate an arbitrary one
         // based on the obliquity and orbital plane. This will result in a realistic
-        // axis but will not necessarily match for that specific time.
+        // axis angle but will not necessarily match the orientation (at the clock time).
         if (this.axisDirection !== undefined) {
             return this.axisDirection;
         }
@@ -167,8 +168,9 @@ class Body {
 
     /**
      * 
-     * A planetary system is a planet with its moons. E.g. Earth planetary system is set
+     * A 'planetary system' is a planet with its moons. E.g. Earth planetary system is set
      * of bodies that include Moon and Earth.
+     * 
      * 
      * @returns Planetary System this body belongs to.
      */

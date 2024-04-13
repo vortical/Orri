@@ -33,7 +33,6 @@ type TimePeriod = {
 
 
 type MaterialProperties = {
-    name: string;
     textureUri?: string;
     bumpMapUri?: string;
     bumpMapScale?: number;
@@ -112,6 +111,7 @@ type BodyProperties = {
      */
     rings?: RingProperties[];
     color?: string;
+    textures: MaterialProperties;
 
 
 }
