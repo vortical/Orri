@@ -4,7 +4,7 @@
 
 import { Mesh, PerspectiveCamera, Sphere, Spherical, Vector3 } from "three";
 import { Vector } from "./vecs";
-import { convert } from 'geo-coordinates-parser' //ES6
+import { convert as convertLatLon} from 'geo-coordinates-parser' //ES6
 
 
 
@@ -40,25 +40,19 @@ class AltitudeAzimuth {
   }
 
   toString(): string {
-
     const trendCharacter = this.trend == -1 ? '\u2193': this.trend == 1? '\u2191': '';
-
-    const northOrSouth = this.elevation<0? "S": "N"
+    const northOrSouth = this.elevation < 0 ? "S": "N"
     const elevationString = Math.abs(this.elevation).toLocaleString(undefined, {maximumFractionDigits: 1});
-    //const elevationString = this.elevation.toLocaleString(undefined, {maximumFractionDigits: 1});
     const azimuthString = this.azimuth.toLocaleString(undefined, {maximumFractionDigits: 1});
     return `${elevationString}\u00B0${northOrSouth}${trendCharacter}, ${azimuthString}\u00B0`;
-    
   }
 
   calcTrend(previous?: AltitudeAzimuth){
-
-    if(previous != undefined){
-      if (this.elevation < previous.elevation){
+    if(previous != undefined){      
+      if (this.elevation < previous.elevation) {
         this.trend = -1;
-      }
-      if(this.elevation > previous.elevation){
-        this.trend = 1;
+      } else if (this.elevation > previous.elevation){      
+          this.trend = 1;
       }
     }
   }
@@ -66,7 +60,6 @@ class AltitudeAzimuth {
 
 
 class LatLon {
-  // Not sure this offset applies to all bodies. But it applies to earth's surface mesh.
   static LON_OFFSET = 90;
 
   lat: number;
@@ -91,54 +84,28 @@ class LatLon {
   }
 
 
+  /**
+   * Parse lat lon coordinates. These come in many shapes
+   * 
+   * @param s 
+   * @returns 
+   */
   static fromString(s: string): LatLon|undefined {
-    if(s == undefined || s.trim().length == 0){
-      return undefined;
-    }
-
-    function tryone(){
-      const converted = convert(s);
+    if(s == undefined || s.trim().length == 0) return undefined;
+    
+    try {
+      const converted = convertLatLon(s);
       return new LatLon(parseFloat(converted.decimalLatitude), parseFloat(converted.decimalLongitude));
-    }
-
-    function trytwo(){
+    }catch(e: any){
       const locationString = s.split(",");
       const lat = parseFloat(locationString[0]);
       const lon = parseFloat(locationString[1]);
       if(isNaN(lat) || isNaN(lon)){
-        throw new Error(`Invalid coordinates, must be of the form: 'lat, lon' where lat is a number between [-90, 90] and lon between [-180,180].`);
+        throw new Error(`Could not parse coordinates.`);
       } 
-      return new LatLon(lat, lon);
+      return new LatLon(lat, lon);  
     }
-
-    try {
-      const latlon = tryone();
-      return latlon;
-    }catch(e: any){
-      try {
-        const latlon = trytwo();
-        return latlon;
-      }catch(ee: any){
-        throw new Error(`Invalid coordinates, must be of the form: 'lat, lon' where lat is a number between [-90, 90] and lon between [-180,180].`);
-      }
-    }
-
   }
-  // static fromString(s: string): LatLon|undefined {
-  //   if(s == undefined || s.trim().length == 0){
-  //     return undefined;
-  //   }
-
-  //   const locationString = s.split(",");
-  //   const lat = parseFloat(locationString[0]);
-  //   const lon = parseFloat(locationString[1]);
-
-  //   if(isNaN(lat) || isNaN(lon)){
-  //     throw new Error(`Invalid coordinates, must be of the form: 'lat, lon' where lat is a number between [-90, 90] and lon between [-180,180].`);
-  //   } 
-    
-  //   return new LatLon(lat, lon);
-  // }
 
   /**
    * 
@@ -146,20 +113,22 @@ class LatLon {
    * @returns 
    */
   toSpherical(radius: number): Spherical {
-      const phi = toRad(90 - this.lat);  // down from the y axis
-      const theta = toRad(this.lon+LatLon.LON_OFFSET) // around z axis, from position z 
+      const phi = toRad(90 - this.lat);  
+      const theta = toRad(this.lon + LatLon.LON_OFFSET) 
       const sphereCoords = new Spherical(radius, phi, theta);
       return sphereCoords;    
   }
 };
 
+function convertLength(source: number, sourceUnits: DistanceUnit, targetUnits: DistanceUnit): number {
+  return source * sourceUnits.conversion / targetUnits.conversion;
+}
 
 const DistanceUnits = {
   au: {abbrev: "au", conversion: 149597870.691},
-
   mi: {abbrev: "mi", conversion: 1.609344},
   km: {abbrev: "km", conversion: 1},
-
+  m:  {abbrev: "m", conversion: 0.001},
 }
 
 type DistanceUnit = typeof DistanceUnits[keyof typeof DistanceUnits];
@@ -209,7 +178,7 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
     const camPos = camera.position;
     const distance = camPos.distanceTo(objectPosition);  
     const fovDeg = camera.getEffectiveFOV();
-    const fovRad = toRad(fovDeg);// * Math.PI/180;
+    const fovRad = toRad(fovDeg);
     const height = 2 * Math.tan(fovRad/2) * distance;
     const width = camera.aspect * height;
     return new Dim(objsectSize.w/width, objsectSize.h/height);
@@ -237,5 +206,5 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon, AltitudeAzimuth };
+export { convertLength, Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon, AltitudeAzimuth };
 export type { WindowSizeObserver, DistanceUnit };

@@ -8,9 +8,25 @@ import { BodySystem } from '../scene/BodySystem.ts';
 import { FlareEffect } from './FlareEffect.ts';
 import { textureLoader } from '../services/textureLoader.ts';
 
-
+/**
+ * We have 2 light sources: pointlight and shadow light ( a directional light). Shadow light can be enabled/disabled,
+ * so when enabled, the sum of lights remains the same to when only pointlight was in effect.
+ * 
+ * This is the ratio when shadow light is enabled. Areas in shadow will 
+ * have light with an intensity based on this ratio.
+ * 
+ * @see StarBodyObject3D.updateLightIntensities
+ * 
+ */
 const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
 
+
+
+/**
+ * We can't use the pointlight as the source for shadows (space is too big for our 
+ * little shadow map). So we carry around a directional light that always aligns itself 
+ * in the direction of the camera to the target. 
+ */
 class DirectionLightTargetListener {
     star: StarBodyObject3D;
 
@@ -53,7 +69,7 @@ class StarBodyObject3D extends BodyObject3D {
         this.shadowingLightTargetListener = new DirectionLightTargetListener(this);
         const widthSegements = 64;
         const heightSegments = 32;
-        const materialProperties = body.textures;//meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
+        const materialProperties = body.textures;
 
         // Create the sun mesh
         const geometry = new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
@@ -78,7 +94,7 @@ class StarBodyObject3D extends BodyObject3D {
         this.pointLight = new PointLight(this.lightProperties.color, this.lightProperties.intensity, this.lightProperties.distance, this.lightProperties.decay);
         this.pointLight.name = "pointlight";
 
-        this.flareEffect = new FlareEffect(this);//createFlares(this.pointLight.color);
+        this.flareEffect = new FlareEffect(this);
         this.pointLight.add(surfacemesh);
 
         const bodymesh =this.object3D;
