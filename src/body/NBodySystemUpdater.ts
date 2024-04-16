@@ -16,9 +16,9 @@ type loopParamProvider = (timestepMs: number) => UpdaterLoopParam;
 
 
 /**
- * Generally, for celestial bodies, a step of about 600 seconds is pretty stable
- * break down the update so that we don't exceed maxStableTimestepMs per update.
- * if this is exceeded, then break down the update into 'iterations' loops.
+ * Generally, for celestial bodies, a step of about 600 seconds is pretty 'stable'.
+ * So break down the update so that we don't exceed maxStableTimestepMs per update.
+ * If this is exceeded, then break down the update into 'iterations' loops.
  *
  * @param timestepMs 
  * @returns 
