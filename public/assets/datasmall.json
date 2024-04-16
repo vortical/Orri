@@ -24,7 +24,7 @@
         "radius": 2.44e6,
         "castShadow": false,
         "receiveShadow": false,
-        "orbitInclination": 7.005,
+
         "obliquityToOrbit": 0.034,
         "sideralRotationPeriod": {
             "days": 58.646
@@ -42,7 +42,6 @@
         "radius": 6.05e6,
         "castShadow": false,
         "receiveShadow": false,
-        "orbitInclination": 3.39,
         "obliquityToOrbit": 177.4,
         "sideralRotationPeriod": {
             "days": 243.02
@@ -60,7 +59,6 @@
         "radius": 6.378e6,
         "castShadow": false,
         "receiveShadow": true,
-        "orbitInclination": 0,
         "obliquityToOrbit": 23.44,
         "sideralRotationPeriod": {
             "hours": 23,
@@ -82,7 +80,6 @@
         "radius": 1.737400e6,
         "castShadow": true,
         "receiveShadow": false,
-        "orbitInclination": 5.145,
         "obliquityToOrbit": 1.5424,
         "sideralRotationPeriod": {
             "days": 27.3217
@@ -106,7 +103,6 @@
         "radius": 3.185500e6,
         "castShadow": false,
         "receiveShadow": false,
-        "orbitInclination": 1.8,
         "obliquityToOrbit": 25.2,
         "sideralRotationPeriod": {
             "hours": 24.6229
@@ -125,7 +121,6 @@
         "radius": 71.492e6,
         "castShadow": false,
         "receiveShadow": true,
-        "orbitInclination": 1.3,
         "obliquityToOrbit": 3.1,
         "sideralRotationPeriod": {
             "hours": 9.93
@@ -150,7 +145,6 @@
         "radius": 1.8213e6,
         "castShadow": true,
         "receiveShadow": false,
-        "orbitInclination": 0.036,
         "obliquityToOrbit": 0,
         "sideralRotationPeriod": {
             "hours": 42.456
@@ -169,7 +163,6 @@
         "radius": 1.561e6,
         "castShadow": true,
         "receiveShadow": false,
-        "orbitInclination": 0.47,
         "obliquityToOrbit": 0,
         "sideralRotationPeriod": {
             "days": 3.551
@@ -187,7 +180,6 @@
         "radius": 2.6341e6,
         "castShadow": true,
         "receiveShadow": false,
-        "orbitInclination": 0.2,
         "obliquityToOrbit": 0,
         "sideralRotationPeriod": {
             "days": 7.155
@@ -204,7 +196,6 @@
         "radius": 2.41e6,
         "castShadow": true,
         "receiveShadow": false,
-        "orbitInclination": 2.02,
         "obliquityToOrbit": 0,
         "sideralRotationPeriod": {
             "days": 16.689
@@ -221,7 +212,6 @@
         "radius": 60.268e6,
         "castShadow": false,
         "receiveShadow": true,
-        "orbitInclination": 2.486,
         "obliquityToOrbit": 26.73,
         "sideralRotationPeriod": {
             "hours": 10.656
@@ -245,7 +235,6 @@
         "radius": 25.559000e6,
         "castShadow": false,
         "receiveShadow": false,
-        "orbitInclination": 0.770,
         "obliquityToOrbit": 97.77,
         "sideralRotationPeriod": {
             "hours": 17.24
@@ -270,7 +259,6 @@
         "radius": 24.764e6,
         "castShadow": false,
         "receiveShadow": false,
-        "orbitInclination": 1.77,
         "obliquityToOrbit": 28.32,
         "sideralRotationPeriod": {
             "hours": 16.11
@@ -287,7 +275,6 @@
         "radius": 1.188e6,
         "castShadow": false,
         "receiveShadow": false,
-        "orbitInclination": 17.16,
         "obliquityToOrbit": 119.51,
         "sideralRotationPeriod": {
             "hours": 153.2928

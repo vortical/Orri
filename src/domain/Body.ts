@@ -7,43 +7,34 @@ import { degToRad } from 'three/src/math/MathUtils.js';
 
 /**
  * G is the universal gravitational constant 
- * in exp(m,3) * exp(kg,-1) * exp(s, -2)
  */
 const G: number = 6.674e-11;
 
-
-
-/**
- * Avoid error accumulation, use a base time and rotation for anything with
- * a constant period.
- */
 
 
 interface RotationCalculator {
     (timeMs: number): Vector;
 }
 
+/**
+ * Represents the non 3D characteristics of a body: position, speed, mass, axis tilt, rotation period etc...
+ * 
+ */
 class Body {
     type: BodyType
     name: string;
-
     parentName: string;
     parent?: Body;
-
-    timeMs!: number;
-
     mass: number;
     /**
      * in meters
      */
     radius: number;
-
     castShadow: boolean;
-
     receiveShadow: boolean;
 
-    /** in meters
-     * 
+    /** 
+     * in meters
      */
     position!: Vector;
 
@@ -52,54 +43,44 @@ class Body {
      * rename to sideralRotation
      */
     rotation!: number;
-
     axisDirection?: Vector;
-
     rotationAtTime!: RotationCalculator;
+
     /**
      * in meters/s
      */
     velocity!: Vector;
-
     acceleration!: Vector;
 
     // rotation angle along its obliquity axis.
     sideralRotation!: Vector;
-
-    // rotationQuaternion!: Quaternion; // using euler 
-
-
-    orbitInclination: number;
+    // orbitInclination: number;
 
     // tilt
     obliquityToOrbit: number;
 
     /** time for a sideral rotation upon axis*/
     sideralRotationPeriodMs: number; // = Number.MAX_VALUE;
-
     lightProperties?: LightProperties;
     rings?: RingProperties;
     color: string;
-
+    // things that change: speeds, postitions, axis directions...
     kinematics!: KinematicObject;
     textures: MaterialProperties;
 
 
-    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", orbitInclination = 0, obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings, textures }: BodyProperties) {
+    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings, textures }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parent;
-
         this.mass = mass;
         this.radius = radius;
         this.castShadow = castShadow;
         this.receiveShadow = receiveShadow;
-
         this.position = Vector.fromVectorComponents(position)
         this.velocity = Vector.fromVectorComponents(velocity)
-        this.orbitInclination = orbitInclination;
+        // this.orbitInclination = orbitInclination;
         this.obliquityToOrbit = obliquityToOrbit;
-
         this.sideralRotationPeriodMs = timePeriodToMs(sideralRotationPeriod);
         this.lightProperties = lightProperties;
         this.rings = rings;
@@ -141,6 +122,10 @@ class Body {
         return this.kinematics;
     }
 
+    /**
+     * Reset a body's velocity, position, rotation.
+     * @param kinematics 
+     */
     setKinematics(kinematics: KinematicObject) {
         this.kinematics = kinematics;
 
@@ -255,10 +240,11 @@ class Body {
      * @returns so + vo * t + a * (t * t)/2
      */
     nextPosition(acc: VectorComponents, time: number): Vector {
+        const time2 = (time * time) / 2;
         return new Vector(
-            this.position.x + (this.velocity.x * time) + (acc.x * time * time) / 2,
-            this.position.y + (this.velocity.y * time) + (acc.y * time * time) / 2,
-            this.position.z + (this.velocity.z * time) + (acc.z * time * time) / 2,
+            this.position.x + (this.velocity.x * time) + (acc.x * time2),
+            this.position.y + (this.velocity.y * time) + (acc.y * time2),
+            this.position.z + (this.velocity.z * time) + (acc.z * time2),
         );
     }
 }

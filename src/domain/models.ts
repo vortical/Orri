@@ -83,7 +83,7 @@ type BodyProperties = {
      * The orbital plane of this body in degrees. 
      * Note: Not USED, we calculate this based on velocities.
      */
-    orbitInclination?: number;
+    // orbitInclination?: number;
 
     /**
      * 

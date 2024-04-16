@@ -7,78 +7,22 @@ import { VectorComponents } from '../domain/models.ts';
 import { max } from 'three/examples/jsm/nodes/Nodes.js';
 
 
-type UpdaterLoopParam = {
-  iterations: number,
-  timestep: number
-};
-
-type loopParamProvider = (timestepMs: number) => UpdaterLoopParam;
-
-
-/**
- * Generally, for celestial bodies, a step of about 600 seconds is pretty 'stable'.
- * So break down the update so that we don't exceed maxStableTimestepMs per update.
- * If this is exceeded, then break down the update into 'iterations' loops.
- *
- * @param timestepMs 
- * @returns 
- */
-const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam => {
-  if (timestepMs == 0){
-    return {iterations: 0, timestep: 0 }
-  }
-
-  const maxStableTimestepMs = 200 * 1000; // make this adjustable.
-  const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
-  return { timestep: timestepMs / iterations, iterations: iterations};
-}
-
-/**
- * Use this for satellites etc... 
- * 
- * It optimizes the resource available (i.e: the number of iterations). So given a desiredTimestep and
- * a maxIterations.  It will attempt to minimize the timestep size once the timestep argument exceeds
- * the desiredTimeStep. 
- * 
- * @param timestepMs 
- */
-const desiredLoopParamProviderProvider = (timestepMs: number): UpdaterLoopParam => {
-  if (timestepMs == 0){
-    return {iterations: 0, timestep: 0 }
-  }
-
-  const maxIterations = 100; 
-  const desiredTimestepMs = 1 * 1000;
-  const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
-  const desiredStepFactor = Math.ceil(desiredIterations/maxIterations);
-  const iterations = Math.ceil(Math.abs(timestepMs)/(desiredTimestepMs * desiredStepFactor));
-  return {iterations: iterations, timestep: timestepMs/iterations };
-}
 
 /**
  * Each body in a system influences all other bodies, regardless of size and distance. 
- * If there are m bodies, there will be m*(m-1) forces taken into account...
+ * If there are m bodies, there will be m*(m-1) forces taken into account... it won't support more than 50 bodies.
  * 
  * Todo: Introduce a few different implementations, each with their own use cases:
- * - using center of mass/barycenters (this would be best)
- * - using parent/child hierachies where a child's acceleration comes only from its parent/grandparents and siblings. This
- *   would be quite pertinent in the case of our solar system (i.e.: this way we'd not introduce earth's contribution to io's orbit anmd view versa)
+ * - using center of mass/barycenters...
+ * - using parent/child hierachies where a child's acceleration comes only from its parent/grandparents and siblings. 
+ * 
+ * Consider running these in webworkers
  */
 class NBodySystemUpdater implements BodySystemUpdater {
   isOneTimeUpdate = false;
   isEnabled = true;
 
 
-  /**
-   * TO do, all updates should be put in webworkers. Each layer can be done in parallel in its 
-   * own webworker. (we have one layer, so not needed yet)
-   * 
-
-   * @param bodyObject3Ds 
-   * @param timestepMs 
-   * @param clock 
-   * @returns 
-   */
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
     const { timestep, iterations} = defaulUpdaterLoopParamProvider(timestepMs);
     // const { timestep, iterations} = desiredLoopParamProviderProvider(timestepMs);
@@ -191,5 +135,53 @@ class NBodySystemUpdater implements BodySystemUpdater {
     return bodies;
   }
 }
+
+
+type UpdaterLoopParam = {
+  iterations: number,
+  timestep: number
+};
+
+type loopParamProvider = (timestepMs: number) => UpdaterLoopParam;
+
+
+/**
+ * Generally, for celestial bodies, a step of about 600 seconds is pretty 'stable'.
+ * So break down the update so that we don't exceed maxStableTimestepMs per update.
+ * If this is exceeded, then break down the update into 'iterations' loops.
+ *
+ * @param timestepMs 
+ * @returns 
+ */
+const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam => {
+  if (timestepMs == 0){
+    return {iterations: 0, timestep: 0 }
+  }
+
+  const maxStableTimestepMs = 200 * 1000; // make this adjustable.
+  const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
+  return { timestep: timestepMs / iterations, iterations: iterations};
+}
+
+/**
+ * It optimizes the resource available (i.e: the number of iterations). So given a desiredTimestep and
+ * a maxIterations.  It will attempt to minimize the timestep size once the timestep argument exceeds
+ * the desiredTimeStep.
+ * 
+ * @param timestepMs 
+ */
+const desiredLoopParamProviderProvider = (timestepMs: number): UpdaterLoopParam => {
+  if (timestepMs == 0){
+    return {iterations: 0, timestep: 0 }
+  }
+
+  const maxIterations = 100; 
+  const desiredTimestepMs = 1 * 1000;
+  const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
+  const desiredStepFactor = Math.ceil(desiredIterations/maxIterations);
+  const iterations = Math.ceil(Math.abs(timestepMs)/(desiredTimestepMs * desiredStepFactor));
+  return { iterations: iterations, timestep: timestepMs/iterations };
+}
+
 
 export { NBodySystemUpdater };
