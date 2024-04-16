@@ -1,4 +1,4 @@
-import { BufferGeometry, DoubleSide, Material, Mesh, MeshLambertMaterial, MeshPhongMaterial, MeshPhongMaterialParameters, NormalBufferAttributes, Object3D, Object3DEventMap, RingGeometry, SphereGeometry, Vector2, Vector3 } from "three";
+import { BufferGeometry, DoubleSide, Material, Mesh, MeshBasicMaterial, MeshBasicMaterialParameters, MeshLambertMaterial, MeshPhongMaterial, MeshPhongMaterialParameters, NormalBufferAttributes, Object3D, Object3DEventMap, RingGeometry, SphereGeometry, Vector2, Vector3 } from "three";
 
 import { Body } from '../domain/Body.ts';
 import { DistanceUnits, convertLength, toRad } from "../system/geometry.ts";
@@ -58,7 +58,7 @@ function createAtmosphereMateriel(textureUri: string) {
  * @param midpoint 
  * @returns 
  */
-function adjustRingTextureUV(mesh: Mesh, midpoint: number): Mesh {
+function mapRingTextureUV(mesh: Mesh, midpoint: number): Mesh {
     const positions = mesh.geometry.attributes.position;
     let verticePosition = new Vector3();
     const angle = new Vector3(1, 0, 0);
@@ -78,7 +78,7 @@ function adjustRingTextureUV(mesh: Mesh, midpoint: number): Mesh {
  */
 export abstract class CelestialBodyPart {
     readonly childParts: CelestialBodyPart[] = []
-    
+
     abstract getObject3D(): Object3D;
     abstract updatePart(): void;
 
@@ -87,7 +87,6 @@ export abstract class CelestialBodyPart {
             this.getObject3D().add(part.getObject3D());
             this.childParts.push(part);
         }
-
         return this;
     }
 
@@ -100,7 +99,6 @@ export abstract class CelestialBodyPart {
 export class Rings extends CelestialBodyPart {
 
     readonly mesh: Mesh;
-
 
     constructor(ringProperties: RingProperties){
         super();
@@ -122,11 +120,11 @@ export class Rings extends CelestialBodyPart {
         });
 
         const mesh = new Mesh(geometry, material);
-        this.mesh = adjustRingTextureUV(mesh, (minRadius + maxRadius) / 2);
+        this.mesh = mapRingTextureUV(mesh, (minRadius + maxRadius) / 2);
+        // rotate rings to be on equatorial plane.
         this.mesh.rotation.set(-Math.PI / 2, 0, 0);
 
     }
-
 
     static create(body: Body): Rings|undefined {
         if(body.rings == undefined) return undefined;
@@ -134,14 +132,12 @@ export class Rings extends CelestialBodyPart {
     }
 
     updatePart(): void {
-     // Assume we don't move it relative to body.
     }    
 
 
     getObject3D(): Object3D {
         return this.mesh;
     }
-
 }
 
 export class Atmosphere extends CelestialBodyPart{
@@ -177,13 +173,11 @@ export class Atmosphere extends CelestialBodyPart{
         return this.mesh;
     }
 
+    /**
+     * Rotate the clouds relative to clock scale.
+     */
     updatePart(): void {
-        // Rotate the clouds relative to clock scale.
-        //
-        // We could update our texture from a canvas getting
-        // imagery
-        this.mesh.rotateY(toRad(this.clock.scale * 0.00005));
-        
+        this.mesh.rotateY(toRad(this.clock.scale * 0.00005));        
     }
 }
 
@@ -215,7 +209,7 @@ export class BodySurface extends CelestialBodyPart{
     getMesh(): Mesh {
         return this.mesh;
     }
-    
+
     getObject3D(): Mesh {
         return this.getMesh();
     }
@@ -225,3 +219,60 @@ export class BodySurface extends CelestialBodyPart{
     }
 }
 
+
+function createStarSurfaceMaterial(materialProperties: MaterialProperties): Material {
+
+    const params: MeshBasicMaterialParameters = {}
+
+    if (materialProperties.textureUri) {
+        params.map = textureLoader.load(materialProperties.textureUri);
+    }
+
+    if (materialProperties.alphaUri) {
+        params.alphaMap = textureLoader.load(materialProperties.alphaUri);
+    }
+
+    return new MeshBasicMaterial(params);        
+
+    
+}
+
+
+
+export class StarSurface extends CelestialBodyPart{
+
+    readonly mesh: Mesh;
+    readonly body: Body;
+
+    constructor(body: Body){ 
+        super();
+        const radiuskm = convertLength(body.radius, DistanceUnits.m, DistanceUnits.km);
+        const materialProperties = body.textures; 
+        const geometry = new SphereGeometry(radiuskm, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
+        const material = createStarSurfaceMaterial(materialProperties);
+        const mesh = new Mesh(geometry, material);
+        mesh.name = body.name;
+        mesh.userData = { type: "star" };
+        
+        
+        this.mesh = mesh;
+        this.body = body;
+    }
+    
+    static create(body: Body): BodySurface {
+        return new BodySurface(body);
+    } 
+
+    getMesh(): Mesh {
+        return this.mesh;
+    }
+
+    getObject3D(): Mesh {
+        return this.getMesh();
+    }
+
+    updatePart(): void {        
+        this.getObject3D().rotation.set(this.body.sideralRotation.x, this.body.sideralRotation.y, this.body.sideralRotation.z);
+    }
+
+}

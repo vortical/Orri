@@ -62,7 +62,7 @@ class FlareEffect {
 
         function computeFlareScaleForStarSize(bodysizePixels: Dim): number {
             // the flare texture size is 512, and the center part of it (i.e. 2/29 or ~7%) represents the 
-            // central part around actual body.
+            // central part 'kinda around/matching' actual body.
             // So given a bodysizePixels size, we determine the scale value of this texture.
             const centerBodySize = FLARE_TEXTURE_SIZE * 2/29; // ~35 pixels - 7%
             const scale = Math.max(bodysizePixels.w, bodysizePixels.h) / centerBodySize;
