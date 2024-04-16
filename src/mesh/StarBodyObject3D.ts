@@ -1,7 +1,6 @@
 import { Body } from '../domain/Body.ts';
 import { LightProperties } from '../domain/models.ts';
 import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters, MeshPhongMaterial } from "three";
-import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
 import { BodySystem } from '../scene/BodySystem.ts';

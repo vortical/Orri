@@ -1,5 +1,5 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFShadowMap,  PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
-import { Dim, DistanceUnit, DistanceUnits, LatLon, WindowSizeObserver } from '../system/geometry.ts';
+import { Dim, DistanceFormatter, DistanceUnit, DistanceUnits, LatLon, WindowSizeObserver } from '../system/geometry.ts';
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
@@ -21,37 +21,8 @@ import { LocationPin } from '../mesh/LocationPin.ts';
 import { CameraTargetingState, CameraMode, CameraModes } from './CameraTargetingState.ts';
 import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
-// import { ShadowType } from '../mesh/Umbra.ts';
+import { CameraLayer } from './CameraLayer.ts';
 
-const CAMERA_NEAR = 1000;
-const CAMERA_NEAR_FROM_SURFACE = 1;
-const CAMERA_FAR = 13000000000;
-
-
-export class DistanceFormatter {
-    
-    distanceUnit: DistanceUnit;
-
-    constructor(unit: DistanceUnit){
-        this.distanceUnit = unit;
-    }
-
-    format(distance: number): string {
-        function formatNumber(n: number, decimals: number = 0): string {
-            return n.toLocaleString(undefined, {maximumFractionDigits: decimals})
-        }
-        
-        const decimals = this.distanceUnit == DistanceUnits.au? 3:0;
-        return formatNumber(distance/this.distanceUnit.conversion, decimals).concat( " ", this.distanceUnit.abbrev);
-    }
-};
-
-
-export enum CameraLayer {
-    NameLabel=2,
-    DistanceLabel=3,
-    ElevationAzimuthLabel=4,
-};
 
 export type BodySystemEvent<T> = {
     topic: string;
@@ -78,8 +49,12 @@ export type BodySystemOptionsState = {
     targettingCameraMode?: CameraMode;
 };
 
+const CAMERA_NEAR = 1000;
+const CAMERA_FAR = 13000000000;
+
+
 /**
- * Our system Facade
+ * Our main facade class
  */
 export class BodySystem {
     dataService: DataService;
@@ -105,7 +80,6 @@ export class BodySystem {
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
     primeMeridianLocationPin ?: LocationPin;
-
     cameraTargetingState: CameraTargetingState;
 
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, { 
@@ -209,7 +183,6 @@ export class BodySystem {
     }
 
     getLocation(): LatLon | undefined {
-        // just an alias for the underlying pin
         return this.getLocationPin()?.latlon;
     }
 
@@ -218,14 +191,7 @@ export class BodySystem {
         return meridian?.getLocationPinNormal();
     }
 
-    /**
-     * we set pin at 0,0 on earth to represent its prime meridian, 
-     * this makes it easy to track.
-     * 
-     * @returns 
-     */
     createPrimeMeridian(){
-        // adds a location at 0,0 on earth
         const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00", false);        
         this.primeMeridianLocationPin?.remove();
         this.primeMeridianLocationPin = primeMeridianLocationPin;
@@ -233,8 +199,6 @@ export class BodySystem {
     }
 
     setLocation(latlon: LatLon|undefined){
-        // just an alias for setting a pin, right now we just set those on earth...
-        // would be trivial to set this up to work anywhere.
         if (this.locationPin?.latlon == latlon){
             return;
         }
@@ -258,10 +222,6 @@ export class BodySystem {
         return this.distanceformatter.distanceUnit;
     }
 
-    setState(state: Required<BodySystemOptionsState>) {
-        // this kind of ends up being realized by the ui's "loadSettings" action.
-    }
-
     getState(): BodySystemOptionsState {
         const options: BodySystemOptionsState = {};
         options.cameraPosition = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
@@ -275,7 +235,6 @@ export class BodySystem {
         options.castShadows = this.areShadowsEnabled();
         options.shadowType = this.getShadowType();
         options.date = this.clock.getTime();
-
         options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
         options.showDistance = this.isLayerEnabled(CameraLayer.DistanceLabel);
         options.showAltitudeAzimuth = this.isLayerEnabled(CameraLayer.ElevationAzimuthLabel);
@@ -288,17 +247,6 @@ export class BodySystem {
         return this.camera.layers.isEnabled(layer);
     }
 
-    // setLayerEnabled(value: boolean, layer: CameraLayer){
-    //     if(value){
-    //         if(!this.isLayerEnabled(layer)){
-    //             this.camera.layers.enable(layer);
-    //         }
-    //     }else{
-    //         if(this.isLayerEnabled(layer)){
-    //             this.camera.layers.disable(layer);
-    //         }
-    //     }
-    // }
     setLayerEnabled(value: boolean, layer: CameraLayer){
         value? this.camera.layers.enable(layer) : this.camera.layers.disable(layer);
     }
@@ -319,33 +267,13 @@ export class BodySystem {
         return this.bodyObjects3D.get(name.toLowerCase())!.body;
     }
 
-    /**
-     * Enables/Disables all light sources to cast shadows.
-     * 
-     * @param value to cast or not!
-     */
     setShadowsEnabled(value: boolean){
-        const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]
-                        .filter( (bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
+        const starBodies = [...this.bodyObjects3D.values()]
+        .filter( (bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
+
         starBodies.forEach(it => it.setShadowsEnabled(value));
-
-        // todo: add this in tools section.
-        // if(value){
-        //     const light = (this.getBodyObject3D("sun") as StarBodyObject3D).shadowingLight!;
-        //     const lightHelper = new DirectionalLightHelper(light, 400000);
-        //     this.lightHelper = lightHelper;
-        //     lightHelper.update();
-        //     this.scene.add( lightHelper );
-
-        // }else{
-        //     this.lightHelper?.removeFromParent();
-        //     this.lightHelper?.dispose();
-        // }      
     }
 
-    /**
-     * @returns true if some light sources areShadowsEnabled.
-     */
     areShadowsEnabled(): boolean {
         const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]
                         .filter( (bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
@@ -416,8 +344,8 @@ export class BodySystem {
     setScale(scale: number) {
         this.scale = scale;
 
-        this.bodyObjects3D.forEach((m) => {
-            m.scale(scale);
+        this.bodyObjects3D.forEach((body) => {
+            body.scale(scale);
         });
     }
 
@@ -465,39 +393,25 @@ export class BodySystem {
     }
 
     setTarget(bodyObject3D: BodyObject3D | string | undefined) {
-        if(bodyObject3D == undefined){
-            return;
-        }
+        if(bodyObject3D == undefined) return;
         
-        
-        if (typeof bodyObject3D === "string") {
+        if (typeof bodyObject3D === "string") {            
             bodyObject3D = this.getBodyObject3D(bodyObject3D);
-            if(bodyObject3D == undefined){
-                return;
-            }
         }
-        
-        
         
         if (this.target != bodyObject3D) {
             this.target = bodyObject3D;
             this.cameraTargetingState.postTargetSet(bodyObject3D);
             this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: bodyObject3D } });        
-        }
-        
-        // this.scaleMoonForShadowType();
-        
+        }        
     }
 
 
     /**
-     * this is hack for the april 8th, 2004 eclipse.
+     * We should formalize.This implementation was just a dirty way to get see the umbra
      * 
-     * This program calculates 'parallel' shadows which shows any area where there is
-     * a partial eclipse, but to see where there
-     * is a total eclipse we 'simulate' where this shadow is. 
-     * 
-     * So, The umbra is  about 100 km radius... I won't even bother calculating this.
+     * Our light emits 'parallel' shadows. There is no way for this type of light to 
+     * show umbra, some variant of ray casting would be needed.
      *
      */
     scaleMoonForShadowType(){

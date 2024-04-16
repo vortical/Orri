@@ -203,8 +203,28 @@ function getMeshSizeFromCameraView(mesh: Mesh, camera: PerspectiveCamera): Dim {
   }
 
 
+
+  class DistanceFormatter {
+    
+    distanceUnit: DistanceUnit;
+
+    constructor(unit: DistanceUnit){
+        this.distanceUnit = unit;
+    }
+
+    format(distance: number): string {
+        function formatNumber(n: number, decimals: number = 0): string {
+            return n.toLocaleString(undefined, {maximumFractionDigits: decimals})
+        }
+        
+        const decimals = this.distanceUnit == DistanceUnits.au? 3:0;
+        return formatNumber(distance/this.distanceUnit.conversion, decimals).concat( " ", this.distanceUnit.abbrev);
+    }
+};
+
+
   // todo: get rid of this
 type WindowSizeObserver = (size: Dim) => void;
 
-export { convertLength, Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon, AltitudeAzimuth };
+export { DistanceFormatter, convertLength, Dim, toRad, toDeg, angleTo, getObjectScreenSize, getMeshScreenSize, DistanceUnits, distanceToUnits, LatLon, AltitudeAzimuth };
 export type { WindowSizeObserver, DistanceUnit };

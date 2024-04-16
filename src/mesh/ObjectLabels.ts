@@ -1,6 +1,7 @@
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { BodyObject3D } from './BodyObject3D';
-import { BodySystem, CameraLayer } from '../scene/BodySystem';
+import { BodySystem } from '../scene/BodySystem';
+import { CameraLayer } from '../scene/CameraLayer';
 import { AltitudeAzimuth } from '../system/geometry';
 import { CameraModes } from '../scene/CameraTargetingState';
 

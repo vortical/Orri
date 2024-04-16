@@ -1,6 +1,6 @@
 import { Body } from '../domain/Body.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
-import { zipCombine } from '../system/arrays.ts';
+import { zipCombine } from '../system/functions.ts';
 import { Clock, TimeUnit, timeMsToUnits } from '../system/timing.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { VectorComponents } from '../domain/models.ts';

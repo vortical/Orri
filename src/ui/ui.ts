@@ -1,4 +1,5 @@
-import { BodySystem, CameraLayer } from '../scene/BodySystem.ts'
+import { BodySystem } from '../scene/BodySystem.ts'
+import { CameraLayer } from '../scene/CameraLayer.ts';
 import GUI, { Controller } from 'lil-gui';
 import PubSub from 'pubsub-js';
 import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC, TIME_SCALE_TOPIC } from '../system/event-types.ts';
