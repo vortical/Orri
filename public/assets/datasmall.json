@@ -130,15 +130,13 @@
         "sideralRotationPeriod": {
             "hours": 9.93
         },
-        "rings": [
-            {
-                "opacity": 0.2,
-                "minRadius": 110.5e6,
-                "maxRadius": 129e6,
-                "colorMapUri": "/assets/textures/planets/jupiter_ring_color.png",
-                "alphaMapUri": "/assets/textures/planets/jupiter_ring_alpha.png"
-            }
-        ],
+        "rings": {
+            "opacity": 0.2,
+            "minRadius": 110.5e6,
+            "maxRadius": 129e6,
+            "colorMapUri": "/assets/textures/planets/jupiter_ring_color.png",
+            "alphaMapUri": "/assets/textures/planets/jupiter_ring_alpha.png"
+        },
         "textures": {
             "name": "Jupiter",
             "textureUri": "/assets/textures/planets/jupiter_map.jpg"
@@ -228,15 +226,13 @@
         "sideralRotationPeriod": {
             "hours": 10.656
         },
-        "rings": [
-            {
-                "opacity": 0.95,
-                "minRadius": 66.900e6,
-                "maxRadius": 140.220e6,
-                "colorMapUri": "/assets/textures/planets/saturn_ring_color.jpg",
-                "alphaMapUri": "/assets/textures/planets/saturn_ring_alpha.gif"
-            }
-        ],
+        "rings": {
+            "opacity": 0.95,
+            "minRadius": 66.900e6,
+            "maxRadius": 140.220e6,
+            "colorMapUri": "/assets/textures/planets/saturn_ring_color.jpg",
+            "alphaMapUri": "/assets/textures/planets/saturn_ring_alpha.gif"
+        },
         "textures": {
             "textureUri": "/assets/textures/planets/saturn_map.jpg"
         }
@@ -254,15 +250,13 @@
         "sideralRotationPeriod": {
             "hours": 17.24
         },
-        "rings": [
-            {
-                "opacity": 0.3,
-                "minRadius": 41.837e6,
-                "maxRadius": 97.7e6,
-                "colorMapUri": "/assets/textures/planets/uranus_ring_colour.jpg",
-                "alphaMapUri": "/assets/textures/planets/uranus_ring_alpha.gif"
-            }
-        ],
+        "rings": {
+            "opacity": 0.3,
+            "minRadius": 41.837e6,
+            "maxRadius": 97.7e6,
+            "colorMapUri": "/assets/textures/planets/uranus_ring_colour.jpg",
+            "alphaMapUri": "/assets/textures/planets/uranus_ring_alpha.gif"
+        },
         "textures": {
             "textureUri": "/assets/textures/planets/uranus_map.jpg",
             "normalUri": "/assets/textures/planets/uranus_normal.jpg"

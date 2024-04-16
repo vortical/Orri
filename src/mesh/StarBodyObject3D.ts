@@ -1,16 +1,33 @@
 import { Body } from '../domain/Body.ts';
 import { LightProperties } from '../domain/models.ts';
-import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters } from "three";
+import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters, MeshPhongMaterial } from "three";
 import { SCENE_LENGTH_UNIT_FACTOR } from '../system/units.ts';
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { FlareEffect } from './FlareEffect.ts';
 import { textureLoader } from '../services/textureLoader.ts';
+import { StarSurface } from './StarSurface.ts';
+// import { StarSurface } from './BodyPart.ts';
 
-
+/**
+ * We have 2 light sources: pointlight and shadow light ( a directional light). Shadow light can be enabled/disabled,
+ * so when enabled, the sum of lights remains the same to when only pointlight was in effect.
+ * 
+ * This is the ratio when shadow light is enabled. Areas in shadow will 
+ * have light with an intensity based on this ratio.
+ * 
+ * @see StarBodyObject3D.updateLightIntensities
+ * 
+ */
 const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
 
+
+/**
+ * We can't use the pointlight as the source for shadows (space is too big for our 
+ * little shadow map). So we carry around a directional light that always aligns itself 
+ * in the direction of the camera to the target. 
+ */
 class DirectionLightTargetListener {
     star: StarBodyObject3D;
 
@@ -37,68 +54,47 @@ const defaultLightProperties: Required<LightProperties> = {
     decay: 0.0
 };
 
+
+
+/**
+ * This is a body composed of a surface, a point light, an optional directional light for generating shadows, 
+ * and Lens Flares.
+ * 
+ * The surface rotates around the body's axis according to the sideralRotation period.
+ * 
+ * The pointlight is not the shadow emitter given the distances involved. Instead we use
+ * a directional light to generate the shadow maps. The directional light will be oriented
+ * towards the target. The light intensity in the scene is the sum of the directional light 
+ * and the point light; areas in shadow will not receive any light from the directional light 
+ * but still receive light from the point light.
+ * 
+ * This object manages a set of lens flares, each associated to a scale. 
+ * Flares are not 3D objects and can't be scaled like normal Object3D; when the camera moves
+ * around the scene, a flare scale is determined and the associated flare is activated.
+ */
 class StarBodyObject3D extends BodyObject3D {
-    // object3D: Object3D;
     pointLight!: PointLight;
     shadowingLight?: DirectionalLight;
     shadowingLightTargetListener: DirectionLightTargetListener;
     lightProperties: Required<LightProperties>;
-    surfaceMesh!: Mesh;
+    readonly surface: StarSurface;
     flareEffect!: FlareEffect;
 
     constructor(body: Body, bodySystem: BodySystem) {
         super(body, bodySystem);
-        const { name, radius } = this.body;
+
         this.lightProperties = { ...defaultLightProperties, ...body.lightProperties };
         this.shadowingLightTargetListener = new DirectionLightTargetListener(this);
-        const widthSegements = 64;
-        const heightSegments = 32;
-        const materialProperties = body.textures;//meshProperties.solarSystem.find((v) => v.name.toLocaleLowerCase() == name.toLowerCase())!;
+        this.surface = new StarSurface(body);
+        this.addPart(this.surface);
 
-        // Create the sun mesh
-        const geometry = new SphereGeometry(radius * SCENE_LENGTH_UNIT_FACTOR, widthSegements, heightSegments);
-
-        const params: MeshBasicMaterialParameters = {}
-
-        if (materialProperties.textureUri) {
-            params.map = textureLoader.load(materialProperties.textureUri);
-        }
-
-        if (materialProperties.alphaUri) {
-            params.alphaMap = textureLoader.load(materialProperties.alphaUri);
-        }
-
-        const material = new MeshBasicMaterial(params);        
-        const surfacemesh = new Mesh(geometry, material);
-        surfacemesh.name = name;
-        this.surfaceMesh = surfacemesh;
-
-        // Create the underlying pointlight along with flares, this is our
-        // only source of light when shadows are disabled.
         this.pointLight = new PointLight(this.lightProperties.color, this.lightProperties.intensity, this.lightProperties.distance, this.lightProperties.decay);
         this.pointLight.name = "pointlight";
-
-        this.flareEffect = new FlareEffect(this);//createFlares(this.pointLight.color);
-        this.pointLight.add(surfacemesh);
-
-        const bodymesh =this.object3D;
-
-        // Align it local axis
-        if (this.body.axisDirection !== undefined) {
-            // rotate body so axis is normal to its orbital plane (i.e.: equatorial = orbital/ecliptic)
-            const axis = this.body.axisDirection!;
-            bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
-
-        } else {
-            // We tilt the body using the body's obliquity arbitrarily tilt the body using 
-            const rotation = this.body.obliquityOrientation();
-            bodymesh.applyQuaternion(rotation);
-            const body_orbital_norm = this.body.get_orbital_plane_normal() || new Vector3(0, 1, 0);
-            bodymesh.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), body_orbital_norm));
-        }
-
-        bodymesh.add(this.pointLight);
+        this.flareEffect = new FlareEffect(this);
         
+        const axis = body.getAxisDirection();
+        this.getObject3D().applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
+        this.getObject3D().add(this.pointLight);
     }
 
     createShadowLight(): DirectionalLight {        
@@ -108,7 +104,8 @@ class StarBodyObject3D extends BodyObject3D {
         const light = new DirectionalLight(color, intensity);
         light.castShadow = true;
 
-        const shadowCameraSize = 80000; // ~jupiter radius size...
+        // ~jupiter radius size... but this could be sized according to the target.
+        const shadowCameraSize = 80000; 
         light.shadow.camera.top = shadowCameraSize;
         light.shadow.camera.bottom = -shadowCameraSize;
         light.shadow.camera.left = -shadowCameraSize;
@@ -124,13 +121,13 @@ class StarBodyObject3D extends BodyObject3D {
         light.shadow.camera.near = this.bodySystem.camera.near;
         light.shadow.camera.far = this.bodySystem.camera.far;
         this.shadowingLight = light;
-        this.object3D.add(light);
+        this.getObject3D().add(light);
 
         return light;
     }
 
     getSurfaceMesh(): Mesh {
-        return this.surfaceMesh;
+        return this.surface.getMesh();
     }
 
     areShadowsEnabled(): boolean {
