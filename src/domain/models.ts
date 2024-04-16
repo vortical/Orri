@@ -106,10 +106,8 @@ type BodyProperties = {
     sideralRotationPeriod?: TimePeriod; 
     sideralRotation?: VectorComponents,    
     lightProperties?: LightProperties;
-    /**
-     * Rings may be partitioned/broken into sections with different oribital periods..
-     */
-    rings?: RingProperties[];
+
+    rings?: RingProperties;
     color?: string;
     textures: MaterialProperties;
 

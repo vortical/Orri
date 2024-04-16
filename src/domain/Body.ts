@@ -78,7 +78,7 @@ class Body {
     sideralRotationPeriodMs: number; // = Number.MAX_VALUE;
 
     lightProperties?: LightProperties;
-    rings?: RingProperties[];
+    rings?: RingProperties;
     color: string;
 
     kinematics!: KinematicObject;
