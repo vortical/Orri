@@ -6,7 +6,7 @@ import { throttle } from '../system/timing.ts';
 import { ObjectLabels } from './ObjectLabels.ts';
 import { LocationPin } from './LocationPin.ts';
 import { Vector } from '../system/vecs.ts';
-import { CelestialBodyPart } from './BodyPart.ts';
+import { CelestialBodyPart } from './CelestialBodyPart.ts';
 
 
 

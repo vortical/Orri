@@ -7,7 +7,8 @@ import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-t
 import { BodySystem } from '../scene/BodySystem.ts';
 import { FlareEffect } from './FlareEffect.ts';
 import { textureLoader } from '../services/textureLoader.ts';
-import { StarSurface } from './BodyPart.ts';
+import { StarSurface } from './StarSurface.ts';
+// import { StarSurface } from './BodyPart.ts';
 
 /**
  * We have 2 light sources: pointlight and shadow light ( a directional light). Shadow light can be enabled/disabled,
@@ -102,7 +103,7 @@ class StarBodyObject3D extends BodyObject3D {
         const { color, intensity } = this.lightProperties;
         const light = new DirectionalLight(color, intensity);
         light.castShadow = true;
-        
+
         // ~jupiter radius size... but this could be sized according to the target.
         const shadowCameraSize = 80000; 
         light.shadow.camera.top = shadowCameraSize;
