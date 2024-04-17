@@ -90,13 +90,13 @@ class StarBodyObject3D extends BodyObject3D {
         this.pointLight = new PointLight(this.lightProperties.color, this.lightProperties.intensity, this.lightProperties.distance, this.lightProperties.decay);
         this.pointLight.name = "pointlight";
         this.flareEffect = new FlareEffect(this);
-        
+
         const axis = body.getAxisDirection();
         this.getObject3D().applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
         this.getObject3D().add(this.pointLight);
     }
 
-    createShadowLight(): DirectionalLight {        
+    createShadowLight(): DirectionalLight {
         const SHADOW_MAP_SIZE = 4096 * 2;
 
         const { color, intensity } = this.lightProperties;
@@ -104,7 +104,7 @@ class StarBodyObject3D extends BodyObject3D {
         light.castShadow = true;
 
         // ~jupiter radius size... but this could be sized according to the target.
-        const shadowCameraSize = 80000; 
+        const shadowCameraSize = 80000;
         light.shadow.camera.top = shadowCameraSize;
         light.shadow.camera.bottom = -shadowCameraSize;
         light.shadow.camera.left = -shadowCameraSize;
@@ -112,7 +112,6 @@ class StarBodyObject3D extends BodyObject3D {
 
         light.shadow.bias = 0.0001;
         light.shadow.radius = 2;
-        // light.shadow.blurSamples = 4;
 
         light.shadow.mapSize.width = SHADOW_MAP_SIZE;
         light.shadow.mapSize.height = SHADOW_MAP_SIZE;
@@ -152,9 +151,7 @@ class StarBodyObject3D extends BodyObject3D {
     }
 
     #disableShadowLight() {
-        if (!this.areShadowsEnabled()) {
-            return;
-        }
+        if (!this.areShadowsEnabled()) return;
 
         this.shadowingLight?.removeFromParent();
         this.shadowingLight?.dispose();
@@ -163,9 +160,7 @@ class StarBodyObject3D extends BodyObject3D {
     }
 
     #enableShadowLight() {
-        if (this.areShadowsEnabled()) {
-            return this;
-        }
+        if (this.areShadowsEnabled()) return this;
 
         const light = this.createShadowLight();
         const target = this.bodySystem.getBodyObject3DTarget().object3D;
@@ -193,10 +188,9 @@ class StarBodyObject3D extends BodyObject3D {
      * 
      * @returns this star as the system.
      */
-    planetarySystem(): BodyObject3D{
+    planetarySystem(): BodyObject3D {
         return this;
     }
-
 }
 
 export { StarBodyObject3D };

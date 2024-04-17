@@ -1,8 +1,6 @@
 import { Raycaster, Vector2 } from "three";
-import { Vector } from "../system/vecs";
 import { BodySystem } from "./BodySystem.ts";
-import { Body } from '../domain/Body.ts';
-import { throttle } from "../system/timing.ts";
+import { throttle } from "../system/throttle.ts";
 import { MOUSE_CLICK_ON_BODY_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
 import { VectorComponents } from "../domain/models.ts";
 import { BodyObject3D } from "../mesh/BodyObject3D.ts";
@@ -12,7 +10,6 @@ export type PickerEvent = {
 }
 
 export class Picker {
-
     raycaster = new Raycaster();
     bodySystem: BodySystem;
     isEnabled: boolean = true;
@@ -45,10 +42,8 @@ function initMouseEventPickHandler(picker: Picker) {
 
     window.addEventListener('pointermove', throttle(300, undefined,
         (event: MouseEvent) => {
-            if (!picker.isEnabled) {
-                return;
-            }
-
+            if (!picker.isEnabled) return;
+            
             PubSub.publish(MOUSE_HOVER_OVER_BODY_TOPIC, {
                 body: picker.pick({
                     x: (event.clientX / window.innerWidth) * 2 - 1,
@@ -61,10 +56,8 @@ function initMouseEventPickHandler(picker: Picker) {
 
     window.addEventListener('click', throttle(300, undefined,
         (event: MouseEvent) => {
-            if (!picker.isEnabled) {
-                return;
-            }
-
+            if (!picker.isEnabled) return;
+            
             PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, {
                 body: picker.pick({
                     x: (event.clientX / window.innerWidth) * 2 - 1,
@@ -74,5 +67,4 @@ function initMouseEventPickHandler(picker: Picker) {
             });
         }
     ));
-
 }

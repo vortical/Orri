@@ -2,7 +2,7 @@ import { Object3D } from "three";
 
 
 /**
- * 3D object with an update
+ * Composite 3D object with an update
  * method.
  */
 export abstract class CelestialBodyPart {

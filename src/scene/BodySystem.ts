@@ -1,15 +1,16 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFShadowMap,  PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
-import { Dim, DistanceFormatter, DistanceUnit, DistanceUnits, LatLon, WindowSizeObserver } from '../system/geometry.ts';
+import { Dim } from "../system/Dim.ts";
+import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../domain/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
-import { throttle } from "../system/timing.ts";
+import { throttle } from "../system/throttle.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
-import { Clock } from '../system/timing.ts';
-import { Vector } from '../system/vecs.ts';
+import { Clock } from "../system/Clock.ts";
+import { Vector } from '../system/Vector.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
@@ -22,6 +23,7 @@ import { CameraTargetingState, CameraMode, CameraModes } from './CameraTargeting
 import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
+import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
 
 
 export type BodySystemEvent<T> = {
@@ -530,7 +532,7 @@ function createAmbiantLight(intensity: number) {
 }
 
 
-function setupResizeHandlers(container: HTMLElement, sizeObserver: WindowSizeObserver) {
+function setupResizeHandlers(container: HTMLElement, sizeObserver: (size: Dim) => void) {
     window.addEventListener("resize",
         throttle(1000 / 30, undefined,
             (event: UIEvent) => {

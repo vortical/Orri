@@ -3,8 +3,8 @@ import { BodySystemOptionsState } from '../scene/BodySystem.ts'
 import { CameraModes } from '../scene/CameraTargetingState.ts'
 
 import LZString from 'lz-string';
-import { Vector } from '../system/vecs.ts';
-import { LatLon } from '../system/geometry.ts';
+import { Vector } from '../system/Vector.ts';
+import { LatLon } from "../system/LatLon.ts";
 import { VectorComponents } from '../domain/models.ts';
 
 type ParamName = "zstate" | "state";

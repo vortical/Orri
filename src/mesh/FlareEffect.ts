@@ -1,14 +1,14 @@
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 import { StarBodyObject3D } from './StarBodyObject3D';
-import { Dim, getObjectScreenSize } from '../system/geometry';
+import { getObjectScreenSize } from '../system/geometry';
+import { Dim } from "../system/Dim.ts";
 import { textureLoader } from '../services/textureLoader.ts';
 
 
 const FLARE_TEXTURE_SIZE = 512;
 
 /**
- * Lensflare arent the usual mesh with an inherent geometry. They have a static size (they are 2d and designed to 
- * emulate flare on the camera lens) and always face the camera. 
+ * Lensflare are not an Object#d with an inherent geometry. They have a static size and always face the camera. 
  * 
  * We create a set of flares with different sizes (i.e. scales).
  *   

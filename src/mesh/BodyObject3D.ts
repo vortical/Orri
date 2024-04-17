@@ -1,16 +1,25 @@
 import { BufferGeometry, Group, Material, Mesh, NormalBufferAttributes, Object3D, Object3DEventMap } from 'three';
 import { Body } from '../domain/Body.ts';
-import { AltitudeAzimuth, angleTo, toDeg, toRad } from '../system/geometry.ts';
+import { angleTo, toDeg, toRad } from '../system/geometry.ts';
+import { AltitudeAzimuth } from "../system/AltitudeAzimuth.ts";
 import { BodySystem } from '../scene/BodySystem.ts';
-import { throttle } from '../system/timing.ts';
+import { throttle } from "../system/throttle.ts";
 import { ObjectLabels } from './ObjectLabels.ts';
 import { LocationPin } from './LocationPin.ts';
-import { Vector } from '../system/vecs.ts';
+import { Vector } from '../system/Vector.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 
 
-
-
+/**
+ * A BodyObject3D is composed of: Object3D and Body and Labels
+ * 
+ * The Body represents the kinematics characteristics, these characteristics
+ * are updated/controller via BodySystemUpdaters.
+ * 
+ * The Object3D is the visual representation in our 3D scene.
+ * 
+ * The main role of the BodyObject3D is to keep the Object3D in sync with the Body.
+ */
 abstract class BodyObject3D extends CelestialBodyPart {
     readonly object3D: Object3D;
     readonly body: Body;
@@ -106,23 +115,6 @@ abstract class BodyObject3D extends CelestialBodyPart {
     updatePart(): void {
         const body = this.body;
         this.object3D.position.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
-
-        
-        
-
-        // this.object3D.children?.forEach((c => {
-        //     c.rotation.set(body.sideralRotation.x, body.sideralRotation.y, body.sideralRotation.z);
-        //     // each surface itself may have animations (e.g. atmosphere), so we should
-        //     // call an update on those.
-        //     // this would rotate the ring if we did not filter this out (only rotate the atmosphere).
-        //     // regardless we need to create a model that represents our model
-        //     c.children
-        //         .filter(child => child.userData?.type === "atmosphere")
-        //         .forEach(mesh => {
-        //             mesh.rotateY(toRad(0.003));
-        //         });
-        // }));
-
         this.updateLabelsInvoker();
     }
 
@@ -134,8 +126,6 @@ abstract class BodyObject3D extends CelestialBodyPart {
     updateLabels(): void {
         this.labels.updateBodyLabels();
     };
-
-
 
     planetarySystem(): BodyObject3D {
         return this;

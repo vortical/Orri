@@ -1,32 +1,26 @@
 import { BodySystem } from '../scene/BodySystem.ts'
 import { CameraLayer } from '../scene/CameraLayer.ts';
-import GUI, { Controller } from 'lil-gui';
+import GUI from 'lil-gui';
 import PubSub from 'pubsub-js';
-import { SYSTEM_TIME_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC, MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC, TIME_SCALE_TOPIC } from '../system/event-types.ts';
+import { MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC, TIME_SCALE_TOPIC } from '../system/event-types.ts';
 import LocationBar from './LocationBar.ts';
 import { PickerEvent } from '../scene/Picker.ts';
-import { TimeUnit, formatPeriod, throttle, timeEquals, timePeriodToUnits, unitsToTimePeriod } from "../system/timing.ts";
-import { ClockTimeUpdateHandler } from './ClockTimeUpdateHandler.ts';
-import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
+import { TimeUnit, formatPeriod, timeEquals, unitsToTimePeriod } from "../system/time.ts";
+
+
 import { DataService } from '../services/dataservice.ts';
 import { ShadowType } from '../domain/models.ts';
-import { BodyObject3D } from '../mesh/BodyObject3D.ts';
-import { DistanceUnit, DistanceUnits, LatLon } from '../system/geometry.ts';
+
+
+import { LatLon } from "../system/LatLon.ts";
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
-import flatpickr from "flatpickr";
-import { Instance } from 'flatpickr/dist/types/instance';
 import { TimeScaleProvider } from './TimeScaleProvider.ts';
 import { ClockDateTimeInput } from './ClockDateTimeInput.ts';
-
-// import { ShadowType} from '../mesh/Umbra.ts';
+import { DistanceUnit, DistanceUnits } from '../system/distance.ts';
 
 
 const userNotify: INotifyService = new NotifyService();
-
-
-// for targets and modes: 
-// https://codepen.io/sean_codes/pen/WdzgdY
 
 
 export class TimeControls {

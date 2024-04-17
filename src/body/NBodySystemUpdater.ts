@@ -1,22 +1,23 @@
 import { Body } from '../domain/Body.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { zipCombine } from '../system/functions.ts';
-import { Clock, TimeUnit, timeMsToUnits } from '../system/timing.ts';
+import { TimeUnit, timeMsToUnits } from '../system/time.ts';
+import { Clock } from "../system/Clock.ts";
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { VectorComponents } from '../domain/models.ts';
-import { max } from 'three/examples/jsm/nodes/Nodes.js';
 
 
 
 /**
- * Each body in a system influences all other bodies, regardless of size and distance. 
- * If there are m bodies, there will be m*(m-1) forces taken into account... it won't support more than 50 bodies.
+ * Each body in a system has an effect on all other bodies, regardless of size and distance. 
+ * If there are m bodies, there will be m*(m-1) forces taken into account... 
  * 
- * Todo: Introduce a few different implementations, each with their own use cases:
+ * The plan is:
+ * Introduce a few different implementations, each with their own use cases:
  * - using center of mass/barycenters...
  * - using parent/child hierachies where a child's acceleration comes only from its parent/grandparents and siblings. 
  * 
- * Consider running these in webworkers
+ * Consider running some of these in webworkers
  */
 class NBodySystemUpdater implements BodySystemUpdater {
   isOneTimeUpdate = false;
@@ -59,9 +60,7 @@ class NBodySystemUpdater implements BodySystemUpdater {
    * So for velocities we use:
    * Vi+1 = Vi + (Ai + Ai+1)/2*dt
    * 
-   * We do this as acceleration is not constant between i and i+1. We improve precision by at least
-   * a few orders of magnitude by using speeds determined from accelerations at 
-   * i and i+1.
+   * We do this as acceleration is not constant between i and i+1.
    *       
    * @param bodies 
    * @param time delta 
@@ -135,7 +134,6 @@ class NBodySystemUpdater implements BodySystemUpdater {
     return bodies;
   }
 }
-
 
 type UpdaterLoopParam = {
   iterations: number,

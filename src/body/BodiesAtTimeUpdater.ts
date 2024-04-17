@@ -1,5 +1,5 @@
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
-import { Clock } from '../system/timing.ts';
+import { Clock } from "../system/Clock.ts";
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { KinematicObject } from '../domain/models.ts';
 

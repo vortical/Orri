@@ -1,5 +1,5 @@
 import { Mesh, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
-import { LatLon } from "../system/geometry";
+import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../domain/Body.ts';
 import { BodyObject3D } from "./BodyObject3D.ts";
 
@@ -26,11 +26,8 @@ export class LocationPin {
         this.color = color;
         this.isVisible = isVisible;
         this.mesh.visible = isVisible;
-
         bodyObject3D.addLocationPin(this);
     }
-
-
 
     getLocationPinNormal(): Vector3 {
         const pinPosition = this.getMesh().getWorldPosition(new Vector3());
@@ -51,5 +48,4 @@ export class LocationPin {
         this.bodyObject3D.removeLocationPin(this);
         this.mesh.geometry.dispose();
     }
-
 }

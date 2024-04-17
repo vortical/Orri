@@ -1,5 +1,15 @@
-import { TimeUnit, timePeriodToUnits } from "../system/timing.ts";
+import { TimeUnit, timePeriodToUnits } from "../system/time.ts";
 
+
+/**
+ * A set of predetermined time scales used by UI's prev and next 
+ * buttons.
+ * 
+ * The time scales are also mirrored into negative range.
+ * 
+ * Calling setCurrentScale does not necessarily need to match a
+ * predetermined scale.
+ */
 export class TimeScaleProvider {
 
     timeScales = [
@@ -27,6 +37,13 @@ export class TimeScaleProvider {
         this.setCurrentScale(scale);
     }
 
+    /**
+     * Honors the scale argument, but sets the index to closest scale
+     * that a subsequent call next/prev will use.
+     * 
+     * @param scale 
+     * @returns 
+     */
     setCurrentScale(scale: number): TimeScaleProvider{
         const sign = Math.sign(scale);
         let index = this.timeScales.findIndex((v, i) => v > sign*scale);

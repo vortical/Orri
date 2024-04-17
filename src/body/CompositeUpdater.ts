@@ -1,5 +1,5 @@
 import { BodyObject3D } from "../mesh/BodyObject3D";
-import { Clock } from "../system/timing";
+import { Clock } from "../system/Clock";
 import { BodySystemUpdater } from "./BodySystemUpdater";
 
 

@@ -2,7 +2,6 @@ import { Body } from '../domain/Body.ts';
 import { Mesh, Quaternion, Vector3 } from "three";
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
-
 import { Rings } from './Rings.ts';
 import { Atmosphere } from './Atmosphere.ts';
 import { BodySurface } from './BodySurface.ts';

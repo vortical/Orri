@@ -1,9 +1,9 @@
 import { Material, Mesh, MeshPhongMaterial, MeshPhongMaterialParameters, SphereGeometry, Vector2 } from "three";
 import { CelestialBodyPart } from "./CelestialBodyPart";
 import { Body } from '../domain/Body.ts';
-import { DistanceUnits, convertLength } from "../system/geometry.ts";
 import { MaterialProperties } from "../domain/models.ts";
 import { textureLoader } from "../services/textureLoader.ts";
+import { DistanceUnits, convertDistance } from "../system/distance.ts";
 
 
 const WIDTH_SEGMENTS = 64;
@@ -17,7 +17,7 @@ export class BodySurface extends CelestialBodyPart{
 
     constructor(body: Body){ 
         super();
-        const radiuskm = convertLength(body.radius, DistanceUnits.m, DistanceUnits.km);
+        const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
         const materialProperties = body.textures; 
         const geometry = new SphereGeometry(radiuskm, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
         const material = createBodySurfaceMaterial(materialProperties);

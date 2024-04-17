@@ -67,7 +67,6 @@ export class NotifyService implements INotifyService {
         }, this.getTimeoutMS(opts.messageType ?? NotifyMessageType.info));
         elem.addEventListener("click", () => {
             elem.classList.remove("notice--active");
-            // clearTimeout(noticeTimeout);
             this.removeNotice(elem);
         });
     }
@@ -88,7 +87,6 @@ export class NotifyService implements INotifyService {
     }
 
     private createNotifyElement(title: string, message: string, options: NotifyOptions): HTMLElement {
-        // Find the existing notice container or create one if required
         const containers = document.querySelectorAll("section.notice-container");
         let sectionEl: HTMLElement;
         let sectionExists = false;
@@ -146,7 +144,6 @@ export class NotifyService implements INotifyService {
         wrapperEl.append(contentEl);
         sectionEl.append(wrapperEl);
 
-        // Add the notice container if necessary
         if (!sectionExists) {
             document.getElementsByTagName("body")[0].append(sectionEl);
         }

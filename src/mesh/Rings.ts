@@ -1,19 +1,19 @@
 import { DoubleSide, Mesh, MeshLambertMaterial, Object3D, RingGeometry, Vector3 } from "three";
-import { DistanceUnits, convertLength } from "../system/geometry.ts";
 import { CelestialBodyPart } from "./CelestialBodyPart.ts";
 import { RingProperties } from "../domain/models.ts";
 import { textureLoader } from "../services/textureLoader.ts";
 import { Body } from '../domain/Body.ts';
+import { DistanceUnits, convertDistance } from "../system/distance.ts";
 
 export class Rings extends CelestialBodyPart {
 
     readonly mesh: Mesh;
 
-    constructor(ringProperties: RingProperties){
+    constructor(ringProperties: RingProperties) {
         super();
 
-        const minRadius = convertLength(ringProperties.minRadius, DistanceUnits.m, DistanceUnits.km);
-        const maxRadius = convertLength(ringProperties.maxRadius, DistanceUnits.m, DistanceUnits.km);
+        const minRadius = convertDistance(ringProperties.minRadius, DistanceUnits.m, DistanceUnits.km);
+        const maxRadius = convertDistance(ringProperties.maxRadius, DistanceUnits.m, DistanceUnits.km);
 
         const geometry = new RingGeometry(minRadius, maxRadius, 128);
 
@@ -35,14 +35,13 @@ export class Rings extends CelestialBodyPart {
 
     }
 
-    static create(body: Body): Rings|undefined {
-        if(body.rings == undefined) return undefined;
+    static create(body: Body): Rings | undefined {
+        if (body.rings == undefined) return undefined;
         return new Rings(body.rings);
     }
 
     updatePart(): void {
-    }    
-
+    }
 
     getObject3D(): Object3D {
         return this.mesh;
@@ -70,4 +69,3 @@ function mapRingTextureUV(mesh: Mesh, midpoint: number): Mesh {
     }
     return mesh;
 }
-

@@ -1,8 +1,8 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
-import { Vector } from '../system/vecs.ts';
+import { Vector } from '../system/Vector.ts';
 import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties } from './models.ts';
-import { timePeriodToMs } from '../system/timing.ts';
+import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
 /**
@@ -54,7 +54,6 @@ class Body {
 
     // rotation angle along its obliquity axis.
     sideralRotation!: Vector;
-    // orbitInclination: number;
 
     // tilt
     obliquityToOrbit: number;
@@ -79,7 +78,6 @@ class Body {
         this.receiveShadow = receiveShadow;
         this.position = Vector.fromVectorComponents(position)
         this.velocity = Vector.fromVectorComponents(velocity)
-        // this.orbitInclination = orbitInclination;
         this.obliquityToOrbit = obliquityToOrbit;
         this.sideralRotationPeriodMs = timePeriodToMs(sideralRotationPeriod);
         this.lightProperties = lightProperties;
