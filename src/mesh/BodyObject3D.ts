@@ -73,15 +73,19 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     }
 
     altitudeAzimuthFromLocationPin(): AltitudeAzimuth | undefined {
-        const east = this.bodySystem.getEast();
+
+        const north = this.bodySystem.getNorth();
         const locationPin = this.bodySystem.locationPin;
 
-        if (locationPin == undefined || east == undefined) return undefined;
+        if (locationPin == undefined || north == undefined) return undefined;
 
         const objectPos = this.object3D.position;
         const camera = this.bodySystem.camera;
 
         const up = locationPin.getLocationPinNormal();
+
+        const east = new Vector().crossVectors(north, up);
+
         // const up = Vector.fromVectorComponents(camera.up);
         const targetVector = new Vector().subVectors(objectPos, camera.position);
         const phi = 90 - toDeg(up.angleTo(targetVector))

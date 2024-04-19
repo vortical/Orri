@@ -28,7 +28,7 @@ export class LocationPin {
             return mesh;
         }
         this.latlon = latlon;
-        this.north = new Vector(0,0,0); //
+        this.north = new Vector(0,0,0); 
         this.mesh = createBodyPinMesh()
         this.bodyObject3D = bodyObject3D;
         this.color = color;
@@ -42,6 +42,7 @@ export class LocationPin {
         const centerBodyPosition = this.bodyObject3D.getSurfaceMesh().getWorldPosition(new Vector3());
         return pinPosition.sub(centerBodyPosition).normalize();
     }
+
 
     getLocationPinWorldPosition(vector = new Vector3()): Vector3 {
         return this.getMesh().getWorldPosition(vector);

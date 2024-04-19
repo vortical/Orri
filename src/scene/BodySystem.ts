@@ -81,7 +81,7 @@ export class BodySystem {
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
-    primeMeridianLocationPin?: LocationPin;
+    north?: LocationPin;
     cameraTargetingState: CameraTargetingState;
 
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
@@ -128,7 +128,7 @@ export class BodySystem {
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showDistance, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
-        this.primeMeridianLocationPin = this.createPrimeMeridian();
+        this.north = this.createNorth();
 
         if (location) {
             this.setLocation(location);
@@ -188,16 +188,16 @@ export class BodySystem {
         return this.getLocationPin()?.latlon;
     }
 
-    getEast(): Vector3 | undefined {
-        const meridian = this.primeMeridianLocationPin;
-        return meridian?.getLocationPinNormal();
+    getNorth(): Vector3 | undefined {
+        const north = this.north;
+        return north?.getLocationPinNormal();
     }
 
-    createPrimeMeridian() {
-        const primeMeridianLocationPin = new LocationPin(new LatLon(0, 0), this.getBodyObject3D("earth"), "#00FF00", false);
-        this.primeMeridianLocationPin?.remove();
-        this.primeMeridianLocationPin = primeMeridianLocationPin;
-        return primeMeridianLocationPin;
+    createNorth() {
+        const north = new LocationPin(new LatLon(90, 0), this.getBodyObject3D("earth"), "#00FF00", false);
+        this.north?.remove();
+        this.north = north;
+        return north;
     }
 
     setLocation(latlon: LatLon | undefined) {
