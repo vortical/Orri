@@ -68,7 +68,8 @@
             "textureUri": "/assets/textures/planets/earth_map.jpg",
             "bumpMapUri": "/assets/textures/planets/earth_bump.jpg",
             "specularMapUri": "/assets/textures/planets/earth_spec.jpg",
-            "atmosphereUri": "/assets/textures/planets/earth_clouds.png"
+            "atmosphereUri": "/assets/textures/planets/earth_clouds.png",
+            "bumpMapScale": 1.2
         }
     },
     {

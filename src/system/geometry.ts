@@ -10,6 +10,29 @@ export function toDeg(rad: number): number {
   return rad * 180 / Math.PI;
 }
 
+
+export type BodyAxes = {
+  up: Vector3,
+  east: Vector3
+};
+
+// class BodyAxes {
+//   readonly up: Vector3;
+//   readonly east: Vector3;
+
+//   constructor(up: Vector3, east: Vector3){
+//     this.up = up;
+//     this.east = east;
+//   }  
+
+
+//   getAltAz(position: Vector3): AltitudeAzimuth {
+
+//   }
+
+
+// }
+
 /**
  * 
  * Returns an angle from 0 to 2*PI. The rotation of the angle is along the plane 
