@@ -19,13 +19,13 @@ import { VectorComponents } from '../domain/models.ts';
  * 
  * Consider running some of these in webworkers
  */
-class NBodySystemUpdater implements BodySystemUpdater {
+export class NBodySystemUpdater implements BodySystemUpdater {
   isOneTimeUpdate = false;
   isEnabled = true;
 
 
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
-    const { timestep, iterations} = defaulUpdaterLoopParamProvider(timestepMs);
+    const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
     // const { timestep, iterations} = desiredLoopParamProviderProvider(timestepMs);
     const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
 
@@ -152,13 +152,13 @@ type loopParamProvider = (timestepMs: number) => UpdaterLoopParam;
  * @returns 
  */
 const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam => {
-  if (timestepMs == 0){
-    return {iterations: 0, timestep: 0 }
+  if (timestepMs == 0) {
+    return { iterations: 0, timestep: 0 }
   }
 
   const maxStableTimestepMs = 200 * 1000; // make this adjustable.
   const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
-  return { timestep: timestepMs / iterations, iterations: iterations};
+  return { timestep: timestepMs / iterations, iterations: iterations };
 }
 
 /**
@@ -169,17 +169,14 @@ const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam =>
  * @param timestepMs 
  */
 const desiredLoopParamProviderProvider = (timestepMs: number): UpdaterLoopParam => {
-  if (timestepMs == 0){
-    return {iterations: 0, timestep: 0 }
+  if (timestepMs == 0) {
+    return { iterations: 0, timestep: 0 }
   }
 
-  const maxIterations = 100; 
+  const maxIterations = 100;
   const desiredTimestepMs = 1 * 1000;
   const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
-  const desiredStepFactor = Math.ceil(desiredIterations/maxIterations);
-  const iterations = Math.ceil(Math.abs(timestepMs)/(desiredTimestepMs * desiredStepFactor));
-  return { iterations: iterations, timestep: timestepMs/iterations };
+  const desiredStepFactor = Math.ceil(desiredIterations / maxIterations);
+  const iterations = Math.ceil(Math.abs(timestepMs) / (desiredTimestepMs * desiredStepFactor));
+  return { iterations: iterations, timestep: timestepMs / iterations };
 }
-
-
-export { NBodySystemUpdater };

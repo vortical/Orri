@@ -6,7 +6,7 @@ import { Rings } from './Rings.ts';
 import { Atmosphere } from './Atmosphere.ts';
 import { BodySurface } from './BodySurface.ts';
 
-class PlanetaryBodyObject3D extends BodyObject3D {
+export class PlanetaryBodyObject3D extends BodyObject3D {
     readonly surface: BodySurface;
 
     constructor(body: Body, bodySystem: BodySystem) {
@@ -25,5 +25,3 @@ class PlanetaryBodyObject3D extends BodyObject3D {
         return this.surface.getMesh();
     }
 }
-
-export { PlanetaryBodyObject3D };

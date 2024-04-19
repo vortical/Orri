@@ -11,7 +11,7 @@ import { CelestialBodyPart } from './CelestialBodyPart.ts';
 
 
 /**
- * A BodyObject3D is composed of: Object3D and Body and Labels
+ * A BodyObject3D is composed of: Object3D, Body and Labels
  * 
  * The Body represents the kinematics characteristics, these characteristics
  * are updated/controller via BodySystemUpdaters.
@@ -20,7 +20,7 @@ import { CelestialBodyPart } from './CelestialBodyPart.ts';
  * 
  * The main role of the BodyObject3D is to keep the Object3D in sync with the Body.
  */
-abstract class BodyObject3D extends CelestialBodyPart {
+export abstract class BodyObject3D extends CelestialBodyPart {
     readonly object3D: Object3D;
     readonly body: Body;
     readonly bodySystem: BodySystem;
@@ -81,7 +81,8 @@ abstract class BodyObject3D extends CelestialBodyPart {
         const objectPos = this.object3D.position;
         const camera = this.bodySystem.camera;
 
-        const up = Vector.fromVectorComponents(camera.up);
+        const up = locationPin.getLocationPinNormal();
+        // const up = Vector.fromVectorComponents(camera.up);
         const targetVector = new Vector().subVectors(objectPos, camera.position);
         const phi = 90 - toDeg(up.angleTo(targetVector))
         // Add 90 cause theta (i.e. azimuth) is based off north, whereas we calculated from east.
@@ -131,5 +132,3 @@ abstract class BodyObject3D extends CelestialBodyPart {
         return this;
     }
 }
-
-export { BodyObject3D };

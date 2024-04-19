@@ -57,4 +57,4 @@ export function throttle(threshold: number, scope: any | undefined, fn: (...args
         }, threshold - (now - last));
     };
 }
-;
+

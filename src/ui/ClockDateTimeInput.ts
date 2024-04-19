@@ -19,9 +19,9 @@ export class ClockDateTimeInput {
     bodySystem: BodySystem;
     currentTime?: Date;
     changedTime?: Date;
-    onFinishChangeHandler?: (v: Date|string) => void;
-    
-    constructor(inputElementId: string, bodySystem: BodySystem){
+    onFinishChangeHandler?: (v: Date | string) => void;
+
+    constructor(inputElementId: string, bodySystem: BodySystem) {
         this.bodySystem = bodySystem;
         this.flatpicker = flatpickr("#datetimePicker", {
             enableTime: true,
@@ -36,19 +36,19 @@ export class ClockDateTimeInput {
             defaultDate: new Date(bodySystem.clock.getTime()),
             onOpen: () => this.onFlatpickrOpen(),
             onClose: () => this.onFlatpickrClose(),
-            onChange:(d) => this.onFlatpickrChange(d)            
+            onChange: (d) => this.onFlatpickrChange(d)
         }) as Instance;
 
         this.subscribeToClockTime();
     }
 
-    onFlatpickrOpen(){
+    onFlatpickrOpen() {
         this.unsubscribeToClockTime();
     }
 
-    onFlatpickrClose(){
+    onFlatpickrClose() {
         // our internal times have millisecond resolution (i.e.: the current time), but the flatpickr ignores the millis.
-        if(this.currentTime && this.changedTime && Math.floor(this.currentTime?.getTime()/1000) !== Math.floor(this.changedTime.getTime()/1000)){
+        if (this.currentTime && this.changedTime && Math.floor(this.currentTime?.getTime() / 1000) !== Math.floor(this.changedTime.getTime() / 1000)) {
             const changedTime = this.changedTime;
             this.currentTime = undefined;
             this.changedTime = undefined;
@@ -57,13 +57,13 @@ export class ClockDateTimeInput {
         this.subscribeToClockTime()
     }
 
-    onFlatpickrChange(d:Date[]){
+    onFlatpickrChange(d: Date[]) {
         // keep track of changes, but don't invoke the callback until after the date is changed.
         // this is all handled in the onFlatpickrClose.
         this.changedTime = d[0];
     }
 
-    subscribeToClockTime(){
+    subscribeToClockTime() {
         this.subscribtion = PubSub.subscribe(SYSTEM_TIME_TOPIC, (msg, timeMs) => {
             this.currentTime = new Date(timeMs);
             this.flatpicker.setDate(timeMs, false);
@@ -74,7 +74,7 @@ export class ClockDateTimeInput {
         PubSub.unsubscribe(this.subscribtion);
     }
 
-    onFinishChange(c: (v: string | Date) => void){
+    onFinishChange(c: (v: string | Date) => void) {
         this.onFinishChangeHandler = c;
         return this;
 

@@ -9,15 +9,15 @@ import { DistanceUnits, convertDistance } from '../system/distance.ts';
 const WIDTH_SEGMENTS = 64;
 const HEIGHT_SEGMENTS = 64;
 
-export class StarSurface extends CelestialBodyPart{
+export class StarSurface extends CelestialBodyPart {
 
     readonly mesh: Mesh;
     readonly body: Body;
 
-    constructor(body: Body){ 
+    constructor(body: Body) {
         super();
         const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
-        const materialProperties = body.textures; 
+        const materialProperties = body.textures;
         const geometry = new SphereGeometry(radiuskm, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
         const material = createStarSurfaceMaterial(materialProperties);
         const mesh = new Mesh(geometry, material);
@@ -26,10 +26,10 @@ export class StarSurface extends CelestialBodyPart{
         this.mesh = mesh;
         this.body = body;
     }
-    
+
     static create(body: Body): StarSurface {
         return new StarSurface(body);
-    } 
+    }
 
     getMesh(): Mesh {
         return this.mesh;
@@ -39,7 +39,7 @@ export class StarSurface extends CelestialBodyPart{
         return this.getMesh();
     }
 
-    updatePart(): void {        
+    updatePart(): void {
         this.getObject3D().rotation.set(this.body.sideralRotation.x, this.body.sideralRotation.y, this.body.sideralRotation.z);
     }
 }
@@ -57,5 +57,5 @@ function createStarSurfaceMaterial(materialProperties: MaterialProperties): Mate
         params.alphaMap = textureLoader.load(materialProperties.alphaUri);
     }
 
-    return new MeshBasicMaterial(params);        
+    return new MeshBasicMaterial(params);
 }

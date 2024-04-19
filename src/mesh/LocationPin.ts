@@ -2,6 +2,7 @@ import { Mesh, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../domain/Body.ts';
 import { BodyObject3D } from "./BodyObject3D.ts";
+import { Vector } from "../system/Vector.ts";
 
 export class LocationPin {
     mesh: Mesh;
@@ -10,17 +11,24 @@ export class LocationPin {
     latlon: LatLon;
     isVisible: boolean;
 
-    constructor(latlon: LatLon, bodyObject3D: BodyObject3D, color: string, isVisible: boolean = true){        
+    north: Vector;
+
+
+    constructor(latlon: LatLon, bodyObject3D: BodyObject3D, color: string, isVisible: boolean = true, elevation: number = 100) {
         function createBodyPinMesh() {
-            const pinRadius = 20; 
+            const pinRadius = 20;
             const geometry = new SphereGeometry(pinRadius, 5, 5);
-            const materiel = new MeshBasicMaterial({color: color});
+            const materiel = new MeshBasicMaterial({ color: color });
             const mesh = new Mesh(geometry, materiel);
-            // we hardcode the elevation to be 100m, but this really needs to vary.
-            mesh.position.setFromSpherical(latlon.toSpherical((bodyObject3D.body.radius+100)/1000));            
+            const spherical = latlon.toSpherical((bodyObject3D.body.radius + elevation) / 1000);
+            
+            
+
+            mesh.position.setFromSpherical(spherical);
             return mesh;
-        }        
+        }
         this.latlon = latlon;
+        this.north = new Vector(0,0,0); //
         this.mesh = createBodyPinMesh()
         this.bodyObject3D = bodyObject3D;
         this.color = color;
@@ -39,12 +47,11 @@ export class LocationPin {
         return this.getMesh().getWorldPosition(vector);
     }
 
-
     getMesh(): Mesh {
         return this.mesh;
     }
 
-    remove(){
+    remove() {
         this.bodyObject3D.removeLocationPin(this);
         this.mesh.geometry.dispose();
     }

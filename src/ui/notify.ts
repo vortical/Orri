@@ -17,7 +17,7 @@
  * https://github.com/FortAwesome/Font-Awesome/blob/5.x/metadata/icons.json
  *  
  * 
- */ 
+ */
 // fa-info-circle
 const InfoPathData = 'M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z';
 // fa-exclamation-triangle
@@ -27,9 +27,9 @@ const SuccessPathData = 'M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 
 // fa-exclamation-circle
 const ErrorPathData = 'M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zm-248 50c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z';
 
-const DefaultFadeTimeout = 5000; 
-const WarnFadeTimeout = 8500; 
-const ErrorFadeTimeout = 10000; 
+const DefaultFadeTimeout = 5000;
+const WarnFadeTimeout = 8500;
+const ErrorFadeTimeout = 10000;
 
 
 export interface INotifyService {
@@ -158,9 +158,9 @@ export class NotifyService implements INotifyService {
         result.setAttribute("data-prefix", "fas");
         result.setAttribute("role", "img");
         if (messageType === NotifyMessageType.warn) {
-          result.setAttribute("viewBox", "0 0 580 512");
-        } else {          
-          result.setAttribute("viewBox", "0 0 512 512");
+            result.setAttribute("viewBox", "0 0 580 512");
+        } else {
+            result.setAttribute("viewBox", "0 0 512 512");
         }
         result.classList.add("svg-inline--fa", "fa-2x", "fa-w-16");
 

@@ -10,21 +10,18 @@ const WIDTH_SEGMENTS = 64;
 const HEIGHT_SEGMENTS = 64;
 
 export class Atmosphere extends CelestialBodyPart {
-    
 
     readonly mesh: Mesh;
     readonly clock: Clock;
 
-    constructor(body: Body, clock: Clock){
+    constructor(body: Body, clock: Clock, altitude: number = 15) {
         super();
         this.clock = clock;
         const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
-        const materialProperties = body.textures; 
-        
-        
-        const altitude = 15; 
+        const materialProperties = body.textures;
+
         const mesh = new Mesh(
-            new SphereGeometry(radiuskm  + altitude, WIDTH_SEGMENTS, HEIGHT_SEGMENTS),
+            new SphereGeometry(radiuskm + altitude, WIDTH_SEGMENTS, HEIGHT_SEGMENTS),
             createAtmosphereMateriel(materialProperties.atmosphereUri!)
         );
 
@@ -33,7 +30,7 @@ export class Atmosphere extends CelestialBodyPart {
         this.mesh = mesh;
     }
 
-    static create(body: Body, clock: Clock ): Atmosphere | undefined {
+    static create(body: Body, clock: Clock): Atmosphere | undefined {
         if (body.textures.atmosphereUri == undefined) return undefined;
         return new Atmosphere(body, clock);
     }
@@ -46,7 +43,7 @@ export class Atmosphere extends CelestialBodyPart {
      * Rotate the clouds relative to clock scale.
      */
     updatePart(): void {
-        this.mesh.rotateY(toRad(this.clock.scale * 0.00005));        
+        this.mesh.rotateY(toRad(this.clock.scale * 0.00005));
     }
 }
 

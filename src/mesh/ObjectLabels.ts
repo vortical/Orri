@@ -5,7 +5,7 @@ import { CameraLayer } from '../scene/CameraLayer';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth";
 import { CameraModes } from '../scene/CameraTargetingState';
 
-class ObjectLabels {
+export class ObjectLabels {
     nameLabel: NameLabel;
     distanceLabel: DistanceLabel;
     altitudeAzimuthLabel: AltitudeAzimuthLabel;
@@ -137,18 +137,18 @@ class NameLabel extends Label {
     isHeader: boolean = true;
 
     update(): void {
-        if (this.isEnabled()) {
-            this.setValue(this.bodyObject3D.getName());
-        }
+        if (!this.isEnabled()) return;
+
+        this.setValue(this.bodyObject3D.getName());
     }
 }
 
 class DistanceLabel extends Label {
     isHeader: boolean = false;
     update(): void {
-        if (this.isEnabled()) {
-            this.setValue(this.bodyObject3D.cameraDistanceAsString());
-        }
+        if (!this.isEnabled()) return;
+
+        this.setValue(this.bodyObject3D.cameraDistanceAsString());
     }
 }
 
@@ -157,22 +157,15 @@ class AltitudeAzimuthLabel extends Label {
     previousAltaz?: AltitudeAzimuth;
 
     update(): void {
+        if (!this.isEnabled()) return;
 
-        if (this.isEnabled()) {
-            if (this.bodySystem.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
-                const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
-                altaz?.calcTrend(this.previousAltaz);
-                this.previousAltaz = altaz;
-                this.setValue(altaz?.toString() || "");
-            } else {
-                this.setValue("");
-            }
+        if (this.bodySystem.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
+            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
+            altaz?.calcTrend(this.previousAltaz);
+            this.previousAltaz = altaz;
+            this.setValue(altaz?.toString() || "");
+        } else {
+            this.setValue("");
         }
     }
-
-    trend(previous: AltitudeAzimuthLabel) {
-
-    }
 }
-
-export { ObjectLabels };

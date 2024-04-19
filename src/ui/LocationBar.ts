@@ -21,25 +21,25 @@ export default class LocationBar {
         return LocationBar.mapURLSearchParamsToState(new URLSearchParams(decodeURI(window.location.search)))
     }
 
-    static pushState(state: BodySystemOptionsState, toCompress=false) {
-        
+    static pushState(state: BodySystemOptionsState, toCompress = false) {
+
         const jsonString = JSON.stringify(state);
 
         // strangely, the compressToEncodedURIComponent seems longer. So compression is an option.
-        const stateString = toCompress? LZString.compressToEncodedURIComponent(jsonString): encodeURI(jsonString);   
+        const stateString = toCompress ? LZString.compressToEncodedURIComponent(jsonString) : encodeURI(jsonString);
 
-        const stateParam: ParamName = toCompress? "zstate": "state";
+        const stateParam: ParamName = toCompress ? "zstate" : "state";
         if (new URLSearchParams(window.location.search).get(stateParam) !== stateString) {
             window.history.pushState(stateString, "", "?".concat(stateParam, "=", stateString));
         }
-    }  
+    }
 
 
     static reviver(): PropertyReviver {
         // just add filtering revivers for properties that have special revival/marshaling requirements)
         return compositeReviver([
-            namedPropertyReviver("location", (v: {lat: number, lon: number}) => new LatLon(v.lat, v.lon)), 
-            namedPropertyReviver("targettingCameraMode", (v: {name: string}) => modeForName(v.name)), 
+            namedPropertyReviver("location", (v: { lat: number, lon: number }) => new LatLon(v.lat, v.lon)),
+            namedPropertyReviver("targettingCameraMode", (v: { name: string }) => modeForName(v.name)),
 
             // don't really have this property... just a place holder
             namedPropertyReviver("bogus_property", (v: VectorComponents) => Vector.fromVectorComponents(v))]);
@@ -47,21 +47,21 @@ export default class LocationBar {
 
 
     static mapURLSearchParamsToState(params: URLSearchParams): BodySystemOptionsState {
-        const state = params.get('zstate') ? 
+        const state = params.get('zstate') ?
             LZString.decompressFromEncodedURIComponent(params.get('zstate')!) :
             params.get("state") || "{}";
 
         return JSON.parse(state, LocationBar.reviver());
-    }    
+    }
 
-    static reload(){
+    static reload() {
         location.reload();
     }
 };
 
-const modeForName = (name:string) => 
+const modeForName = (name: string) =>
     CameraModes[
-        Object.getOwnPropertyNames(CameraModes)
+    Object.getOwnPropertyNames(CameraModes)
         .filter((x) => CameraModes[x as keyof typeof CameraModes].name == name)[0] as keyof typeof CameraModes
     ];
 

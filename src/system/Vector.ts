@@ -2,7 +2,7 @@ import { Vector3 } from "three";
 import { VectorComponents } from "../domain/models.ts";
 
 
-class Vector extends Vector3 implements VectorComponents {
+export class Vector extends Vector3 implements VectorComponents {
 
     magnitude(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
@@ -20,5 +20,3 @@ class Vector extends Vector3 implements VectorComponents {
         return v == undefined? new Vector():new Vector(v.x, v.y, v.z)
     }
 }
-
-export { Vector };

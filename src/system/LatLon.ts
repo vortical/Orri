@@ -62,4 +62,3 @@ export class LatLon {
     return sphereCoords;
   }
 }
-;

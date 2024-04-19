@@ -11,7 +11,7 @@ export abstract class CelestialBodyPart {
     abstract getObject3D(): Object3D;
     abstract updatePart(): void;
 
-    addPart(part: CelestialBodyPart|undefined): CelestialBodyPart {
+    addPart(part: CelestialBodyPart | undefined): CelestialBodyPart {
         if (part != undefined) {
             this.getObject3D().add(part.getObject3D());
             this.childParts.push(part);

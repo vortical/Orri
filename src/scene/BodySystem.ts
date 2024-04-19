@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFShadowMap,  PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim } from "../system/Dim.ts";
 import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../domain/Body.ts';
@@ -60,7 +60,7 @@ const CAMERA_FAR = 13000000000;
  */
 export class BodySystem {
     dataService: DataService;
-    shadowType: ShadowType =  ShadowType.Penumbra;
+    shadowType: ShadowType = ShadowType.Penumbra;
     bodySystemUpdater: CompositeUpdater = new CompositeUpdater()
     bodies: Body[];
     camera: PerspectiveCamera;
@@ -81,15 +81,15 @@ export class BodySystem {
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
-    primeMeridianLocationPin ?: LocationPin;
+    primeMeridianLocationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
 
-    constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, { 
-            cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35, 
-            ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType= ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
-            showNames = true, showDistance = true, showAltitudeAzimuth=true,
-            location, targettingCameraMode = CameraModes.FollowTarget}: BodySystemOptionsState) {
-        
+    constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
+        cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
+        ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType = ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
+        showNames = true, showDistance = true, showAltitudeAzimuth = true,
+        location, targettingCameraMode = CameraModes.FollowTarget }: BodySystemOptionsState) {
+
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
         this.dataService = dataService;
@@ -130,9 +130,9 @@ export class BodySystem {
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
         this.primeMeridianLocationPin = this.createPrimeMeridian();
 
-        if(location){
+        if (location) {
             this.setLocation(location);
-        }        
+        }
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this)
         this.cameraTargetingState.postTargetSet(this.target);
     }
@@ -147,9 +147,9 @@ export class BodySystem {
                 console.log(e)
             }
         });
-    }    
+    }
 
-    setShadowType(shadowType: ShadowType){
+    setShadowType(shadowType: ShadowType) {
         this.shadowType = shadowType;
         this.scaleMoonForShadowType()
     }
@@ -158,7 +158,7 @@ export class BodySystem {
         return this.shadowType;
     }
 
-    getCameraTargetingState(): CameraTargetingState{
+    getCameraTargetingState(): CameraTargetingState {
         return this.cameraTargetingState;
     }
 
@@ -167,19 +167,19 @@ export class BodySystem {
     }
 
     setCameraTargetingMode(cameraMode: CameraMode) {
-        if (this.cameraTargetingState.cameraMode == cameraMode){
+        if (this.cameraTargetingState.cameraMode == cameraMode) {
             return;
         }
 
-        if(cameraMode == CameraModes.ViewTargetFromSurface){
-            if(this.getLocationPin() == undefined){
+        if (cameraMode == CameraModes.ViewTargetFromSurface) {
+            if (this.getLocationPin() == undefined) {
                 throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a surface location set.");
             }
-            if( this.target == this.getBodyObject3D("earth")){
+            if (this.target == this.getBodyObject3D("earth")) {
                 throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a target other than Earth.");
             }
         }
-        
+
         this.cameraTargetingState = cameraMode.stateBuilder(this);
         this.cameraTargetingState.moveToTarget(this.getBodyObject3DTarget(), true);
     }
@@ -188,35 +188,35 @@ export class BodySystem {
         return this.getLocationPin()?.latlon;
     }
 
-    getEast(): Vector3 | undefined{
+    getEast(): Vector3 | undefined {
         const meridian = this.primeMeridianLocationPin;
         return meridian?.getLocationPinNormal();
     }
 
-    createPrimeMeridian(){
-        const primeMeridianLocationPin = new LocationPin(new LatLon(0,0), this.getBodyObject3D("earth"), "#00FF00", false);        
+    createPrimeMeridian() {
+        const primeMeridianLocationPin = new LocationPin(new LatLon(0, 0), this.getBodyObject3D("earth"), "#00FF00", false);
         this.primeMeridianLocationPin?.remove();
         this.primeMeridianLocationPin = primeMeridianLocationPin;
         return primeMeridianLocationPin;
     }
 
-    setLocation(latlon: LatLon|undefined){
-        if (this.locationPin?.latlon == latlon){
+    setLocation(latlon: LatLon | undefined) {
+        if (this.locationPin?.latlon == latlon) {
             return;
         }
-        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00"): undefined);
+        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00") : undefined);
     }
 
-    getLocationPin(): LocationPin| undefined{
+    getLocationPin(): LocationPin | undefined {
         return this.locationPin;
     }
 
-    setLocationPin(locationPin: LocationPin|undefined){        
+    setLocationPin(locationPin: LocationPin | undefined) {
         this.locationPin?.remove();
         this.locationPin = locationPin;
     }
 
-    setDistanceUnit(distanceUnit: DistanceUnit){
+    setDistanceUnit(distanceUnit: DistanceUnit) {
         this.distanceformatter = new DistanceFormatter(distanceUnit);
     }
 
@@ -249,8 +249,8 @@ export class BodySystem {
         return this.camera.layers.isEnabled(layer);
     }
 
-    setLayerEnabled(value: boolean, layer: CameraLayer){
-        value? this.camera.layers.enable(layer) : this.camera.layers.disable(layer);
+    setLayerEnabled(value: boolean, layer: CameraLayer) {
+        value ? this.camera.layers.enable(layer) : this.camera.layers.disable(layer);
     }
 
     setCameraUp(v = new Vector3(0, 1, 0)) {
@@ -269,16 +269,16 @@ export class BodySystem {
         return this.bodyObjects3D.get(name.toLowerCase())!.body;
     }
 
-    setShadowsEnabled(value: boolean){
+    setShadowsEnabled(value: boolean) {
         const starBodies = [...this.bodyObjects3D.values()]
-        .filter( (bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
+            .filter((bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
 
         starBodies.forEach(it => it.setShadowsEnabled(value));
     }
 
     areShadowsEnabled(): boolean {
         const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]
-                        .filter( (bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
+            .filter((bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
         return starBodies.reduce((prev: boolean, current) => (current.areShadowsEnabled() && prev), true);
     }
 
@@ -371,16 +371,16 @@ export class BodySystem {
     getBodyObject3DTarget(): BodyObject3D {
         return this.target;
     }
-    
-    moveToTarget(bodyObject3D: BodyObject3D, forceMoveCloser = false){
-        if(this.getBodyObject3DTarget() == bodyObject3D && !forceMoveCloser){
+
+    moveToTarget(bodyObject3D: BodyObject3D, forceMoveCloser = false) {
+        if (this.getBodyObject3DTarget() == bodyObject3D && !forceMoveCloser) {
             return;
         }
 
-        if(bodyObject3D == this.getBodyObject3D("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface){
+        if (bodyObject3D == this.getBodyObject3D("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
             throw new Error("Can't select Earth as target while viewing from Earth's surface.");
         }
-        
+
         this.cameraTargetingState.moveToTarget(bodyObject3D, forceMoveCloser);
     }
 
@@ -395,17 +395,17 @@ export class BodySystem {
     }
 
     setTarget(bodyObject3D: BodyObject3D | string | undefined) {
-        if(bodyObject3D == undefined) return;
-        
-        if (typeof bodyObject3D === "string") {            
+        if (bodyObject3D == undefined) return;
+
+        if (typeof bodyObject3D === "string") {
             bodyObject3D = this.getBodyObject3D(bodyObject3D);
         }
-        
+
         if (this.target != bodyObject3D) {
             this.target = bodyObject3D;
             this.cameraTargetingState.postTargetSet(bodyObject3D);
-            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: bodyObject3D } });        
-        }        
+            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: bodyObject3D } });
+        }
     }
 
 
@@ -413,24 +413,21 @@ export class BodySystem {
      * We should formalize.This implementation was just a dirty way to get see the umbra
      * 
      * Our light emits 'parallel' shadows. There is no way for this type of light to 
-     * show umbra, some variant of ray casting would be needed.
-     *
+     * show umbra.
      */
-    scaleMoonForShadowType(){
-        const shadowType  = this.shadowType;
+    scaleMoonForShadowType() {
+        const shadowType = this.shadowType;
         const moon = this.getBodyObject3D("moon");
 
-        if(shadowType == ShadowType.Umbra  && this.getBodyObject3DTarget().getName().toLocaleLowerCase() == "earth" 
-                && this.getBodyObject3DTarget().cameraDistance() < 384400 && moon.cameraDistance() < 384400) {
+        if (shadowType == ShadowType.Umbra && this.getBodyObject3DTarget().getName().toLocaleLowerCase() == "earth"
+            && this.getBodyObject3DTarget().cameraDistance() < 384400 && moon.cameraDistance() < 384400) {
             const moon = this.getBodyObject3D("moon");
-            // 100 km diameter for.
-
             const radius = moon.body.radius;
             const umbraRadius = 100e3;
-            const scale = umbraRadius/radius;
+            const scale = umbraRadius / radius;
 
             moon.scale(scale);
-        }else{
+        } else {
             const moon = this.getBodyObject3D("moon");
             moon.scale(this.scale);
 
@@ -450,7 +447,7 @@ export class BodySystem {
             await this.tick(delta);
             this.controls.update();
 
-            if(this.controls.enabled){
+            if (this.controls.enabled) {
                 this.followTarget(this.target);
             }
             TWEEN.update();
@@ -519,15 +516,15 @@ export class BodySystem {
      * @returns Map<string, BodyObject3D> 
      */
     createObjects3D(bodies: Body[]): Map<string, BodyObject3D> {
-        return bodies.reduce( (m: Map<string, BodyObject3D>, body: Body) => 
-                    m.set(body.name.toLowerCase(), BodyObject3DFactory.create(body, this)),
-                    new Map<string, BodyObject3D>()
+        return bodies.reduce((m: Map<string, BodyObject3D>, body: Body) =>
+            m.set(body.name.toLowerCase(), BodyObject3DFactory.create(body, this)),
+            new Map<string, BodyObject3D>()
         );
     }
 }
 
 
-function createAmbiantLight(intensity: number) {    
+function createAmbiantLight(intensity: number) {
     return new AmbientLight("white", intensity);
 }
 
@@ -552,7 +549,7 @@ function createCamera({ fov = 35, aspectRatio = 1.0, near = CAMERA_NEAR, far = C
 }
 
 function createRenderer(): WebGLRenderer {
-    const renderer  = new WebGLRenderer({ antialias: true });
+    const renderer = new WebGLRenderer({ antialias: true });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
     return renderer

@@ -11,4 +11,3 @@ export class Dim {
     return this.w / this.h;
   }
 }
-;

@@ -61,6 +61,13 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         return bodyRadius + (1.5 * bodyRadius);
     }
 
+    /**
+     * Pretty Lerp of the camera towards the target.     * 
+     * 
+     * @param bodyObject3D 
+     * @param force 
+     * @returns 
+     */
 
     moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
 

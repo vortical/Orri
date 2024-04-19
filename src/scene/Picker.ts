@@ -9,6 +9,10 @@ export type PickerEvent = {
     body: BodyObject3D | null;
 }
 
+/**
+ * Publishes events based on the state of the pointer/mouse in relation with 
+ * bodies in the scene: hover over a body, click on a body
+ */
 export class Picker {
     raycaster = new Raycaster();
     bodySystem: BodySystem;
@@ -37,13 +41,12 @@ export class Picker {
     }
 }
 
-
 function initMouseEventPickHandler(picker: Picker) {
 
     window.addEventListener('pointermove', throttle(300, undefined,
         (event: MouseEvent) => {
             if (!picker.isEnabled) return;
-            
+
             PubSub.publish(MOUSE_HOVER_OVER_BODY_TOPIC, {
                 body: picker.pick({
                     x: (event.clientX / window.innerWidth) * 2 - 1,
@@ -57,7 +60,7 @@ function initMouseEventPickHandler(picker: Picker) {
     window.addEventListener('click', throttle(300, undefined,
         (event: MouseEvent) => {
             if (!picker.isEnabled) return;
-            
+
             PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, {
                 body: picker.pick({
                     x: (event.clientX / window.innerWidth) * 2 - 1,

@@ -24,7 +24,6 @@
         "radius": 2.44e6,
         "castShadow": false,
         "receiveShadow": false,
-
         "obliquityToOrbit": 0.034,
         "sideralRotationPeriod": {
             "days": 58.646

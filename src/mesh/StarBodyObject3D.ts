@@ -53,8 +53,6 @@ const defaultLightProperties: Required<LightProperties> = {
     decay: 0.0
 };
 
-
-
 /**
  * This is a body composed of a surface, a point light, an optional directional light for generating shadows, 
  * and Lens Flares.
@@ -71,7 +69,7 @@ const defaultLightProperties: Required<LightProperties> = {
  * Flares are not 3D objects and can't be scaled like normal Object3D; when the camera moves
  * around the scene, a flare scale is determined and the associated flare is activated.
  */
-class StarBodyObject3D extends BodyObject3D {
+export class StarBodyObject3D extends BodyObject3D {
     pointLight!: PointLight;
     shadowingLight?: DirectionalLight;
     shadowingLightTargetListener: DirectionLightTargetListener;
@@ -192,5 +190,3 @@ class StarBodyObject3D extends BodyObject3D {
         return this;
     }
 }
-
-export { StarBodyObject3D };

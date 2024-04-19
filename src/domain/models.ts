@@ -1,17 +1,17 @@
-interface VectorComponents {
+export interface VectorComponents {
     x: number;
     y: number;
     z: number;
 }
 
-interface Axis {
+export interface Axis {
     // rotation based off the 'prime meridian' of the body.
     rotation?: number
     //ICRS vector of the axis, body spins around this axis
     direction?: VectorComponents
 }
 
-interface KinematicObject {
+export interface KinematicObject {
     name: string;
     axis?: Axis,
     velocity: VectorComponents
@@ -19,7 +19,7 @@ interface KinematicObject {
     datetime: Date;
 }
 
-type TimePeriod = {
+export type TimePeriod = {
     days?: number
     hours?: number
     minutes?: number
@@ -27,7 +27,7 @@ type TimePeriod = {
     millis?: number
 };
 
-type MaterialProperties = {
+export type MaterialProperties = {
     textureUri?: string;
     bumpMapUri?: string;
     bumpMapScale?: number;
@@ -39,14 +39,14 @@ type MaterialProperties = {
     color?: string;
 }
 
-type LightProperties = {
+export type LightProperties = {
     color?: string;
     intensity?: number;
     distance?: number;
     decay?: number;
 };
 
-type RingProperties = {
+export type RingProperties = {
     opacity: number;
     minRadius: number;
     maxRadius: number;
@@ -54,10 +54,10 @@ type RingProperties = {
     colorMapUri?: string;
 };
 
-type BodyType = "star" | "planet" | "moon";
+export type BodyType = "star" | "planet" | "moon";
 
 
-type BodyProperties = {
+export type BodyProperties = {
     type: BodyType;
     name: string;
     parent: string;
@@ -96,5 +96,3 @@ export enum ShadowType {
     Umbra = "Umbra",
     Penumbra = "Penumbra"
 }
-
-export type { VectorComponents, BodyType, RingProperties, BodyProperties, LightProperties, MaterialProperties, KinematicObject, TimePeriod, };

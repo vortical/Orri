@@ -10,6 +10,16 @@ export function toDeg(rad: number): number {
   return rad * 180 / Math.PI;
 }
 
+/**
+ * 
+ * Returns an angle from 0 to 2*PI. The rotation of the angle is along the plane 
+ * normal vector.
+ * 
+ * @param v1 
+ * @param v2 
+ * @param plane the normal of the plane from which we measure the angle
+ * @returns 
+ */
 export function angleTo(v1: Vector3, v2: Vector3, plane: Vector3): number {
   const v1Projected = v1.clone().projectOnPlane(plane);
   const v2Projected = v2.clone().projectOnPlane(plane);

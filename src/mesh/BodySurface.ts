@@ -10,15 +10,15 @@ const WIDTH_SEGMENTS = 64;
 const HEIGHT_SEGMENTS = 64;
 
 
-export class BodySurface extends CelestialBodyPart{
+export class BodySurface extends CelestialBodyPart {
 
     readonly mesh: Mesh;
     readonly body: Body;
 
-    constructor(body: Body){ 
+    constructor(body: Body) {
         super();
         const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
-        const materialProperties = body.textures; 
+        const materialProperties = body.textures;
         const geometry = new SphereGeometry(radiuskm, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
         const material = createBodySurfaceMaterial(materialProperties);
         const mesh = new Mesh(geometry, material);
@@ -29,10 +29,10 @@ export class BodySurface extends CelestialBodyPart{
         this.mesh = mesh;
         this.body = body;
     }
-    
+
     static create(body: Body): BodySurface {
         return new BodySurface(body);
-    } 
+    }
 
     getMesh(): Mesh {
         return this.mesh;
@@ -42,11 +42,10 @@ export class BodySurface extends CelestialBodyPart{
         return this.getMesh();
     }
 
-    updatePart(): void {        
+    updatePart(): void {
         this.getObject3D().rotation.set(this.body.sideralRotation.x, this.body.sideralRotation.y, this.body.sideralRotation.z);
     }
 }
-
 
 function createBodySurfaceMaterial(materialProperties: MaterialProperties): Material {
 
@@ -58,7 +57,7 @@ function createBodySurfaceMaterial(materialProperties: MaterialProperties): Mate
 
     if (materialProperties.normalUri) {
         params.normalMap = textureLoader.load(materialProperties.normalUri);
-        params.normalScale = materialProperties.normalMapScale ? new Vector2(materialProperties.normalMapScale, materialProperties.normalMapScale) : new Vector2(1,1);
+        params.normalScale = materialProperties.normalMapScale ? new Vector2(materialProperties.normalMapScale, materialProperties.normalMapScale) : new Vector2(1, 1);
     }
 
     if (materialProperties.bumpMapUri) {

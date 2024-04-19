@@ -10,8 +10,6 @@ import { degToRad } from 'three/src/math/MathUtils.js';
  */
 const G: number = 6.674e-11;
 
-
-
 interface RotationCalculator {
     (timeMs: number): Vector;
 }
@@ -20,7 +18,7 @@ interface RotationCalculator {
  * Represents the non 3D characteristics of a body: position, speed, mass, axis tilt, rotation period etc...
  * 
  */
-class Body {
+export class Body {
     type: BodyType
     name: string;
     parentName: string;
@@ -100,11 +98,15 @@ class Body {
         return new Vector().crossVectors(rel_pos, rel_vel).normalize();
     }
 
+    /**
+     * If this body had an axisDirection provided, then we simply return it.
+     * 
+     * If not, then we calculate an arbitrary one based on the obliquity and orbital
+     * plane. This will result in a realistic axis angle but will not necessarily match 
+     * the orientation (at the clock time).
+     * @returns 
+     */
     getAxisDirection(): Vector {
-
-        // If an axis was given, then we honor it else we calculate an arbitrary one
-        // based on the obliquity and orbital plane. This will result in a realistic
-        // axis angle but will not necessarily match the orientation (at the clock time).
         if (this.axisDirection !== undefined) {
             return this.axisDirection;
         }
@@ -128,14 +130,16 @@ class Body {
         this.kinematics = kinematics;
 
         const baseTimeMs = kinematics.datetime.getTime()
-
         const baseRotation = toRad(kinematics.axis?.rotation || 0);
 
         this.axisDirection = kinematics.axis?.direction ? Vector.fromVectorComponents(kinematics.axis.direction) : undefined;
-
         this.velocity = Vector.fromVectorComponents(kinematics.velocity);
         this.position = Vector.fromVectorComponents(kinematics.position);
 
+        // RotationCalculator; rotation are calculated from:
+        //  baseRotation,
+        //  rotation period, and 
+        //  time delta since baseRotation.
         this.rotationAtTime = function (periodMs: number) {
             return (timeMs: number) => {
                 const PI_2 = 2 * Math.PI;
@@ -150,10 +154,8 @@ class Body {
     }
 
     /**
-     * 
      * A 'planetary system' is a planet with its moons. E.g. Earth planetary system is set
      * of bodies that include Moon and Earth.
-     * 
      * 
      * @returns Planetary System this body belongs to.
      */
@@ -169,7 +171,6 @@ class Body {
     }
 
     /**
-     * 
      * @param body 
      * @returns Distance from this body to body 
      */
@@ -213,7 +214,6 @@ class Body {
             ]);
     }
 
-
     /**
      * Calculate a speed after time delta and constant acceleration.
      * 
@@ -246,5 +246,3 @@ class Body {
         );
     }
 }
-
-export { Body, G };

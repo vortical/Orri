@@ -20,6 +20,6 @@ const mainElement = document.querySelector<HTMLDivElement>('#scene-container')!;
     bodySystem.setCameraUp(bodySystem.getBody("earth").get_orbital_plane_normal());
     const ui = new SimpleUI(bodySystem, dataService);
     bodySystem.start();
-    
+
 })();
 
