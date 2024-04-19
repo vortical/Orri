@@ -4,6 +4,7 @@ import { BodySystem } from '../scene/BodySystem';
 import { CameraLayer } from '../scene/CameraLayer';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth";
 import { CameraModes } from '../scene/CameraTargetingState';
+import { LocationPin } from './LocationPin';
 
 export class ObjectLabels {
     nameLabel: NameLabel;
@@ -51,6 +52,7 @@ export class ObjectLabels {
         const currentTarget = this.bodyObject3D.bodySystem.getBodyObject3DTarget();
         return this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem()
     }
+
 
     clearBodyLabels() {
         this.getLabels().forEach((l: Label) => l.setValue(""));
@@ -148,7 +150,10 @@ class DistanceLabel extends Label {
     update(): void {
         if (!this.isEnabled()) return;
 
-        this.setValue(this.bodyObject3D.cameraDistanceAsString());
+
+        const distance = this.bodyObject3D.cameraDistance();
+        
+        this.setValue(this.bodySystem.getDistanceFormatter().format(distance));
     }
 }
 
@@ -156,11 +161,15 @@ class AltitudeAzimuthLabel extends Label {
     isHeader: boolean = false;
     previousAltaz?: AltitudeAzimuth;
 
+    #getActiveLocationPin(): LocationPin | undefined{
+        return this.bodyObject3D.bodySystem.getLocationPin();
+    }
+
     update(): void {
         if (!this.isEnabled()) return;
 
         if (this.bodySystem.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
-            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin();
+            const altaz = this.bodyObject3D.altitudeAzimuthFromLocationPin(this.#getActiveLocationPin());
             altaz?.calcTrend(this.previousAltaz);
             this.previousAltaz = altaz;
             this.setValue(altaz?.toString() || "");

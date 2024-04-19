@@ -81,7 +81,6 @@ export class BodySystem {
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
-    primeMeridianLocationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
 
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
@@ -128,7 +127,6 @@ export class BodySystem {
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showDistance, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
-        this.primeMeridianLocationPin = this.createPrimeMeridian();
 
         if (location) {
             this.setLocation(location);
@@ -188,23 +186,11 @@ export class BodySystem {
         return this.getLocationPin()?.latlon;
     }
 
-    getEast(): Vector3 | undefined {
-        const meridian = this.primeMeridianLocationPin;
-        return meridian?.getLocationPinNormal();
-    }
-
-    createPrimeMeridian() {
-        const primeMeridianLocationPin = new LocationPin(new LatLon(0, 0), this.getBodyObject3D("earth"), "#00FF00", false);
-        this.primeMeridianLocationPin?.remove();
-        this.primeMeridianLocationPin = primeMeridianLocationPin;
-        return primeMeridianLocationPin;
-    }
-
     setLocation(latlon: LatLon | undefined) {
         if (this.locationPin?.latlon == latlon) {
             return;
         }
-        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getBodyObject3D("earth"), "#00FF00") : undefined);
+        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getBodyObject3D("earth"),  "#00FF00", "ViewerPosition") : undefined);
     }
 
     getLocationPin(): LocationPin | undefined {

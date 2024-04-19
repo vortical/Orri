@@ -1,4 +1,4 @@
-import { BufferGeometry, Group, Material, Mesh, NormalBufferAttributes, Object3D, Object3DEventMap } from 'three';
+import { BufferGeometry, Group, Material, Mesh, NormalBufferAttributes, Object3D, Object3DEventMap, Vector3 } from 'three';
 import { Body } from '../domain/Body.ts';
 import { angleTo, toDeg, toRad } from '../system/geometry.ts';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth.ts";
@@ -8,6 +8,7 @@ import { ObjectLabels } from './ObjectLabels.ts';
 import { LocationPin } from './LocationPin.ts';
 import { Vector } from '../system/Vector.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
+import { LatLon } from '../system/LatLon.ts';
 
 
 /**
@@ -26,6 +27,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     readonly bodySystem: BodySystem;
     readonly labels: ObjectLabels;
     pins: LocationPin[] = [];
+    northPin?: LocationPin;
 
     constructor(body: Body, bodySystem: BodySystem) {
         super();
@@ -34,12 +36,20 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.object3D = new Group();
         this.labels = new ObjectLabels(this);
         this.object3D.add(...this.labels.getCSS2DObjects());
+    
     }
 
     abstract getSurfaceMesh(): Mesh;
 
     getObject3D(): Object3D {
         return this.object3D;
+    }
+
+    getNorthAxis(): Vector3 {
+        if (this.northPin == undefined) {
+            this.northPin = new LocationPin(new LatLon(90, 0), this, "#00FF00", "North",false);
+        }
+        return this.northPin.getLocationPinNormal();
     }
 
     getName(): string {
@@ -67,27 +77,21 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         return this.cameraDistance(true);
     }
 
-    cameraDistanceAsString(fromSurface: boolean = false): string {
-        const distance = this.cameraDistance(fromSurface);
-        return this.bodySystem.getDistanceFormatter().format(distance);
-    }
+    /**
+     * What is the AltitudeAzimuth to this body when viewed from a location pin on another body.
+     * 
+     * @param locationPin A location pin on another body
+     * @returns The AltitudeAzimuth to this body
+     */
+    altitudeAzimuthFromLocationPin(locationPin?: LocationPin): AltitudeAzimuth | undefined {
+        if (locationPin == undefined ) return undefined;
 
-    altitudeAzimuthFromLocationPin(): AltitudeAzimuth | undefined {
-        const east = this.bodySystem.getEast();
-        const locationPin = this.bodySystem.locationPin;
-
-        if (locationPin == undefined || east == undefined) return undefined;
-
-        const objectPos = this.object3D.position;
-        const camera = this.bodySystem.camera;
-
-        const up = locationPin.getLocationPinNormal();
-        // const up = Vector.fromVectorComponents(camera.up);
-        const targetVector = new Vector().subVectors(objectPos, camera.position);
-        const phi = 90 - toDeg(up.angleTo(targetVector))
+        const axes =  locationPin.getAxes();
+        const targetVector = new Vector().subVectors(this.object3D.position, locationPin.getLocationPinWorldPosition());
+                
         // Add 90 cause theta (i.e. azimuth) is based off north, whereas we calculated from east.
-        const theta = (toDeg(angleTo(targetVector, east, up)) + 90) % 360;
-
+        const theta = (toDeg(angleTo(targetVector, axes.east, axes.up)) + 90) % 360;
+        const phi = 90 - toDeg(axes.up.angleTo(targetVector))
         return new AltitudeAzimuth(phi, theta);
     }
 
