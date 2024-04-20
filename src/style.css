@@ -20,6 +20,7 @@ html, body {
 }
 
 .label {
+  text-shadow: 1px 1px 3px black, 0 0 1em black, 0 0 0.2em black;
   color: #979797;
   font-family: sans-serif;
   padding: 2px;
