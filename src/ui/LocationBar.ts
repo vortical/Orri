@@ -12,7 +12,9 @@ type ParamName = "zstate" | "state";
 /**
  * Manage history based on state being pushed. Users can also copy the location/share it.
  * 
- * State is can be represented as either compressed or uncompressed json via either zipstate or state param.
+ * State can be represented as either compressed or uncompressed json via either zipstate or state param.
+ * @see pushState(state: BodySystemOptionsState, toCompress = false)
+ * 
  * 
  */
 export default class LocationBar {
@@ -34,17 +36,15 @@ export default class LocationBar {
         }
     }
 
-
+    /**
+     * Revivers for properties that have special revival/marshaling requirements
+     */
     static reviver(): PropertyReviver {
-        // just add filtering revivers for properties that have special revival/marshaling requirements)
         return compositeReviver([
             namedPropertyReviver("location", (v: { lat: number, lon: number }) => new LatLon(v.lat, v.lon)),
-            namedPropertyReviver("targettingCameraMode", (v: { name: string }) => modeForName(v.name)),
-
-            // don't really have this property... just a place holder
-            namedPropertyReviver("bogus_property", (v: VectorComponents) => Vector.fromVectorComponents(v))]);
+            namedPropertyReviver("targettingCameraMode", (v: { name: string }) => modeForName(v.name))
+        ]);
     }
-
 
     static mapURLSearchParamsToState(params: URLSearchParams): BodySystemOptionsState {
         const state = params.get('zstate') ?

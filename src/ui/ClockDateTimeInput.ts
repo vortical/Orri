@@ -9,7 +9,7 @@ import { BodySystem } from "../scene/BodySystem";
  * When changes are made to the Calendar, keep track of them internally but don't trigger the 
  * 'onFinishChangeHandler'.
  *
- *  When the Calendar is closed: if there were changes to the time then call the 'onFinishChangeHandler'
+ * When the Calendar is closed: if there were changes to the time then call the 'onFinishChangeHandler'
  * if its registered.
  * 
 */

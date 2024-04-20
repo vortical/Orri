@@ -18,7 +18,7 @@ import { DistanceUnit, DistanceUnits } from '../system/distance.ts';
 import { TimeControls } from './TimeControls.ts';
 
 
-const userNotify: INotifyService = new NotifyService();
+export const userNotify: INotifyService = new NotifyService();
 
 
 /**
@@ -46,22 +46,6 @@ export class SimpleUI {
     }
 }
 
-function getLocationFromBrowser(): Promise<LatLon> {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject("Geolocation is not supported by your browser");
-        } else {
-            navigator.geolocation.getCurrentPosition(
-                (position: any) => {
-                    resolve(new LatLon(position.coords.latitude, position.coords.longitude))
-                },
-                (e) => {
-                    reject(e.message);
-                }
-            );
-        }
-    });
-};
 
 /**
  * Manage the initialValue of lil-gui controllers, if an exception arises then
@@ -82,7 +66,7 @@ function withRollback(callback: (v: any) => void) {
 }
 
 function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
-    const gui = new GUI().title("Orri");
+    const gui = new GUI().title("Settings");
     const bodyNames = bodySystem.bodies.map((b) => b.name);
 
     const options = {
@@ -109,7 +93,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
             LocationBar.reload();
         },
         getLocation() {
-            getLocationFromBrowser().then(
+            LatLon.fromBrowser().then(
                 (l) => {
                     const v = `${l.lat}, ${l.lon}`;
                     locationController.setValue(v);
@@ -118,7 +102,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
                     locationController._onFinishChange(v);
                 },
                 (e) => {
-
                     userNotify.showWarning("Could not get your location!", e.toString().concat(", You will need to add you coordinates manually in the settings."))
                     gui.open();
 
@@ -127,10 +110,6 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
             );
         },
     };
-
-    if (bodySystem.getLocation() == undefined) {
-        options.getLocation();
-    }
 
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback((targetName) => {

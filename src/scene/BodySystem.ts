@@ -130,7 +130,12 @@ export class BodySystem {
 
         if (location) {
             this.setLocation(location);
+        }else if (targettingCameraMode == CameraModes.ViewTargetFromSurface) {
+            // if we don't have a location, then we can't go to surface.
+            // So default back to 'follow target' mode.
+            targettingCameraMode = CameraModes.FollowTarget;
         }
+        
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this)
         this.cameraTargetingState.postTargetSet(this.target);
     }

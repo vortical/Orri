@@ -30,11 +30,11 @@ export class TimeControls {
         this.nowButton = document.querySelector<HTMLInputElement>("#nowButton")!;
         this.resetTimeScaleButton = document.querySelector<HTMLInputElement>("#resetTimeScaleButton")!;
 
-        this.rewindButton.addEventListener("click", () => this.rewind());
-        this.playPauseButton.addEventListener("click", () => this.playPause());
-        this.forwardButton.addEventListener("click", () => this.forward());
-        this.nowButton.addEventListener("click", () => this.now());
-        this.resetTimeScaleButton.addEventListener("click", () => this.resetTimeScale());
+        this.rewindButton.addEventListener("click", (e) => this.#handleEvent(e, this.rewind));
+        this.playPauseButton.addEventListener("click", (e) => this.#handleEvent(e, this.playPause));
+        this.forwardButton.addEventListener("click", (e) => this.#handleEvent(e, this.forward));
+        this.nowButton.addEventListener("click", (e) => this.#handleEvent(e, this.now));
+        this.resetTimeScaleButton.addEventListener("click", (e) => this.#handleEvent(e, this.resetTimeScale));
 
         this.subscribeToTimeScale();
 
@@ -46,6 +46,11 @@ export class TimeControls {
         this.clockDateTimeInput = new ClockDateTimeInput("#datetimePicker", bodySystem)
             .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
 
+    }
+
+    #handleEvent(e: any, f: () => void) {
+        e.stopPropagation();
+        f.apply(this);
     }
 
     rewind() {

@@ -51,6 +51,28 @@ export class LatLon {
   }
 
   /**
+   * Requires permission.
+   * 
+   * @returns Promise<LatLon> from browser
+   */
+  static fromBrowser(): Promise<LatLon> {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject("Geolocation is not supported by your browser");
+        } else {
+            navigator.geolocation.getCurrentPosition(
+                (position: any) => {
+                    resolve(new LatLon(position.coords.latitude, position.coords.longitude))
+                },
+                (e) => {
+                    reject(e.message);
+                }
+            );
+        }
+    });
+  }
+
+  /**
    *
    * @param radius radius of body in km
    * @returns

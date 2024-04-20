@@ -7,8 +7,9 @@ import { TimeUnit, timePeriodToUnits } from "../system/time.ts";
  * 
  * The time scales are also mirrored into negative range.
  * 
- * Calling setCurrentScale does not necessarily need to match a
- * predetermined scale.
+ * Calling setCurrentScale does not need to match a
+ * predetermined scale; will use scale passed in as argument
+ * but with subsequent next/prev matching next/prev closest scale.
  */
 export class TimeScaleProvider {
 
