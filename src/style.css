@@ -8,7 +8,7 @@ html, body {
 }
 
 .selectedSystemLabel {
-  font-size: large;
+  text-shadow: 1px 1px 3px black, 0 0 1em black, 0 0 0.2em black;
   color: #f89406;
   font-family: sans-serif;
   padding: 2px;
@@ -16,7 +16,7 @@ html, body {
 }
 
 .selectedSystemLabel.info {
-  font-size: small
+  font-size:smaller;
 }
 
 .label {
