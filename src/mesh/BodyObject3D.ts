@@ -1,5 +1,5 @@
 import { BufferGeometry, Group, Material, Mesh, NormalBufferAttributes, Object3D, Object3DEventMap, Vector3 } from 'three';
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { angleTo, toDeg, toRad } from '../system/geometry.ts';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth.ts";
 import { BodySystem } from '../scene/BodySystem.ts';

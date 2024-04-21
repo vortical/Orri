@@ -1,6 +1,6 @@
 import { BodySystem } from "../scene/BodySystem.ts";
 import { PlanetaryBodyObject3D } from "./PlanetBodyObject3D.ts";
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 
 export class MoonBodyObject3D extends PlanetaryBodyObject3D {
 

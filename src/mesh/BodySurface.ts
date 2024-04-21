@@ -1,6 +1,6 @@
 import { Material, Mesh, MeshPhongMaterial, MeshPhongMaterialParameters, SphereGeometry, Vector2 } from "three";
 import { CelestialBodyPart } from "./CelestialBodyPart";
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { MaterialProperties } from "../domain/models.ts";
 import { textureLoader } from "../services/textureLoader.ts";
 import { DistanceUnits, convertDistance } from "../system/distance.ts";

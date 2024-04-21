@@ -1,4 +1,4 @@
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { LightProperties } from '../domain/models.ts';
 import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters, MeshPhongMaterial } from "three";
 import { BodyObject3D } from './BodyObject3D.ts';

@@ -1,7 +1,7 @@
 import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim } from "../system/Dim.ts";
 import { LatLon } from "../system/LatLon.ts";
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
@@ -436,11 +436,11 @@ export class BodySystem {
         this.renderer.setAnimationLoop(async () => {
             const delta = timer.getDelta()!;
             await this.tick(delta);
-            this.controls.update();
-
+            
             if (this.controls.enabled) {
                 this.followTarget(this.target);
             }
+            this.controls.update();
             TWEEN.update();
             this.render();
             this.updateStats();

@@ -1,7 +1,7 @@
 import { Mesh, MeshPhongMaterial, SphereGeometry } from "three";
 import { CelestialBodyPart } from "./CelestialBodyPart";
 import { Clock } from "../system/Clock.ts";
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { textureLoader } from "../services/textureLoader.ts";
 import { DistanceUnits, convertDistance } from "../system/distance.ts";
 import { toRad } from "../system/geometry.ts";

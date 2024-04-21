@@ -213,6 +213,8 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
         bodySystem.setCameraUp(this.computeDesiredCameraUp());
         const cameraPosition = bodySystem.camera.position.clone();
         const target = bodySystem.controls.target.clone();
+
+        bodySystem.controls
         bodySystem.controls.target.set(bodyObject3D.body.position.x / 1000, bodyObject3D.body.position.y / 1000, bodyObject3D.body.position.z / 1000);
         const locationPin = bodySystem.getLocationPin();
         const locationPinPosition = locationPin!.getLocationPinWorldPosition();

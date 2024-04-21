@@ -1,4 +1,4 @@
-import { Body } from "../domain/Body.ts";
+import { Body } from "../body/Body.ts";
 import { BodyProperties, KinematicObject, VectorComponents } from "../domain/models.ts";
 
 

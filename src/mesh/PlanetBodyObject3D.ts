@@ -1,4 +1,4 @@
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { Mesh, Quaternion, Vector3 } from "three";
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BodySystem } from '../scene/BodySystem.ts';

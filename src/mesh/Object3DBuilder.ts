@@ -1,4 +1,4 @@
-import { Body } from "../domain/Body.ts";
+import { Body } from "../body/Body.ts";
 import { BodyObject3D } from "./BodyObject3D";
 import { StarBodyObject3D } from "./StarBodyObject3D";
 import { PlanetaryBodyObject3D } from "./PlanetBodyObject3D";

@@ -1,6 +1,6 @@
 import { Mesh, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { LatLon } from "../system/LatLon.ts";
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { BodyObject3D } from "./BodyObject3D.ts";
 import { Vector } from "../system/Vector.ts";
 import { BodyAxes } from "../system/geometry.ts";

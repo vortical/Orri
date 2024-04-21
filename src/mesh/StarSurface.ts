@@ -1,5 +1,5 @@
 import { Material, Mesh, MeshBasicMaterial, MeshBasicMaterialParameters, SphereGeometry } from 'three';
-import { Body } from '../domain/Body.ts';
+import { Body } from '../body/Body.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 
 import { MaterialProperties } from '../domain/models.ts';

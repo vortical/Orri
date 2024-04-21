@@ -1,4 +1,4 @@
-import { Body } from '../domain/Body.ts';
+import { Body } from './Body.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { zipCombine } from '../system/functions.ts';
 import { TimeUnit, timeMsToUnits } from '../system/time.ts';

@@ -1,7 +1,7 @@
 import './style.css';
 import { BodySystem } from './scene/BodySystem.ts'
 import { NBodySystemUpdater } from './body/NBodySystemUpdater.ts';
-import { Body } from './domain/Body.ts';
+import { Body } from './body/Body.ts';
 import { SimpleUI, userNotify } from './ui/ui.ts';
 import LocationBar from './ui/LocationBar.ts';
 import { DataService } from './services/dataservice.ts';
