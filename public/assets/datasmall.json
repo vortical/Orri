@@ -227,6 +227,139 @@
             "textureUri": "/assets/textures/planets/saturn_map.jpg"
         }
     },
+
+    {
+        "type": "moon",
+        "name": "Titan",
+        "parent": "Saturn",
+        "mass": 13.452e22,
+        
+        "radius": 2.5747e6,
+        "castShadow": true,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 15.945
+        },
+        "textures": {
+            "textureUri": "/assets/textures/planets/titan_map.jpg"
+        }
+    },
+    {
+        "type": "moon",
+        "name": "Rhea",
+        "parent": "Saturn",
+        "mass": 2.3064854e21,
+        
+        "radius": 763500,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 4.518212
+        },
+        "textures": {
+            "textureUri": "/assets/textures/planets/rhea_map.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Mimas",
+        "parent": "Saturn",
+        "mass": 3.75094e19,
+        
+        "radius": 198200,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 0.942421959
+        },
+        "textures": {
+            "author": "oleg-pluton",
+            "textureUri": "/assets/textures/planets/mimas_map.jpg"
+        }
+    },
+    {
+        "type": "moon",
+        "name": "Enceladus",
+        "parent": "Saturn",
+        "mass": 1.080318e20,
+        
+        "radius": 252100,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 1.370218
+        },
+        "textures": {
+            "author": "jpl",
+            "textureUri": "/assets/textures/planets/enceladus_map.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Tethys",
+        "parent": "Saturn",
+        "mass":  6.1749e20,
+        
+        "radius": 531100,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 1.887802
+        },
+        "textures": {
+            "author": "jpl",
+            "textureUri": "/assets/textures/planets/tethys_map.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Dione",
+        "parent": "Saturn",
+        "mass":  1.0954868e21,
+        
+        "radius": 561400,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 2.736915
+        },
+        "textures": {
+            "author": "jpl",
+            "textureUri": "/assets/textures/planets/dione_map.jpg"
+        }
+    },
+
+
+    {
+        "type": "moon",
+        "name": "Iapetus",
+        "parent": "Saturn",
+        "mass":  1.80565e21,
+        
+        "radius": 734400,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 79.3215
+        },
+        "textures": {
+            "author": "jpl",
+            "textureUri": "/assets/textures/planets/iapetus_map.jpg"
+        }
+    },
+
+
+
     {
         "type": "planet",
         "name": "Uranus",
