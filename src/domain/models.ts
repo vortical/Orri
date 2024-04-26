@@ -59,7 +59,7 @@ export type RingProperties = {
     colorMapUri?: string;
 };
 
-export type BodyType = "star" | "planet" | "moon" | "model";
+export type BodyType = "star" | "planet" | "moon" ;
 
 
 export type BodyProperties = {
