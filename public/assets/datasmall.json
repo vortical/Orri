@@ -114,6 +114,42 @@
         }
     },
     {
+        "type": "moon",
+        "name": "Phobos",
+        "parent": "Mars",
+        "mass": 1.060e16,
+        "radius": 11080,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 0.31891023
+        },
+        "gltf": {
+            "uri": "/assets/gltf/planets/phobos.glb",
+            "scale": 1,
+            "credits": "https://science.nasa.gov/resource/phobos-3d-model/"
+        }
+    },
+    {
+        "type": "moon",
+        "name": "Deimos",
+        "parent": "Mars",
+        "mass": 1.51e15,
+        "radius": 6270,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 1.791,
+        "sideralRotationPeriod": {
+            "hours": 30.312
+        },
+        "gltf": {
+            "uri": "/assets/gltf/planets/deimos.glb",
+            "scale": 1,
+            "credits": "https://science.nasa.gov/resource/deimos-3d-model/"
+        }
+    },
+    {
         "type": "planet",
         "name": "Jupiter",
         "parent": "Sun",
@@ -227,13 +263,11 @@
             "textureUri": "/assets/textures/planets/saturn_map.jpg"
         }
     },
-
     {
         "type": "moon",
         "name": "Titan",
         "parent": "Saturn",
         "mass": 13.452e22,
-        
         "radius": 2.5747e6,
         "castShadow": true,
         "receiveShadow": false,
@@ -250,7 +284,6 @@
         "name": "Rhea",
         "parent": "Saturn",
         "mass": 2.3064854e21,
-        
         "radius": 763500,
         "castShadow": false,
         "receiveShadow": false,
@@ -262,13 +295,11 @@
             "textureUri": "/assets/textures/planets/rhea_map.jpg"
         }
     },
-
     {
         "type": "moon",
         "name": "Mimas",
         "parent": "Saturn",
         "mass": 3.75094e19,
-        
         "radius": 198200,
         "castShadow": false,
         "receiveShadow": false,
@@ -286,7 +317,6 @@
         "name": "Enceladus",
         "parent": "Saturn",
         "mass": 1.080318e20,
-        
         "radius": 252100,
         "castShadow": false,
         "receiveShadow": false,
@@ -299,13 +329,11 @@
             "textureUri": "/assets/textures/planets/enceladus_map.jpg"
         }
     },
-
     {
         "type": "moon",
         "name": "Tethys",
         "parent": "Saturn",
-        "mass":  6.1749e20,
-        
+        "mass": 6.1749e20,
         "radius": 531100,
         "castShadow": false,
         "receiveShadow": false,
@@ -318,13 +346,11 @@
             "textureUri": "/assets/textures/planets/tethys_map.jpg"
         }
     },
-
     {
         "type": "moon",
         "name": "Dione",
         "parent": "Saturn",
-        "mass":  1.0954868e21,
-        
+        "mass": 1.0954868e21,
         "radius": 561400,
         "castShadow": false,
         "receiveShadow": false,
@@ -337,14 +363,11 @@
             "textureUri": "/assets/textures/planets/dione_map.jpg"
         }
     },
-
-
     {
         "type": "moon",
         "name": "Iapetus",
         "parent": "Saturn",
-        "mass":  1.80565e21,
-        
+        "mass": 1.80565e21,
         "radius": 734400,
         "castShadow": false,
         "receiveShadow": false,
@@ -357,9 +380,6 @@
             "textureUri": "/assets/textures/planets/iapetus_map.jpg"
         }
     },
-
-
-
     {
         "type": "planet",
         "name": "Uranus",

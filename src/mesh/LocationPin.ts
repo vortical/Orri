@@ -48,7 +48,7 @@ export class LocationPin {
      */
     getLocationPinNormal(): Vector3 {
         const pinPosition = this.getMesh().getWorldPosition(new Vector3());
-        const centerBodyPosition = this.bodyObject3D.getSurfaceMesh().getWorldPosition(new Vector3());
+        const centerBodyPosition = this.bodyObject3D.getSurface().getWorldPosition(new Vector3());
         return pinPosition.sub(centerBodyPosition).normalize();
     }
 

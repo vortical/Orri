@@ -39,6 +39,11 @@ export type MaterialProperties = {
     color?: string;
 }
 
+export type GLTFModelProperties = {
+    uri: string,
+    baseScale: number
+}
+
 export type LightProperties = {
     color?: string;
     intensity?: number;
@@ -54,7 +59,7 @@ export type RingProperties = {
     colorMapUri?: string;
 };
 
-export type BodyType = "star" | "planet" | "moon";
+export type BodyType = "star" | "planet" | "moon" | "model";
 
 
 export type BodyProperties = {
@@ -89,7 +94,10 @@ export type BodyProperties = {
 
     rings?: RingProperties;
     color?: string;
-    textures: MaterialProperties;
+    textures?: MaterialProperties;
+    gltf?: GLTFModelProperties;
+
+    
 }
 
 export enum ShadowType {

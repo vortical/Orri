@@ -15,8 +15,8 @@ export class AltitudeAzimuth {
   toString(): string {
     const trendCharacter = this.trend == -1 ? '\u2193' : this.trend == 1 ? '\u2191' : '';
     const northOrSouth = this.elevation < 0 ? "S" : "N";
-    const elevationString = Math.abs(this.elevation).toLocaleString(undefined, { maximumFractionDigits: 1 });
-    const azimuthString = this.azimuth.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    const elevationString = Math.abs(this.elevation).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const azimuthString = this.azimuth.toLocaleString(undefined, { maximumFractionDigits: 2 });
     return `${elevationString}\u00B0${northOrSouth}${trendCharacter}, ${azimuthString}\u00B0`;
   }
 

@@ -122,8 +122,8 @@ export class StarBodyObject3D extends BodyObject3D {
         return light;
     }
 
-    getSurfaceMesh(): Mesh {
-        return this.surface.getMesh();
+    getSurface(): Object3D {
+        return this.surface.getObject3D();
     }
 
     areShadowsEnabled(): boolean {
@@ -131,7 +131,7 @@ export class StarBodyObject3D extends BodyObject3D {
     }
 
     /**
-     * The shadowingLight and pointlight's intensities have a total value of this.lightProperties.intensity.
+     * The 'shadowing'Light and pointlight's intensities have a total value of this.lightProperties.intensity.
      * When shadowingLight is active, it will have SHADOW_LIGHT_TO_POINT_LIGHT_RATIO; hence if its total intensity is 3 and the ratio is 2,
      * shadowlight will have intensity 2 and pointlight will have intensity 1.
      * 

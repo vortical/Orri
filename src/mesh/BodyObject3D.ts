@@ -9,6 +9,7 @@ import { LocationPin } from './LocationPin.ts';
 import { Vector } from '../system/Vector.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 import { LatLon } from '../system/LatLon.ts';
+import { BodySurface } from './BodySurface.ts';
 
 
 /**
@@ -22,6 +23,9 @@ import { LatLon } from '../system/LatLon.ts';
  * The main role of the BodyObject3D is to keep the Object3D in sync with the Body.
  */
 export abstract class BodyObject3D extends CelestialBodyPart {
+    /**
+     * This is the object3d representing this object. It's a Group instance.
+     */
     readonly object3D: Object3D;
     readonly body: Body;
     readonly bodySystem: BodySystem;
@@ -31,15 +35,15 @@ export abstract class BodyObject3D extends CelestialBodyPart {
 
     constructor(body: Body, bodySystem: BodySystem) {
         super();
+        this.object3D = new Group();
         this.body = body;
         this.bodySystem = bodySystem;
-        this.object3D = new Group();
         this.labels = new ObjectLabels(this);
         this.object3D.add(...this.labels.getCSS2DObjects());
     
     }
 
-    abstract getSurfaceMesh(): Mesh;
+    abstract  getSurface(): Object3D;
 
     getObject3D(): Object3D {
         return this.object3D;
@@ -102,7 +106,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     }
 
     addLocationPin(locationPin: LocationPin): void {
-        this.getSurfaceMesh().add(locationPin.getMesh());
+        this.getSurface().add(locationPin.getMesh());
         this.pins.push(locationPin);
     }
 
