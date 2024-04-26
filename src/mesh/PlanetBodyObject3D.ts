@@ -1,10 +1,11 @@
 import { Body } from '../body/Body.ts';
-import { Mesh, Quaternion, Vector3 } from "three";
+import { Mesh, Object3D, Quaternion, Vector3 } from "three";
 import { BodyObject3D } from './BodyObject3D.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { Rings } from './Rings.ts';
 import { Atmosphere } from './Atmosphere.ts';
 import { BodySurface } from './BodySurface.ts';
+import { BodySurfaceBuilder } from './BodySurfaceBuilder.ts';
 
 export class PlanetaryBodyObject3D extends BodyObject3D {
     readonly surface: BodySurface;
@@ -12,7 +13,7 @@ export class PlanetaryBodyObject3D extends BodyObject3D {
     constructor(body: Body, bodySystem: BodySystem) {
         super(body, bodySystem);
 
-        const surface = BodySurface.create(body);
+        const surface = BodySurfaceBuilder.create(body, bodySystem);
         this.surface = surface;
         this.addPart(surface);
         this.addPart(Rings.create(body));
@@ -21,7 +22,7 @@ export class PlanetaryBodyObject3D extends BodyObject3D {
         this.getObject3D().applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
     }
 
-    getSurfaceMesh(): Mesh {
-        return this.surface.getMesh();
+    getSurface(): Object3D {
+        return this.surface.getObject3D();
     }
 }

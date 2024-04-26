@@ -18,7 +18,7 @@ export class Atmosphere extends CelestialBodyPart {
         super();
         this.clock = clock;
         const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
-        const materialProperties = body.textures;
+        const materialProperties = body.textures!;
 
         const mesh = new Mesh(
             new SphereGeometry(radiuskm + altitude, WIDTH_SEGMENTS, HEIGHT_SEGMENTS),
@@ -31,7 +31,7 @@ export class Atmosphere extends CelestialBodyPart {
     }
 
     static create(body: Body, clock: Clock): Atmosphere | undefined {
-        if (body.textures.atmosphereUri == undefined) return undefined;
+        if (body.textures?.atmosphereUri == undefined) return undefined;
         return new Atmosphere(body, clock);
     }
 

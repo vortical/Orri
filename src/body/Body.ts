@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vector } from '../system/Vector.ts';
-import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties } from '../domain/models.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties } from '../domain/models.ts';
 import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
@@ -63,10 +63,11 @@ export class Body {
     color: string;
     // things that change: speeds, postitions, axis directions...
     kinematics!: KinematicObject;
-    textures: MaterialProperties;
+    textures?: MaterialProperties;
+    gltf?: GLTFModelProperties;
 
 
-    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings, textures }: BodyProperties) {
+    constructor({ type, name, parent, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings, textures, gltf }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parent;
@@ -82,6 +83,7 @@ export class Body {
         this.rings = rings;
         this.color = color;
         this.textures = textures;
+        this.gltf = gltf;
     }
 
     /**

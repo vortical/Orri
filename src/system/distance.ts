@@ -7,6 +7,14 @@ export const DistanceUnits = {
 
 export type DistanceUnit = typeof DistanceUnits[keyof typeof DistanceUnits];
 
+/**
+ * Converts the source argument from sourceUnits to targetUnits
+ * 
+ * @param source distance value in source Units
+ * @param sourceUnits 
+ * @param targetUnits 
+ * @returns source value converted to target Units
+ */
 export function convertDistance(source: number, sourceUnits: DistanceUnit, targetUnits: DistanceUnit): number {
     return source * sourceUnits.conversion / targetUnits.conversion;
 }

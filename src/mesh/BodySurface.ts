@@ -1,78 +1,36 @@
-import { Material, Mesh, MeshPhongMaterial, MeshPhongMaterialParameters, SphereGeometry, Vector2 } from "three";
+import { Object3D } from "three";
 import { CelestialBodyPart } from "./CelestialBodyPart";
 import { Body } from '../body/Body.ts';
-import { MaterialProperties } from "../domain/models.ts";
-import { textureLoader } from "../services/textureLoader.ts";
-import { DistanceUnits, convertDistance } from "../system/distance.ts";
+import { BodySystem } from "../scene/BodySystem.ts";
 
 
-const WIDTH_SEGMENTS = 64;
-const HEIGHT_SEGMENTS = 64;
+export abstract class BodySurface extends CelestialBodyPart {
 
-
-export class BodySurface extends CelestialBodyPart {
-
-    readonly mesh: Mesh;
+    
+    readonly object3D: Object3D;
     readonly body: Body;
 
-    constructor(body: Body) {
+    constructor(body: Body,  bodySystem: BodySystem) {
         super();
-        const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
-        const materialProperties = body.textures;
-        const geometry = new SphereGeometry(radiuskm, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
-        const material = createBodySurfaceMaterial(materialProperties);
-        const mesh = new Mesh(geometry, material);
-        mesh.name = body.name;
-        mesh.userData = { type: "surface" };
-        mesh.receiveShadow = body.receiveShadow;
-        mesh.castShadow = body.castShadow;
-        this.mesh = mesh;
+        const object3D = this.createSurfaceObject3D(body, bodySystem);
+        object3D.name = body.name;
+        object3D.userData = { type: "surface" };
+        object3D.receiveShadow = body.receiveShadow;
+        object3D.castShadow = body.castShadow;
+        this.object3D = object3D;
         this.body = body;
     }
 
-    static create(body: Body): BodySurface {
-        return new BodySurface(body);
+    getObject3D(): Object3D {
+        return this.object3D;
     }
 
-    getMesh(): Mesh {
-        return this.mesh;
-    }
-
-    getObject3D(): Mesh {
-        return this.getMesh();
-    }
-
+    /**
+     * Calculate sideral rotation
+     */
     updatePart(): void {
         this.getObject3D().rotation.set(this.body.sideralRotation.x, this.body.sideralRotation.y, this.body.sideralRotation.z);
     }
+
+    abstract createSurfaceObject3D(body: Body,  bodySystem: BodySystem): Object3D;    
 }
-
-function createBodySurfaceMaterial(materialProperties: MaterialProperties): Material {
-
-    const params: MeshPhongMaterialParameters = {}
-
-    if (materialProperties.textureUri) {
-        params.map = textureLoader.load(materialProperties.textureUri);
-    }
-
-    if (materialProperties.normalUri) {
-        params.normalMap = textureLoader.load(materialProperties.normalUri);
-        params.normalScale = materialProperties.normalMapScale ? new Vector2(materialProperties.normalMapScale, materialProperties.normalMapScale) : new Vector2(1, 1);
-    }
-
-    if (materialProperties.bumpMapUri) {
-        params.bumpMap = textureLoader.load(materialProperties.bumpMapUri);
-        params.bumpScale = materialProperties.bumpMapScale || 1;
-    }
-
-    if (materialProperties.specularMapUri) {
-        params.specularMap = textureLoader.load(materialProperties.specularMapUri);
-    }
-
-    if (materialProperties.color) {
-        params.color = materialProperties.color;
-    }
-
-    return new MeshPhongMaterial(params);
-}
-

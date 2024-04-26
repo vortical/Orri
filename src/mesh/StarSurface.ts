@@ -1,4 +1,4 @@
-import { Material, Mesh, MeshBasicMaterial, MeshBasicMaterialParameters, SphereGeometry } from 'three';
+import { Material, Mesh, MeshBasicMaterial, MeshBasicMaterialParameters, Object3D, SphereGeometry } from 'three';
 import { Body } from '../body/Body.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 
@@ -11,7 +11,7 @@ const HEIGHT_SEGMENTS = 64;
 
 export class StarSurface extends CelestialBodyPart {
 
-    readonly mesh: Mesh;
+    readonly surfaceObject3D: Object3D;
     readonly body: Body;
 
     constructor(body: Body) {
@@ -19,11 +19,11 @@ export class StarSurface extends CelestialBodyPart {
         const radiuskm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
         const materialProperties = body.textures;
         const geometry = new SphereGeometry(radiuskm, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
-        const material = createStarSurfaceMaterial(materialProperties);
+        const material = createStarSurfaceMaterial(materialProperties!);
         const mesh = new Mesh(geometry, material);
         mesh.name = body.name;
         mesh.userData = { type: "star" };
-        this.mesh = mesh;
+        this.surfaceObject3D = mesh;
         this.body = body;
     }
 
@@ -31,12 +31,8 @@ export class StarSurface extends CelestialBodyPart {
         return new StarSurface(body);
     }
 
-    getMesh(): Mesh {
-        return this.mesh;
-    }
-
-    getObject3D(): Mesh {
-        return this.getMesh();
+    getObject3D(): Object3D {
+        return this.surfaceObject3D;
     }
 
     updatePart(): void {

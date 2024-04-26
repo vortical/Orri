@@ -145,7 +145,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         }));
     gui.add(options, "getLocation").name('Use Browser Location');
 
-    const fovController = gui.add(options, "fov", 0.05, 90, 0.1).name('Field Of Vue')
+    const fovController = gui.add(options, "fov", 0.0001, 90, 0.0001).name('Field Of Vue')
         .onChange((v: number) => bodySystem.setFOV(v));
 
     const labelsSettingsfolder = gui.addFolder('Labels Settings');
