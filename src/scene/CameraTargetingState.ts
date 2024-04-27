@@ -31,7 +31,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     abstract cameraMode: CameraMode;
     max_distance_ratio: number;
 
-    constructor(bodySystem: BodySystem, max_distance_ratio: number = 75) {
+    constructor(bodySystem: BodySystem, max_distance_ratio: number = 50) {
         this.bodySystem = bodySystem;
         this.max_distance_ratio = max_distance_ratio;
 
@@ -44,8 +44,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         }
 
         bodySystem.setCameraUp(this.computeDesiredCameraUp());
-        bodySystem.camera.near = this.CAMERA_NEAR;
-        bodySystem.camera.updateProjectionMatrix();
+        this.bodySystem.setCameraNear(this.CAMERA_NEAR);
     }
 
     computeDesiredCameraUp(): Vector3 {
@@ -53,13 +52,25 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     }
 
     postTargetSet(bodyObject3D: BodyObject3D) {
+        
         this.bodySystem.controls.minDistance = this.minCameraDistance(bodyObject3D);
+        this.bodySystem.setCameraNear(bodyObject3D.body.radius / 1000);
     }
 
+    /**
+     * What is the desired min distance when camera targeting a 3d body.
+     * 
+     * Camera at (1.5 * radius) from surface.
+     * 
+     * @param bodyObject3D 
+     * @returns 
+     */
     minCameraDistance(bodyObject3D: BodyObject3D) {
         const bodyRadius = bodyObject3D.body.radius / 1000
         return bodyRadius + (1.5 * bodyRadius);
     }
+
+
 
     /**
      * Pretty Lerp of the camera towards the target.     * 
@@ -155,7 +166,7 @@ export class LookAtTargetCameraMode extends OrbitingCameraMode {
 
 export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingState {
 
-    readonly CAMERA_NEAR = 1;
+    readonly CAMERA_NEAR = 1; // ??? because field of vue?
     bodySystem: BodySystem;
     cameraMode = CameraModes.ViewTargetFromSurface;
 
@@ -164,8 +175,7 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
         const pinNormal = this.bodySystem.locationPin?.getLocationPinNormal();
         this.bodySystem.locationPin!.mesh.visible = false;
         this.bodySystem.setCameraUp(pinNormal);
-        this.bodySystem.camera.near = this.CAMERA_NEAR;
-        this.bodySystem.camera.updateProjectionMatrix();
+        this.bodySystem.setCameraNear(this.CAMERA_NEAR);
     }
 
     computeDesiredCameraUp(): Vector3 {

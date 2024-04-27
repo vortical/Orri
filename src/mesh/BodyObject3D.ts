@@ -128,9 +128,9 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     }
 
     /*
-     * Limit the label updates to 10 per second.
+     * Limit the label updates to 20 per second.
      */
-    updateLabelsInvoker = throttle(100, this, () => this.updateLabels());
+    updateLabelsInvoker = throttle(1000/20, this, () => this.updateLabels());
 
     updateLabels(): void {
         this.labels.updateBodyLabels();

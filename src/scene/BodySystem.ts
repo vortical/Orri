@@ -51,7 +51,7 @@ export type BodySystemOptionsState = {
     targettingCameraMode?: CameraMode;
 };
 
-const CAMERA_NEAR = 1000;
+const CAMERA_NEAR = 500;
 const CAMERA_FAR = 13000000000;
 
 
@@ -138,6 +138,23 @@ export class BodySystem {
         
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this)
         this.cameraTargetingState.postTargetSet(this.target);
+    }
+
+    /**
+     * Moving near frustrum plane.
+     * 
+     * 
+     * @param valueInKm 
+     * @returns 
+     */
+    setCameraNear(valueInKm: number) {
+        const near = Math.min(valueInKm, CAMERA_NEAR);
+
+        if (this.camera.near == near){
+            return;        
+        }
+        this.camera.near = near;
+        this.camera.updateProjectionMatrix();        
     }
 
     setSystemTime(datetime: string | Date) {
