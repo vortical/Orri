@@ -404,7 +404,60 @@
             "normalUri": "/assets/textures/planets/uranus_normal.jpg"
         }
     },
-
+    {
+        "type": "moon",
+        "name": "Cordelia",
+        "parent": "Uranus",
+        "mass": 6.08e16,
+        "radiusfoo": "50,36,36",
+        "radius": 22000,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 0.33503384
+        },
+        "textures": {
+            "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
+            "textureUri": "/assets/textures/planets/puck_map.jpg"
+        }
+    },    
+    {
+        "type": "moon",
+        "name": "Juliet",
+        "parent": "Uranus",
+        "mass": 3.871e17,
+        "radiusfoo":"(150 × 74 × 74 km)",
+        "radius": 55000,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 0.493065490
+        },
+        "textures": {
+            "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
+            "textureUri": "/assets/textures/planets/puck_map.jpg"
+        }
+    },
+    {
+        "type": "moon",
+        "name": "Portia",
+        "parent": "Uranus",
+        "mass": 1.1671e18 ,
+        "radiusfoo":"(156 × 126)",
+        "radius": 67000,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 0.5131959201
+        },
+        "textures": {
+            "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
+            "textureUri": "/assets/textures/planets/puck_map.jpg"
+        }
+    },
     
     {
         "type": "moon",
@@ -423,6 +476,97 @@
             "textureUri": "/assets/textures/planets/puck_map.jpg"
         }
     },
+
+    {
+        "type": "moon",
+        "name": "Miranda",
+        "parent": "Uranus",
+        "mass": 6.293e19 ,
+        "radius": 235000,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 1.413479
+        },
+        "textures": {
+            "author": "https://www.johnstonsarchive.net/spaceart/cylmaps.html",
+            "textureUri": "/assets/textures/planets/miranda_map.jpg"
+        }
+    },
+    {
+        "type": "moon",
+        "name": "Ariel",
+        "parent": "Uranus",
+        "mass": 1.2331e21 ,
+        "radius": 578900,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 2.520
+        },
+        "textures": {
+            "author": "https://stevealbers.net/albers/sos/sos.html",
+            "textureUri": "/assets/textures/planets/ariel_map.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Umbriel",
+        "parent": "Uranus",
+        "mass": 1.2885e21 ,
+        "radius": 584700,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 4.144
+        },
+        "textures": {
+            "author": "https://stevealbers.net/albers/sos/sos.html",
+            "textureUri": "/assets/textures/planets/umbriel_map.jpg"
+        }
+    },
+
+
+    {
+        "type": "moon",
+        "name": "Titania",
+        "parent": "Uranus",
+        "mass": 3.4550e21 ,
+        "radius": 788400,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 8.706234
+        },
+        "textures": {
+            "author": "https://stevealbers.net/albers/sos/sos.html",
+            "textureUri": "/assets/textures/planets/titania_map.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Oberon",
+        "parent": "Uranus",
+        "mass": 3.1104e21 ,
+        "radius": 761400,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 13.463234
+        },
+        "textures": {
+            "author": "https://stevealbers.net/albers/sos/sos.html",
+            "textureUri": "/assets/textures/planets/oberon_map.jpg"
+        }
+    },
+
 
     {
         "type": "planet",
