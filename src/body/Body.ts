@@ -135,8 +135,8 @@ export class Body {
         const baseRotation = toRad(kinematics.axis?.rotation || 0);
 
         this.axisDirection = kinematics.axis?.direction ? Vector.fromVectorComponents(kinematics.axis.direction) : undefined;
-        this.velocity = Vector.fromVectorComponents(kinematics.velocity);
-        this.position = Vector.fromVectorComponents(kinematics.position);
+        this.velocity = Vector.fromVectorComponents(kinematics.ephemeris.velocity);
+        this.position = Vector.fromVectorComponents(kinematics.ephemeris.position);
 
         // RotationCalculator; rotation are calculated from:
         //  baseRotation,

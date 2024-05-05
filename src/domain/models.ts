@@ -4,6 +4,12 @@ export interface VectorComponents {
     z: number;
 }
 
+
+export interface Ephemeris {
+    velocity: VectorComponents;
+    position: VectorComponents;
+}
+
 export interface Axis {
     // rotation based off the 'prime meridian' of the body.
     rotation?: number
@@ -13,9 +19,8 @@ export interface Axis {
 
 export interface KinematicObject {
     name: string;
+    ephemeris: Ephemeris;
     axis?: Axis,
-    velocity: VectorComponents
-    position: VectorComponents;
     datetime: Date;
 }
 

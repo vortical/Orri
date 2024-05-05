@@ -404,6 +404,26 @@
             "normalUri": "/assets/textures/planets/uranus_normal.jpg"
         }
     },
+
+    
+    {
+        "type": "moon",
+        "name": "Puck",
+        "parent": "Uranus",
+        "mass": 1.91e18 ,
+        "radius": 81000,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 0.76183287
+        },
+        "textures": {
+            "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
+            "textureUri": "/assets/textures/planets/puck_map.jpg"
+        }
+    },
+
     {
         "type": "planet",
         "name": "Neptune",
