@@ -586,6 +586,42 @@
         }
     },
     {
+        "type": "moon",
+        "name": "Triton",
+        "parent": "Neptune",
+        "mass": 2.1389e22 ,
+        "radius": 1353.400e3,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 5.876854
+        },
+        "textures": {
+            "author": "https://www.deviantart.com/neptuneprogaming/art/Triton-Texture-Map-713512330",
+            "textureUri": "/assets/textures/planets/triton_map.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Proteus",
+        "parent": "Neptune",
+        "mass": 3.10e19 ,
+        "radius": 209e3,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 1.12231477
+        },
+        "textures": {
+            "author": "https://solarviews.com/thumb/nep/proteus2.gif",
+            "textureUri": "/assets/textures/planets/proteus_map.jpg"
+        }
+    },
+
+    {
         "type": "planet",
         "name": "Pluto",
         "parent": "Sun",
