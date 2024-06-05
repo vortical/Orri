@@ -14,14 +14,14 @@ import { VectorComponents } from '../domain/models.ts';
  * 
  * The plan is:
  * Introduce a few different implementations, each with their own use cases:
- * - using center of mass/barycenters...
- * - using parent/child hierachies where a child's acceleration comes only from its parent/grandparents and siblings. 
- * 
- * Consider running some of these in webworkers
+ * - Leveraging octree
+ * - Leveraging webworkers
+ *  
  */
 export class NBodySystemUpdater implements BodySystemUpdater {
   isOneTimeUpdate = false;
   isEnabled = true;
+  accelerations?: VectorComponents[];
 
 
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
@@ -42,25 +42,29 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   }
 
   /**
+   * updateBodyProperties based on a Leapfrog algorithm (https://en.wikipedia.org/wiki/Leapfrog_integration)
    * 
    * Calculates and updates the positions and velocities of the (n-bodies). Accelerations are
-   * based on F = GMiMj/(R*R).
-   * Ax for (Mi) = (GMj/R*R*R)* [x/mag(R)]
-   * Ay for (Mi) = (GMj/R*R*R)* [y/mag(R)]
-   * ...
-   * For each body we currently sum up all the acceleration values with all the other bodies. 
+   * based on the usual F = GMiMj/(R*R).
+   * 
+   * For each body: update positions, velocities and accelerations for time i+1 
+   * such that:
+   * 
+   * Ai = Accelerations(Xi) is the accelereration from previous update. If there is no 
+   * previous update: calculate it with existing positions.
    * 
    * For positions:
    * Xi+1 = Xi + Vi*dt + Ai*(dt*dt)/2
    * 
    * Once positions at i+1 are determined, we calculate velocities using the averages of
-   * accelerations at i and i+1; which requires another pass at gathering accelerations 
-   * based on the positions at i+1.
+   * accelerations at i and i+1;  so we calcualte accelerations based on the positions at i+1.
+   * 
+   * A(i+1) = Accelerations(Xi+1)
    *     
    * So for velocities we use:
    * Vi+1 = Vi + (Ai + Ai+1)/2*dt
    * 
-   * We do this as acceleration is not constant between i and i+1.
+   * 
    *       
    * @param bodies 
    * @param time delta 
@@ -117,19 +121,29 @@ export class NBodySystemUpdater implements BodySystemUpdater {
       return bodyAccelerations;
     }
 
-    const accelerations_i1 = nBodyAccelerations(bodies);
+    //   Ai = Accelerations(Xi) is the accelereration from previous update. If there is no 
+    //   previous update: calculate it with existing positions.
+    const accelerations_i1 = this.accelerations || nBodyAccelerations(bodies);
+
     bodies.forEach((body, index) => {
       body.position = body.nextPosition(accelerations_i1[index], time);
     });
 
     const accelerations_i2 = nBodyAccelerations(bodies);
-    const avgAccelerations = zipCombine(accelerations_i1, accelerations_i2, (a, b) => {
-      return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 }
-    });
+
+    // const avgAccelerations = zipCombine(accelerations_i1, accelerations_i2, (a, b) => {
+    //   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 }
+    // });
 
     bodies.forEach((body, index) => {
-      body.velocity = body.nextSpeed(avgAccelerations[index], time)
+      const a = accelerations_i1[index];
+      const b = accelerations_i2[index];
+      const avgAcceleration = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 };
+      body.velocity = body.nextSpeed(avgAcceleration, time)
     });
+
+    // save accelerations for next iteration.
+    this.accelerations = accelerations_i2;
 
     return bodies;
   }
