@@ -5,6 +5,7 @@ import { CameraLayer } from '../scene/CameraLayer';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth";
 import { CameraModes } from '../scene/CameraTargetingState';
 import { LocationPin } from './LocationPin';
+import { MOUSE_CLICK_ON_BODY_TOPIC } from '../system/event-types';
 
 export class ObjectLabels {
     nameLabel: NameLabel;
@@ -38,14 +39,40 @@ export class ObjectLabels {
 
     setupLabelClickHandler() {
 
-        const downclickhandler = () => {
-            this.bodyObject3D.moveToTarget();
+        // onpointerup event is not triggered from chrome on desktop (works on firefox),
+        // We workaround this by detecting a pointer down over a label then if
+        // the pointer does not move for 250ms then we trigger the handler for 
+        // the pointerUp event. 
+        // This helps mitigate users clicking on a label while using the orbit
+        // controls.
+
+
+        let timeoutId: number | undefined = undefined;
+        
+        // Invoke the uphandler 250ms if the timeout is not canceled by a 
+        // a pointer move
+        const downHandler = () => {
+            timeoutId = setTimeout(upHandler, 250);
         };
 
-        // This is a poor mans's implementation of handling pointer.
-        this.nameLabel.cssObject.element.addEventListener("pointerdown", downclickhandler);
-        this.distanceLabel.cssObject.element.addEventListener("pointerdown", downclickhandler);
-        this.altitudeAzimuthLabel.cssObject.element.addEventListener("pointerdown", downclickhandler);
+        const upHandler = () => {
+            PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, {body: this.bodyObject3D});
+            timeoutId = undefined;
+        };
+        
+        // If the pointer moves and we have timeoutId (i.e.: pointer was pressed down)
+        // then cancel the press.
+        const moveHandler = () => {
+            if(timeoutId) {
+                clearTimeout(timeoutId);  
+                timeoutId = undefined;
+            } 
+        };        
+
+        this.nameLabel.cssObject.element.onpointerdown = downHandler;
+        this.distanceLabel.cssObject.element.onpointerdown = downHandler;
+        this.altitudeAzimuthLabel.cssObject.element.onpointerdown = downHandler;
+        window.addEventListener('pointermove', moveHandler);
     }
 
     isPlanetarySystemSelected() {
@@ -55,6 +82,7 @@ export class ObjectLabels {
 
 
     clearBodyLabels() {
+        // Probably better to use css properties...
         this.getLabels().forEach((l: Label) => l.setValue(""));
     }
 
@@ -87,6 +115,7 @@ export class ObjectLabels {
         }
     };
 }
+
 
 function createCSS2DObject(center: number, textContent: string, layer: CameraLayer): CSS2DObject {
     const elementDiv = document.createElement('div');

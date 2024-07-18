@@ -94,7 +94,7 @@
         "textures": {
             "textureUri": "/assets/textures/planets/moon_map.jpg",
             "bumpMapUri": "/assets/textures/planets/moon_bump.jpg",
-            "bumpMapScale": 3
+            "bumpMapScale": 4
         }
     },
     {
