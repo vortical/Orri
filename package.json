@@ -13,18 +13,18 @@
   "devDependencies": {
     "@types/pubsub-js": "^1.8.6",
     "@types/three": "^0.160.0",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.8",
-    "vitest": "^1.2.1"
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
-    "@tweenjs/tween.js": "^23.1.1",
+    "@tweenjs/tween.js": "^23.1.2",
     "flatpickr": "^4.6.13",
-    "geo-coordinates-parser": "^1.6.6",
-    "lil-gui": "^0.19.1",
+    "geo-coordinates-parser": "^1.7.3",
+    "lil-gui": "^0.19.2",
     "lz-string": "^1.5.0",
     "pubsub-js": "^1.9.4",
     "stats.js": "^0.17.0",
-    "three": "^0.160.0"
+    "three": "^0.160.1"
   }
 }
