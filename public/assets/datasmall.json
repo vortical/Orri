@@ -45,7 +45,7 @@
         "receiveShadow": false,
         "obliquityToOrbit": 177.4,
         "sideralRotationPeriod": {
-            "days": 243.02
+            "days": 243.022
         },
         "textures": {
             "textureUri": "/assets/textures/planets/venus_map.jpg",
@@ -625,17 +625,35 @@
         "type": "planet",
         "name": "Pluto",
         "parent": "Sun",
-        "mass": 0.01303e24,
+        "mass": 1.3025e22,
         "radius": 1.188e6,
         "castShadow": false,
         "receiveShadow": false,
-        "obliquityToOrbit": 119.51,
+        "obliquityToOrbit": 122.53,
         "sideralRotationPeriod": {
             "hours": 153.2928
         },
         "textures": {
             "textureUri": "/assets/textures/planets/pluto_map.jpg",
             "bumpMapUri": "/assets/textures/planets/pluto_bump.jpg"
+        }
+    },
+
+    {
+        "type": "moon",
+        "name": "Charon",
+        "parent": "Pluto",
+        "mass": 1.5897e21 ,
+        "radius": 606e3,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 6.387221
+        },
+        "textures": {
+            "author": "https://www.deviantart.com/askaniy/art/Charon-Texture-Map-762245061",
+            "textureUri": "/assets/textures/planets/charon_map.jpg"
         }
     }
 ]
