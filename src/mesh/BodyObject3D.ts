@@ -10,6 +10,7 @@ import { Vector } from '../system/Vector.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 import { LatLon } from '../system/LatLon.ts';
 import { BodySurface } from './BodySurface.ts';
+import { OrbitalOutline } from './OrbitOutline.ts';
 
 
 /**
@@ -29,6 +30,8 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     readonly object3D: Object3D;
     readonly body: Body;
     readonly bodySystem: BodySystem;
+    readonly orbitOutline: OrbitalOutline;
+    
     readonly labels: ObjectLabels;
     pins: LocationPin[] = [];
     northPin?: LocationPin;
@@ -39,7 +42,10 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.body = body;
         this.bodySystem = bodySystem;
         this.labels = new ObjectLabels(this);
+        this.orbitOutline = new OrbitalOutline(this);
+        
         this.object3D.add(...this.labels.getCSS2DObjects());
+        this.bodySystem.scene.add(this.orbitOutline.getObject3D())
     
     }
 
@@ -123,14 +129,23 @@ export abstract class BodyObject3D extends CelestialBodyPart {
      */
     updatePart(): void {
         const body = this.body;
-        this.object3D.position.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
+        const x = body.position.x / 1000, y = body.position.y / 1000, z = body.position.z / 1000;
+        this.object3D.position.set(x, y, z);
+
         this.updateLabelsInvoker();
+        this.orbitOutline.addPosition(this.object3D.position)
+
     }
 
     /*
-     * Limit the label updates to 20 per second.
+     * Limit the label updates frequency. 20 per second
      */
     updateLabelsInvoker = throttle(1000/20, this, () => this.updateLabels());
+    // updateOrbitsInvoker = throttle(1000/30, this, () => this.updateOrbit());
+
+    // updateOrbit(): void {
+    //     this.orbitOutline.addPosition(this.object3D.position)
+    // }
 
     updateLabels(): void {
         this.labels.updateBodyLabels();

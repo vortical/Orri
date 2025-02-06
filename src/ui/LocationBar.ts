@@ -27,7 +27,7 @@ export default class LocationBar {
 
         const jsonString = JSON.stringify(state);
 
-        // strangely, the compressToEncodedURIComponent seems longer. So compression is an option.
+        // Interestingly, the compressToEncodedURIComponent is longer. So compression is an option.
         const stateString = toCompress ? LZString.compressToEncodedURIComponent(jsonString) : encodeURI(jsonString);
 
         const stateParam: ParamName = toCompress ? "zstate" : "state";

@@ -126,7 +126,7 @@ export class StarBodyObject3D extends BodyObject3D {
         return this.surface.getObject3D();
     }
 
-    areShadowsEnabled(): boolean {
+    getShadowsEnabled(): boolean {
         return this.shadowingLight !== undefined;
     }
 
@@ -140,7 +140,7 @@ export class StarBodyObject3D extends BodyObject3D {
      * will be twice as intense as shadowed areas.
      */
     #updateLightIntensities() {
-        if (this.areShadowsEnabled()) {
+        if (this.getShadowsEnabled()) {
             this.shadowingLight!.intensity = SHADOW_LIGHT_TO_POINT_LIGHT_RATIO * this.lightProperties.intensity / (1 + SHADOW_LIGHT_TO_POINT_LIGHT_RATIO);
             this.pointLight.intensity = 1 * this.lightProperties.intensity / (1 + SHADOW_LIGHT_TO_POINT_LIGHT_RATIO);
         } else {
@@ -149,7 +149,7 @@ export class StarBodyObject3D extends BodyObject3D {
     }
 
     #disableShadowLight() {
-        if (!this.areShadowsEnabled()) return;
+        if (!this.getShadowsEnabled()) return;
 
         this.shadowingLight?.removeFromParent();
         this.shadowingLight?.dispose();
@@ -158,7 +158,7 @@ export class StarBodyObject3D extends BodyObject3D {
     }
 
     #enableShadowLight() {
-        if (this.areShadowsEnabled()) return this;
+        if (this.getShadowsEnabled()) return this;
 
         const light = this.createShadowLight();
         const target = this.bodySystem.getBodyObject3DTarget().object3D;

@@ -51,13 +51,13 @@ export class SimpleUI {
  * Manage the initialValue of lil-gui controllers, if an exception arises then
  * call reset on the lil-gui component: reset rolls back the value to initialValue.
  * 
- * @param callback 
+ * @param f 
  * @returns 
  */
-function withRollback(callback: (v: any) => void) {
+function withRollback(f: (v: any) => void) {
     return function (v: any) {
         try {
-            callback.call(this, v);
+            f.call(this, v);
             this.initialValue = v;
         } catch (e) {
             this.reset();
@@ -78,12 +78,14 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         showNameLabels: bodySystem.isLayerEnabled(CameraLayer.NameLabel),
         showDistanceLabels: bodySystem.isLayerEnabled(CameraLayer.DistanceLabel),
         showAltitudeAzimuthLabels: bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel),
-        projectShadows: bodySystem.areShadowsEnabled(),
+        projectShadows: bodySystem.getShadowsEnabled(),
         shadowType: bodySystem.getShadowType(),
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
+        orbitalOutlinesEnabled: bodySystem.getOrbitalOutlinesEnabled(),
+        orbitalOutlinesOpacity: bodySystem.getOrbitalOutlinesOpacity(),
 
         pushState() {
             const state = bodySystem.getState();
@@ -162,6 +164,19 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
 
     const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
+
+    const orbitalOutlinesfolder = gui.addFolder('Orbital Outlines');
+
+    const orbitalOutlinesEnabledController = orbitalOutlinesfolder.add(options, "orbitalOutlinesEnabled").name('Show Orbital Outlines')
+        .onChange((v: boolean) => bodySystem.setOrbitalOutlinesEnabled(v));
+
+
+    const orbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "orbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbital Outlines Opacity')
+        .onChange((v: number) => bodySystem.setOrbitalOutlinesOpacity(v));
+
+
+
+    
 
     const shadowsSettingsfolder = gui.addFolder('Eclipse/shadow Settings');
 

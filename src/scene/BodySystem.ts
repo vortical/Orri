@@ -26,9 +26,16 @@ import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
 
 
+
 export type BodySystemEvent<T> = {
     topic: string;
     message: T;
+};
+
+export type OrbitalOutlineOptions = {
+    colorHue?: number;
+    opacity?: number;
+    enabled?: boolean;
 };
 
 export type BodySystemOptionsState = {
@@ -49,6 +56,10 @@ export type BodySystemOptionsState = {
     showDistance?: boolean;
     showAltitudeAzimuth?: boolean;
     targettingCameraMode?: CameraMode;
+    // put orbital outlines into their own type?
+    orbitalOutlinesEnabled?: boolean;
+    orbitalOutlinesOpacity?: number;
+
 };
 
 const CAMERA_NEAR = 500;
@@ -87,7 +98,7 @@ export class BodySystem {
         cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
         ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType = ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
         showNames = true, showDistance = true, showAltitudeAzimuth = true,
-        location, targettingCameraMode = CameraModes.FollowTarget }: BodySystemOptionsState) {
+        location, targettingCameraMode = CameraModes.FollowTarget, orbitalOutlinesEnabled=false, orbitalOutlinesOpacity=0.5 }: BodySystemOptionsState) {
 
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
@@ -115,6 +126,9 @@ export class BodySystem {
         this.scene.add(this.ambiantLight);
         this.controls.update();
         this.scene.add(...Array.from(this.bodyObjects3D.values()).map(o => o.object3D));
+        this.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
+        this.setOrbitalOutlinesOpacity(orbitalOutlinesOpacity);
+
         this.setAxesHelper(showAxes);
         this.setScale(sizeScale);
         this.setTimeScale(timeScale)
@@ -127,6 +141,7 @@ export class BodySystem {
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showDistance, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
+        this.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
 
         if (location) {
             this.setLocation(location);
@@ -242,7 +257,7 @@ export class BodySystem {
         options.fov = this.getFov();
         options.ambientLightLevel = this.getAmbiantLightLevel();
         options.showAxes = this.hasAxesHelper();
-        options.castShadows = this.areShadowsEnabled();
+        options.castShadows = this.getShadowsEnabled();
         options.shadowType = this.getShadowType();
         options.date = this.clock.getTime();
         options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
@@ -284,10 +299,33 @@ export class BodySystem {
         starBodies.forEach(it => it.setShadowsEnabled(value));
     }
 
-    areShadowsEnabled(): boolean {
+    getShadowsEnabled(): boolean {
         const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]
             .filter((bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
-        return starBodies.reduce((prev: boolean, current) => (current.areShadowsEnabled() && prev), true);
+        return starBodies.reduce((prev: boolean, current) => (current.getShadowsEnabled() && prev), true);
+    }
+
+    setOrbitalOutlinesEnabled(value: boolean) {
+
+        for(const bodyObject3D of this.bodyObjects3D.values()){
+            bodyObject3D.orbitOutline.enabled = value;
+        }
+    }
+
+    getOrbitalOutlinesEnabled(): boolean {
+        const [firstBody] = this.bodyObjects3D.values();
+        return firstBody.orbitOutline.enabled;
+    }
+
+    setOrbitalOutlinesOpacity(value: number) {
+
+        for(const bodyObject3D of this.bodyObjects3D.values()){
+            bodyObject3D.orbitOutline.opacity = value;
+        }
+    }    
+    getOrbitalOutlinesOpacity(): number {
+        const [firstBody] = this.bodyObjects3D.values();
+        return firstBody.orbitOutline.opacity;
     }
 
     hasStats(): boolean {
@@ -375,6 +413,7 @@ export class BodySystem {
         this.camera.fov = fov;
         this.camera.updateProjectionMatrix();
     }
+
 
     getBodyObject3DTarget(): BodyObject3D {
         return this.target;

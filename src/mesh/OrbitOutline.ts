@@ -1,0 +1,123 @@
+import { BufferAttribute, BufferGeometry, Float32BufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
+import { CelestialBodyPart } from "./CelestialBodyPart";
+import { BodyObject3D } from "./BodyObject3D";
+import { Vector } from "../system/Vector";
+import { Body } from '../body/Body.ts';
+
+
+const MAX_VERTICES = 360 * 20;
+
+
+function hashCode(s: String) {
+    for(var i = 0, h = 0; i < s.length; i++)
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    return h;
+}
+
+export class OrbitalOutline  {
+    line: Line;
+    readonly body: BodyObject3D;
+    material: LineBasicMaterial;
+    _colorHue!: number;
+    index: number = 0;
+
+    p0!: Vector3;
+    p1!: Vector3;
+
+    constructor(body: BodyObject3D, enabled = true, colorHue = 0.5, opacity = 0.7) {        
+        this.body = body;
+        const geometry = new BufferGeometry();
+        const positionAttribute = new Float32BufferAttribute(new Float32Array(MAX_VERTICES * 3), 3);
+        geometry.setAttribute('position', positionAttribute);
+        this.material = new LineBasicMaterial({ color: 0xffffff, opacity: opacity, transparent: true });
+        this.line = new Line(geometry, this.material);
+
+        this.colorHue = (Math.abs(hashCode(body.getName())) % 360)/360;
+        console.log("hue"+this.colorHue);
+
+
+        // this.colorHue = colorHue;
+        this.enabled = enabled;
+        this.opacity = opacity;
+    }
+
+    getObject3D(): Object3D {
+        return this.line;
+    }
+
+    resetOrbit(){
+        this.index = 0;
+    }
+
+    addPosition(position: Vector3) {
+
+        position = position.clone();
+        const positionAttributeBuffer: BufferAttribute = this.line.geometry.getAttribute('position') as BufferAttribute;
+
+        // Grab 2 previous positions and current body position
+        // Create 2 vectors from those 3 positions.
+        // If the angle between the first and second vector surpasses a threshold,
+        // then add a new point to the orbit
+        // else extend the second vector by replacing the last point in the buffer
+        // with the current position.
+
+       
+        // ensure we have at least 2 previous points/
+        if(this.index == 1){
+            if(!position.equals(this.p0)){
+                this.p1 = position;
+                positionAttributeBuffer.setXYZ(this.index++, position.x, position.y, position.z);    
+            }
+        }else if (this.index == 0) {
+            this.p0 = position;                
+            positionAttributeBuffer.setXYZ(this.index++, position.x, position.y, position.z);
+        } else if(position.equals(this.p1)){
+                return;
+        } else {
+            const v1 = Vector.substract(this.p0, this.p1);
+            const v2 = Vector.substract(this.p1, position);
+            const angle = Math.abs(v1.angleTo(v2));
+
+            // 0.25 degrees
+            if(angle > Math.PI/720) {
+                // add position
+                this.p0 = this.p1.clone();
+                this.p1 = position;
+                positionAttributeBuffer.setXYZ(this.index++, position.x, position.y, position.z);
+            } else {
+                // replace p2 with position
+                this.p1 = position;
+                positionAttributeBuffer.setXYZ(this.index-1, position.x, position.y, position.z);    
+            }
+
+        }
+
+        this.line.geometry.setDrawRange(0, this.index);
+        positionAttributeBuffer.needsUpdate = true;
+        this.line.geometry.computeBoundingSphere();
+    }
+
+    set opacity(value: number) {
+        this.material.opacity = value;
+    }
+
+    get opacity(): number {
+        return this.material.opacity;
+    }    
+
+    set colorHue(value: number) {
+        this._colorHue = value;
+        this.material.color.setHSL(value, 0.8, 0.5, SRGBColorSpace);
+    }
+    get colorHue(): number {
+        return this._colorHue;
+    }
+
+    set enabled(value: boolean) {
+        this.line.visible = value;
+    }
+
+    get enabled(): boolean {
+        return this.line.visible;
+    }    
+}
