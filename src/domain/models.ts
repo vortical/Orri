@@ -70,13 +70,13 @@ export type BodyType = "star" | "planet" | "moon" ;
 export type BodyProperties = {
     type: BodyType;
     name: string;
-    parent: string;
+    parentName: string;
     mass: number;
     radius: number;
     position?: VectorComponents;
     velocity?: VectorComponents;
-    castShadow: boolean;
-    receiveShadow: boolean;
+    castShadow?: boolean;
+    receiveShadow?: boolean;
 
     /**
      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body

@@ -24,6 +24,8 @@ import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
+import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
+import { timePeriodToMs } from '../system/time.ts';
 
 
 
@@ -63,7 +65,7 @@ export type BodySystemOptionsState = {
 };
 
 const CAMERA_NEAR = 500;
-const CAMERA_FAR = 13000000000;
+const CAMERA_FAR = 33000000000;
 
 
 /**
@@ -151,8 +153,11 @@ export class BodySystem {
             targettingCameraMode = CameraModes.FollowTarget;
         }
         
-        this.cameraTargetingState = targettingCameraMode.stateBuilder(this)
+        this.cameraTargetingState = targettingCameraMode.stateBuilder(this);
         this.cameraTargetingState.postTargetSet(this.target);
+        // 6 month orbit
+        // new OrbitPathUpdater(this).renderOrbitsForTime(timePeriodToMs({days: 10*365, hours: 6/2}),[...this.bodyObjects3D.values()]);
+        new OrbitPathUpdater(this).renderOrbitForAngle(359,[...this.bodyObjects3D.values()]);
     }
 
     /**
@@ -265,6 +270,9 @@ export class BodySystem {
         options.showAltitudeAzimuth = this.isLayerEnabled(CameraLayer.ElevationAzimuthLabel);
         options.location = this.getLocation();
         options.targettingCameraMode = this.getCameraTargetingMode();
+        options.orbitalOutlinesEnabled = this.getOrbitalOutlinesEnabled();
+        options.orbitalOutlinesOpacity = this.getOrbitalOutlinesOpacity();
+
         return options;
     }
 
