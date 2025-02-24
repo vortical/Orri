@@ -53,13 +53,13 @@ class OrbitingBodyWithPositionAttribute extends Body{
     const x = [...transferables.filter(t => t != undefined)];
 
 
-    if(x == undefined){
-      postMessage({response: response});
-    }else{
-      postMessage({response: response}, x);
-    }
-
-    
+    setTimeout(() => {
+      if(x == undefined){
+        postMessage({response: response});
+      }else{
+        postMessage({response: response}, x);
+      }
+    }, 500*Math.floor(Math.random() * 6));    
   };
 
 

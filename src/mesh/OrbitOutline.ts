@@ -107,6 +107,7 @@ export class OrbitalOutline  {
         positionAttributeBuffer.needsUpdate = true;
         this.line.geometry.computeBoundingSphere();
     }
+    
     set opacity(value: number) {
         this.material.opacity = value;
     }

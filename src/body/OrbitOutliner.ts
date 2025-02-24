@@ -10,6 +10,7 @@ import { Vector } from '../system/Vector.ts';
 
 import MyWorker from './worker?worker'
 import { BodySystem } from '../scene/BodySystem.ts';
+import { ExecutorPool } from '../system/ExecutorPool.ts';
 
 
 /**
@@ -60,11 +61,14 @@ function createOrbitingBodies(sourceBodyObjects: BodyObject3D[]): OrbitingBody[]
 export class OrbitPathUpdater { 
 
     bodySystem: BodySystem;
-    workerRunnerPool: WorkerRunnerPool;
+    workerExecutorPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: OrbitingBody[]},NamedArrayBuffer[]>;
 
     constructor(bodySystem: BodySystem){
         this.bodySystem = bodySystem;
-        this.workerRunnerPool = new WorkerRunnerPool ();
+        this.workerExecutorPool = new ExecutorPool(Array.from({length: 6}).map(() => {
+            const runner = new OrbittingOutlinerWorker();
+            return (s) => runner.run(s.orbitLength, s.orbitingBodies);        
+        }));
     }
 
     /**
@@ -93,34 +97,34 @@ export class OrbitPathUpdater {
         bodyObjects = bodyObjects.filter(o => o.body.type == "planet"|| o.body.type  == "star")
 
         const orbitingBodies = createOrbitingBodies(bodyObjects);
-        const partitions = partitionPlanets(orbitingBodies);
+        const partitions = partitionPlanetsBySystem(orbitingBodies);
 
         partitions.forEach(partition => {
-            // this in theory will block: so we need to make runnables retrieved as promises
-            const runnable = this.workerRunnerPool.getRunnable();
-            runnable.run(orbitLength, partition).then(namedOrbitArrayBuffers => { 
-                namedOrbitArrayBuffers
-                    .filter( o => o.buffer != undefined)
-                    .forEach( o => {
-                        const bodyObject3D: BodyObject3D = this.bodySystem.getBodyObject3D(o.name);
-                        bodyObject3D.orbitOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
-                        bodyObject3D.orbitOutline.needsUpdate();
-                    });
-
+            this.workerExecutorPool.execute({orbitLength:orbitLength, orbitingBodies:partition})
+                .then(namedOrbitArrayBuffers => { 
+                    namedOrbitArrayBuffers
+                        .filter( o => o.buffer != undefined)
+                        .forEach( o => {
+                            const bodyObject3D: BodyObject3D = this.bodySystem.getBodyObject3D(o.name);
+                            bodyObject3D.orbitOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
+                            bodyObject3D.orbitOutline.needsUpdate();
+                        });
             });
         });
     }
 }
 
-function partitionPlanets( orbitingBodies: OrbitingBody[]):OrbitingBody[][] {
-    // partition each planets into its own group (todo: along with moons)
+
+/**
+ * partition each planet with the sun and its moon (todo: along with moons)
+ */
+function partitionPlanetsBySystem( orbitingBodies: OrbitingBody[]):OrbitingBody[][] {
 
     function findBody(name: String): OrbitingBody|undefined {
         return orbitingBodies.find(o => o.name == name);
     }
 
     return [...orbitingBodies.map(o => {
-        // return an array with itself and the sun
         const group = [o];
         while(o.parentName != undefined){
             o = findBody(o.parentName)!;
@@ -128,45 +132,9 @@ function partitionPlanets( orbitingBodies: OrbitingBody[]):OrbitingBody[][] {
         }
         return group;
     })];
-
-
 }
 
-
-
-// Add a queue and make getRunnable be a promise
-class WorkerRunnerPool {
-    size: number;
-    pool: OrbittingOutlinerWorkerRunner[];
-    // waitQueues = {};
-    // activeRequests = {};
-    count = 0;
-
-    constructor(size: number=5){        
-        this.size = size;
-        this.pool = [];
-        for(let i = 0; i < size; i++){
-            this.pool.push(new OrbittingOutlinerWorkerRunner());
-        }
-    }
-
-    /**
-     * 
-     */
-    getRunnable(): OrbittingOutlinerWorkerRunner{
-        const index = this.count++;
-        this.count = (this.count % this.size)
-        return this.pool[index];
-    }
-
-
-}
-
-
-
-
-// Todo: definitely generalize this if needed.
-class OrbittingOutlinerWorkerRunner {
+class OrbittingOutlinerWorker {
 
     worker: Worker;
 
@@ -174,29 +142,12 @@ class OrbittingOutlinerWorkerRunner {
         this.worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
         });
-
-
     };
 
     run(orbitLength: OrbitLength, orbitingBodies: OrbitingBody[]): Promise<NamedArrayBuffer[]>{
-
-        const p = new Promise<NamedArrayBuffer[]>((resolve) => {
-
-            this.worker.onmessage = (event) => {
-                // console.log('Result from worker:', event.data);
-                const orbitArrayBuffers = event.data.response;                
-                resolve(orbitArrayBuffers);
-    
-            };
-    
-            this.worker.postMessage({orbitLength: orbitLength, bodies: orbitingBodies })
-    
+        return new Promise<NamedArrayBuffer[]>((resolve) => {
+            this.worker.onmessage = (event) => resolve(event.data.response);                
+            this.worker.postMessage({orbitLength: orbitLength, bodies: orbitingBodies })    
         });
-        return p;
-
-
     }
-
-
 }
-
