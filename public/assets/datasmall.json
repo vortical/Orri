@@ -30,6 +30,9 @@
         "sideralRotationPeriod": {
             "days": 58.646
         },
+        "orbitPeriod":{
+            "days":  87.97
+        },
         "textures": {
             "textureUri": "/assets/textures/planets/mercury_map.jpg",
             "bumpMapUri": "/assets/textures/planets/mercury_bump.jpg"
@@ -46,6 +49,9 @@
         "obliquityToOrbit": 177.4,
         "sideralRotationPeriod": {
             "days": 243.022
+        },
+        "orbitPeriod":{
+            "days":  224.7
         },
         "textures": {
             "textureUri": "/assets/textures/planets/venus_map.jpg",
@@ -65,6 +71,9 @@
             "hours": 23,
             "minutes": 56,
             "seconds": 4.0905
+        },
+        "orbitPeriod":{
+            "days":  365.26
         },
         "textures": {
             "textureUri": "/assets/textures/planets/earth_map.jpg",
@@ -109,6 +118,10 @@
         "sideralRotationPeriod": {
             "hours": 24.6229
         },
+        "orbitPeriod":{
+            "days":   686.98
+        },
+
         "textures": {
             "textureUri": "/assets/textures/planets/mars_map.jpg",
             "normalUri": "/assets/textures/planets/mars_normal.jpg",
@@ -162,6 +175,9 @@
         "obliquityToOrbit": 3.1,
         "sideralRotationPeriod": {
             "hours": 9.93
+        },        
+        "orbitPeriod":{
+            "days": 4332.82
         },
         "rings": {
             "opacity": 0.2,
@@ -253,6 +269,9 @@
         "obliquityToOrbit": 26.73,
         "sideralRotationPeriod": {
             "hours": 10.656
+        },
+        "orbitPeriod":{
+            "days": 10755.70
         },
         "rings": {
             "opacity": 0.95,
@@ -393,6 +412,9 @@
         "obliquityToOrbit": 97.77,
         "sideralRotationPeriod": {
             "hours": 17.24
+        },
+        "orbitPeriod":{
+            "days":  30687.15
         },
         "rings": {
             "opacity": 0.3,
@@ -581,6 +603,9 @@
         "sideralRotationPeriod": {
             "hours": 16.11
         },
+        "orbitPeriod":{
+            "days":  60190.03
+        },        
         "textures": {
             "textureUri": "/assets/textures/planets/neptune_map.jpg"
         }
@@ -633,6 +658,9 @@
         "sideralRotationPeriod": {
             "hours": 153.2928
         },
+        "orbitPeriod":{
+            "days":  90560.085
+        },                
         "textures": {
             "textureUri": "/assets/textures/planets/pluto_map.jpg",
             "bumpMapUri": "/assets/textures/planets/pluto_bump.jpg"

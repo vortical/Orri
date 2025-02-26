@@ -94,6 +94,7 @@ export type BodyProperties = {
      * Period of rotation around axis in seconds
      */
     sideralRotationPeriod?: TimePeriod;
+    orbitPeriod?: TimePeriod;
     sideralRotation?: VectorComponents,
     lightProperties?: LightProperties;
 

@@ -8,7 +8,7 @@ export class Vector extends Vector3 implements VectorComponents {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
-    static substract(pos1: VectorComponents|Vector3, pos2: VectorComponents|Vector3): Vector {
+    static substract(pos1: VectorComponents|Vector3|Vector, pos2: VectorComponents|Vector3|Vector): Vector {
         return new Vector(pos2.x - pos1.x, pos2.y - pos1.y, pos2.z - pos1.z);
     }
 

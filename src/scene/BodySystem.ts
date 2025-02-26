@@ -14,7 +14,7 @@ import { Vector } from '../system/Vector.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
-import { VectorComponents, ShadowType } from '../domain/models.ts';
+import { VectorComponents, ShadowType, BodyProperties } from '../domain/models.ts';
 import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import * as TWEEN from '@tweenjs/tween.js';
@@ -24,8 +24,10 @@ import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
-import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
+// import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
 import { timePeriodToMs } from '../system/time.ts';
+import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
+import { ExecutorPool } from '../system/ExecutorPool.ts';
 
 
 
@@ -95,6 +97,8 @@ export class BodySystem {
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
+    workerPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]}, NamedArrayBuffer[]> ;
+    
 
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
         cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
@@ -157,8 +161,14 @@ export class BodySystem {
         this.cameraTargetingState.postTargetSet(this.target);
         // 6 month orbit
         // new OrbitPathUpdater(this).renderOrbitsForTime(timePeriodToMs({days: 10*365, hours: 6/2}),[...this.bodyObjects3D.values()]);
-        new OrbitPathUpdater(this).renderOrbitForAngle(359,[...this.bodyObjects3D.values()]);
+        // new OrbitPathUpdater(this).renderOrbitForAngle(350,[...this.bodyObjects3D.values()]);
+
+        this.workerPool = getworkerExecutorPool();
+        
+        this.initializeOrbitOutlines();
     }
+
+
 
     /**
      * Moving near frustrum plane.
@@ -309,7 +319,7 @@ export class BodySystem {
 
     getShadowsEnabled(): boolean {
         const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]
-            .filter((bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
+            .filter((bodyObject: BodyObject3D) => bodyObject.body.type == "star") as StarBodyObject3D[]; // instanceof StarBodyObject3D) as StarBodyObject3D[];
         return starBodies.reduce((prev: boolean, current) => (current.getShadowsEnabled() && prev), true);
     }
 
@@ -437,6 +447,14 @@ export class BodySystem {
         }
 
         this.cameraTargetingState.moveToTarget(bodyObject3D, forceMoveCloser);
+    }
+
+    initializeOrbitOutlines(){
+        const planets = [...this.bodyObjects3D.values()]
+            .filter(o => o.body.type == "planet"|| o.body.type  == "star")
+            // .filter(o=>o.getName() == "Earth")
+            .forEach(o => o.orbitOutline.createOrbitForAngle(355, o, o.bodySystem));
+
     }
 
     /**

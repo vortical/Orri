@@ -15,8 +15,8 @@ export abstract class BodySurface extends CelestialBodyPart {
         const object3D = this.createSurfaceObject3D(body, bodySystem);
         object3D.name = body.name;
         object3D.userData = { type: "surface" };
-        object3D.receiveShadow = body.receiveShadow;
-        object3D.castShadow = body.castShadow;
+        object3D.receiveShadow = body.receiveShadow || false;
+        object3D.castShadow = body.castShadow || false;
         this.object3D = object3D;
         this.body = body;
     }

@@ -133,7 +133,10 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.object3D.position.set(x, y, z);
 
         this.updateLabelsInvoker();
-       // this.orbitOutline.addPosition(this.object3D.position)
+
+        this.orbitOutline.addPosition(this.body.position);
+        this.updateOrbitsInvoker();
+        // this.orbitOutline.needsUpdate();
 
     }
 
@@ -141,7 +144,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
      * Limit the label updates frequency. 20 per second
      */
     updateLabelsInvoker = throttle(1000/20, this, () => this.updateLabels());
-    // updateOrbitsInvoker = throttle(1000/30, this, () => this.updateOrbit());
+    updateOrbitsInvoker = throttle(1000/5, this, () => this.orbitOutline.needsUpdate());
 
     // updateOrbit(): void {
     //     this.orbitOutline.addPosition(this.object3D.position)

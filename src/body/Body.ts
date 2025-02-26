@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vector } from '../system/Vector.ts';
-import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties } from '../domain/models.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod } from '../domain/models.ts';
 import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
@@ -58,6 +58,7 @@ export class Body {
 
     /** time for a sideral rotation upon axis*/
     sideralRotationPeriodMs: number; // = Number.MAX_VALUE;
+    orbitPeriod?: TimePeriod;
     lightProperties?: LightProperties;
     rings?: RingProperties;
     color: string;
@@ -67,7 +68,7 @@ export class Body {
     gltf?: GLTFModelProperties;
 
 
-    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, lightProperties, rings, textures, gltf }: BodyProperties) {
+    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parentName;
@@ -79,11 +80,29 @@ export class Body {
         this.velocity = Vector.fromVectorComponents(velocity)
         this.obliquityToOrbit = obliquityToOrbit;
         this.sideralRotationPeriodMs = timePeriodToMs(sideralRotationPeriod);
+        this.orbitPeriod = orbitPeriod;
         this.lightProperties = lightProperties;
         this.rings = rings;
         this.color = color;
         this.textures = textures;
         this.gltf = gltf;
+    }
+
+
+    
+    getBodyProperties(): BodyProperties {
+        return {
+            type: this.type,
+            name: this.name,
+            mass: this.mass,
+            radius: this.radius,
+            position: this.position,        
+            velocity: this.velocity,
+            parentName: this.parentName,
+            orbitPeriod: this.orbitPeriod,
+            // needsOrbit: sourceBodyObject.body.type == "planet"|| sourceBodyObject.body.type  == "star"
+            
+        };
     }
 
     /**
