@@ -78,11 +78,22 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.bodySystem.setTarget(this);
     }
 
+    /**
+     * 
+     * @param fromSurface true if distance is to be measured from surface of body as opposed to center.
+     * 
+     * @returns distance in km
+     */
     cameraDistance(fromSurface: boolean = false): number {
         const distance = this.bodySystem.camera.position.distanceTo(this.object3D.position);
         return fromSurface ? distance - (this.body.radius / 1000) : distance;
     }
 
+    /**
+     * Alias of cameraDistance(true)
+     * 
+     * @returns 
+     */
     cameraDistanceFromSurface(): number {
         return this.cameraDistance(true);
     }
@@ -134,8 +145,10 @@ export abstract class BodyObject3D extends CelestialBodyPart {
 
         this.updateLabelsInvoker();
 
+        // if(this.getName() == "Pluto"){
         this.orbitOutline.addPosition(this.body.position);
         this.updateOrbitsInvoker();
+        // }
         // this.orbitOutline.needsUpdate();
 
     }
@@ -144,7 +157,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
      * Limit the label updates frequency. 20 per second
      */
     updateLabelsInvoker = throttle(1000/20, this, () => this.updateLabels());
-    updateOrbitsInvoker = throttle(1000/5, this, () => this.orbitOutline.needsUpdate());
+    updateOrbitsInvoker = throttle(1000/6, this, () => this.orbitOutline.needsUpdate());
 
     // updateOrbit(): void {
     //     this.orbitOutline.addPosition(this.object3D.position)

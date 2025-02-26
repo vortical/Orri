@@ -1,5 +1,4 @@
-import { BufferAttribute, BufferGeometry, Float32BufferAttribute, InterleavedBuffer, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
-import { CelestialBodyPart } from "./CelestialBodyPart";
+import { BufferAttribute, BufferGeometry, Float32BufferAttribute, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
 import { BodyObject3D } from "./BodyObject3D";
 import { Vector } from "../system/Vector";
 import { Body } from '../body/Body.ts';
@@ -8,9 +7,9 @@ import { BodyProperties } from "../domain/models.ts";
 import { ExecutorPool } from "../system/ExecutorPool.ts";
 // import MyWorker from './worker?worker';
 
-const MAX_VERTICES = 360 * 20*10;
+// const MAX_VERTICES = 360 * 20*10;
+const MAX_VERTICES = 360 * 5;
 const NB_WORKERS = 8;
-
 
 export type NamedArrayBuffer = {
     name: string,
@@ -26,10 +25,9 @@ export enum OrbitLengthType {
 export type OrbitLength = {
     type: OrbitLengthType,
     value: number
-}
+};
 
-
-class OrbittingOutlinerWorker {
+class OrbitOutlinerWorker {
 
     worker: Worker;
 
@@ -48,15 +46,19 @@ class OrbittingOutlinerWorker {
 }
 
 
+type OrbitOutlineWorkerParams = {orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]};
 
-export function getworkerExecutorPool():ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]},NamedArrayBuffer[]> {
-return new ExecutorPool(
-    Array.from({length: NB_WORKERS}).map(() => {
-            const runner = new OrbittingOutlinerWorker();
-            return (s) => runner.run(s.orbitLength, s.orbitingBodies);        
-        })
-);
+let workerPool: ExecutorPool<OrbitOutlineWorkerParams, NamedArrayBuffer[]>;
 
+export function getworkerExecutorPool(): ExecutorPool<OrbitOutlineWorkerParams,NamedArrayBuffer[]> {
+    if(workerPool == undefined){
+        const workers = Array.from({length: NB_WORKERS}).map(() => {
+            const runner = new OrbitOutlinerWorker();
+            return (s: OrbitOutlineWorkerParams) => runner.run(s.orbitLength, s.orbitingBodies);        
+        });
+        workerPool = new ExecutorPool(workers);
+    }
+    return workerPool;
 }
     
 
@@ -67,7 +69,13 @@ export class OrbitalOutline  {
     material: LineBasicMaterial;
     _colorHue!: number;
     startIndex: number = 0;
-    index: number = 0;
+    endIndex: number = 0;
+    /**
+     * Size of the buffer holding the position attribute.
+     */
+    maxVertices: number;
+    // nbOf vertices representing this orbit. Defaults to nearly a full circle.
+    nbVertices: number = 355 * 4
 
     /**
      * Full circle is 2PI.
@@ -80,12 +88,13 @@ export class OrbitalOutline  {
 
     constructor(maxVertices=MAX_VERTICES, enabled = true, colorHue = 0.5, opacity = 0.7) {        
         const geometry = new BufferGeometry();
-        const positionAttribute = new Float32BufferAttribute(new Float32Array(MAX_VERTICES * 3), 3);
+        const positionAttribute = new Float32BufferAttribute(new Float32Array(maxVertices * 3), 3);
         geometry.setAttribute('position', positionAttribute);
         this.material = new LineBasicMaterial({ color: 0xffffff, opacity: opacity, transparent: true });
         this.line = new Line(geometry, this.material);
         this.enabled = enabled;
         this.opacity = opacity;
+        this.maxVertices=maxVertices
     }
 
     getObject3D(): Object3D {
@@ -93,7 +102,7 @@ export class OrbitalOutline  {
     }
 
     resetOrbit(){
-        this.index = 0;
+        this.endIndex = 0;
     }
 
     /**
@@ -119,23 +128,24 @@ export class OrbitalOutline  {
 
     createOrbit(orbitLength: OrbitLength, bodyObject: BodyObject3D, bodySystem: BodySystem){
 
+        // collection of bodies needed to create a credible orbit of this body
         const bodyPlanetSystem = planetSystem(bodyObject.body, bodySystem);
 
-        // We send data objects to the webworkers. Grab the properties of the 
-        // of the bodies so that they webworker can reconstruct the bodies.
+        // We send data transfer objects to the webworkers. 
         const orbitingBodies = bodyPlanetSystem.map(b => b.getBodyProperties());
 
-        // Determine the orbits using a stationary sun, substract its velocity.
-        const sun = bodySystem.getBody("Sun")!;
-        orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
+        // Determine the orbits using a stationary sun, substract its velocity. (commented out for now)
+        // const sun = bodySystem.getBody("Sun")!;
+        // orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
 
-        bodySystem.workerPool.execute({orbitLength:orbitLength, orbitingBodies:orbitingBodies})
+        getworkerExecutorPool().execute({orbitLength:orbitLength, orbitingBodies:orbitingBodies})
             .then(namedOrbitArrayBuffers => { 
                 namedOrbitArrayBuffers
                     .filter( o => o.buffer != undefined)
                     .forEach( o => {
                         const bodyObject3D: BodyObject3D = bodySystem.getBodyObject3D(o.name);
                         bodyObject3D.orbitOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
+                        bodyObject3D.orbitOutline.nbVertices = o.index; // createOrbit determines the length of the orbit.
                         bodyObject3D.orbitOutline.needsUpdate();
                     });
         });
@@ -160,15 +170,15 @@ export class OrbitalOutline  {
         // Positions are in km in the scene...
         position = position.clone().multiplyScalar(0.001);
 
-        if (this.index == 0) { 
+        if (this.endIndex == 0) { 
             this.p0 = position;                
-            positionAttributeBuffer.setXYZ(this.index++, position.x, position.y, position.z);
-        } else if(this.index == 1){
+            positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);
+        } else if(this.endIndex == 1){
             if(position.equals(this.p0)){
                 return;
             }
             this.p1 = position;
-            positionAttributeBuffer.setXYZ(this.index++, position.x, position.y, position.z);    
+            positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);    
             
         } else {
             if(position.equals(this.p1)){
@@ -185,21 +195,47 @@ export class OrbitalOutline  {
                 // add position, our draw range/index is increased by 1
                 this.p0 = this.p1.clone();
                 this.p1 = position;
-                positionAttributeBuffer.setXYZ(this.index++, position.x, position.y, position.z);
+                positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);
+                if(this.endIndex-this.startIndex > this.nbVertices){
+                    this.startIndex++;
+                    // console.log(this.nbVertices+": "+this.startIndex+" -> "+this.endIndex)
+
+                    // has our endIndex reached the end of our buffer?
+                    if(this.endIndex >= this.maxVertices){                        
+                        this.shiftPositionBufferAttribute();
+                    }
+
+                }
+            
             } else {
                 // replace p1 with position, draw range/index remains the same
                 this.p1 = position;
-                positionAttributeBuffer.setXYZ(this.index-1, position.x, position.y, position.z);    
+                positionAttributeBuffer.setXYZ(this.endIndex-1, position.x, position.y, position.z);    
             }
 
         }
     }
 
+    /**
+     * 
+     * Move startIndex to 0. This happens when the endIndex reached the maxNBVertices.
+     * 
+     */
+    shiftPositionBufferAttribute(){
+        const sourcePositionArray: Float32Array = this.getPositionAttribute().array as Float32Array;
+        // 3 components per index
+        sourcePositionArray.copyWithin(0, this.startIndex*3, this.endIndex*3);        
+        // const start = this.startIndex;
+
+        this.endIndex = this.endIndex - this.startIndex;
+        this.startIndex = 0;
+    } 
+
     flipPositionBufferAttribute() {
         const sourcePositionArray: Float32Array = this.getPositionAttribute().array as Float32Array;
-        const targetPositionArray = new Float32Array(MAX_VERTICES * 3);
+        const targetPositionArray = new Float32Array(this.maxVertices * 3);
 
-        for(let sourceIndex = 3*(this.index-1), targetIndex=0; sourceIndex >= 0; sourceIndex-=3, targetIndex+=3){
+        for(let sourceIndex = 3*(this.endIndex-1), targetIndex=0; sourceIndex >= 0; sourceIndex-=3, targetIndex+=3){
             for(let c = 0; c < 3; c++) {
                 targetPositionArray[targetIndex+c] = sourcePositionArray[sourceIndex+c];
 
@@ -207,7 +243,7 @@ export class OrbitalOutline  {
 
 
         }        
-        this.setPositionAttributeBuffer(targetPositionArray, this.index);
+        this.setPositionAttributeBuffer(targetPositionArray, this.endIndex);
     }
 
     getPositionAttribute():BufferAttribute | InterleavedBufferAttribute {
@@ -216,12 +252,13 @@ export class OrbitalOutline  {
     
     setPositionAttributeBuffer(positionAttribute: Float32Array, index: number){
         this.line.geometry.attributes['position'].array.set(positionAttribute);
-        this.index = index;
+        this.endIndex = index;
+        this.startIndex = 0;
     }
     
     needsUpdate(){
         const positionAttributeBuffer = this.line.geometry.getAttribute('position') as BufferAttribute;
-        this.line.geometry.setDrawRange(0, this.index);
+        this.line.geometry.setDrawRange(this.startIndex, this.endIndex-this.startIndex);
         positionAttributeBuffer.needsUpdate = true;
         this.line.geometry.computeBoundingSphere();
     }

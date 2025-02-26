@@ -25,9 +25,9 @@ import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
 // import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
-import { timePeriodToMs } from '../system/time.ts';
-import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
-import { ExecutorPool } from '../system/ExecutorPool.ts';
+// import { timePeriodToMs } from '../system/time.ts';
+// import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
+// import { ExecutorPool } from '../system/ExecutorPool.ts';
 
 
 
@@ -97,7 +97,7 @@ export class BodySystem {
     distanceformatter: DistanceFormatter
     locationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
-    workerPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]}, NamedArrayBuffer[]> ;
+    // workerPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]}, NamedArrayBuffer[]> ;
     
 
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
@@ -163,7 +163,7 @@ export class BodySystem {
         // new OrbitPathUpdater(this).renderOrbitsForTime(timePeriodToMs({days: 10*365, hours: 6/2}),[...this.bodyObjects3D.values()]);
         // new OrbitPathUpdater(this).renderOrbitForAngle(350,[...this.bodyObjects3D.values()]);
 
-        this.workerPool = getworkerExecutorPool();
+        
         
         this.initializeOrbitOutlines();
     }
@@ -452,7 +452,7 @@ export class BodySystem {
     initializeOrbitOutlines(){
         const planets = [...this.bodyObjects3D.values()]
             .filter(o => o.body.type == "planet"|| o.body.type  == "star")
-            // .filter(o=>o.getName() == "Earth")
+            // .filter(o=>o.getName() == "Pluto")
             .forEach(o => o.orbitOutline.createOrbitForAngle(355, o, o.bodySystem));
 
     }

@@ -11,7 +11,7 @@ import { BodyProperties } from '../domain/models.ts';
 
 const UNIT_PERIOD = timePeriodToMs({days: 365, hours: 6});
 const UNIT_DISTANCE = DistanceUnits.au;
-const MAX_VERTICES = 360 * 4 * 10;
+
 const STEPS_PER_ORBIT = 360*4*10;
 
 class OrbitingBodyWithPositionAttribute extends Body {
@@ -19,7 +19,7 @@ class OrbitingBodyWithPositionAttribute extends Body {
   constructor(b: BodyProperties){
     super(b);
     if(b.type == 'planet'){
-      this.orbitalOutline =  new OrbitalOutline(MAX_VERTICES);
+      this.orbitalOutline =  new OrbitalOutline();
     }
   }
 };
@@ -41,7 +41,7 @@ onmessage = (event) => {
       { 
         name: o.name, 
         buffer: o.orbitalOutline?.getPositionAttribute().array.buffer,
-        index: o.orbitalOutline?.index
+        index: o.orbitalOutline?.endIndex
       }));
 
   const transferables = orbitingObjects
