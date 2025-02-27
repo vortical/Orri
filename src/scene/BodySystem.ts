@@ -24,6 +24,7 @@ import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
+import { OrbitLength } from '../mesh/OrbitOutline.ts';
 // import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
 // import { timePeriodToMs } from '../system/time.ts';
 // import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
@@ -63,10 +64,13 @@ export type BodySystemOptionsState = {
     // put orbital outlines into their own type?
     orbitalOutlinesEnabled?: boolean;
     orbitalOutlinesOpacity?: number;
+    orbitalOutlineLength?: OrbitLength;
 
 };
 
 const CAMERA_NEAR = 500;
+// const CAMERA_FAR = 33000000;
+// const CAMERA_FAR = 3300000000; // this shows shadows correctly...
 const CAMERA_FAR = 33000000000;
 
 
@@ -282,6 +286,7 @@ export class BodySystem {
         options.targettingCameraMode = this.getCameraTargetingMode();
         options.orbitalOutlinesEnabled = this.getOrbitalOutlinesEnabled();
         options.orbitalOutlinesOpacity = this.getOrbitalOutlinesOpacity();
+        options.orbitalOutlineLength = this.getOrbitalOutlineLength();
 
         return options;
     }
@@ -344,6 +349,19 @@ export class BodySystem {
     getOrbitalOutlinesOpacity(): number {
         const [firstBody] = this.bodyObjects3D.values();
         return firstBody.orbitOutline.opacity;
+    }
+
+    setOrbitalOutlineLength(value: OrbitLength){
+        console.log("Line :"+value.type + ", "+value.value)
+        for(const bodyObject3D of this.bodyObjects3D.values()){
+            bodyObject3D.orbitOutline.orbitLength = value;
+        }
+    }
+
+    getOrbitalOutlineLength(): OrbitLength{
+        const [firstBody] = this.bodyObjects3D.values();
+        return firstBody.orbitOutline.orbitLength;
+
     }
 
     hasStats(): boolean {
@@ -451,9 +469,9 @@ export class BodySystem {
 
     initializeOrbitOutlines(){
         const planets = [...this.bodyObjects3D.values()]
-            .filter(o => o.body.type == "planet"|| o.body.type  == "star")
-            // .filter(o=>o.getName() == "Pluto")
-            .forEach(o => o.orbitOutline.createOrbitForAngle(355, o, o.bodySystem));
+            .filter(o => o.body.type == "planet")
+            // .filter(o=>o.getName() == "Earth")
+            .forEach(o => o.orbitOutline.createOrbit());
 
     }
 

@@ -16,6 +16,8 @@ import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
 import { DistanceUnit, DistanceUnits } from '../system/distance.ts';
 import { TimeControls } from './TimeControls.ts';
+import { OrbitLengthType } from '../mesh/OrbitOutline.ts';
+import { throttle } from '../system/throttle.ts';
 
 
 export const userNotify: INotifyService = new NotifyService();
@@ -86,6 +88,9 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
         orbitalOutlinesEnabled: bodySystem.getOrbitalOutlinesEnabled(),
         orbitalOutlinesOpacity: bodySystem.getOrbitalOutlinesOpacity(),
+        orbitalOutlinesLengthType: bodySystem.getOrbitalOutlineLength().type,
+        orbitalOutlinesLengthValue: bodySystem.getOrbitalOutlineLength().value,
+
 
         pushState() {
             const state = bodySystem.getState();
@@ -173,6 +178,19 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
 
     const orbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "orbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbital Outlines Opacity')
         .onChange((v: number) => bodySystem.setOrbitalOutlinesOpacity(v));
+    
+    const updateOrbitsInvoker = throttle(100, this, (v) => bodySystem.setOrbitalOutlineLength({value:v, type:bodySystem.getOrbitalOutlineLength().type}));
+
+    const orbitalOutlinesLengthValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesLengthValue", 0.0, 355, 0.1).name('Orbital Outlines Length')
+        .onChange(updateOrbitsInvoker);
+        // .onFinishChange((v: number) => bodySystem.setOrbitalOutlineLength({value:v * (bodySystem.getOrbitalOutlineLength().type == OrbitLengthType.Time? 60 * 60: 1) , type:bodySystem.getOrbitalOutlineLength().type}));
+        // .onFinishChange((v: number) => bodySystem.setOrbitalOutlineLength({value:v * bodySystem.getOrbitalOutlineLength().type == OrbitLengthType.Time? 60 * 60 * 24: 1, type:bodySystem.getOrbitalOutlineLength().type}));
+
+    const orbitalOutlinesLengthTypeController = orbitalOutlinesfolder.add(options, "orbitalOutlinesLengthType", OrbitLengthType).name('Orbital Outlines Length Type')
+        .onChange((v: number) => bodySystem.setOrbitalOutlineLength({value:bodySystem.getOrbitalOutlineLength().value, type:v}));
+
+
+        
 
 
 

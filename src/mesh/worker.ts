@@ -63,6 +63,8 @@ function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBody
   const timestep = timeMsToUnits(timePeriod/STEPS_PER_ORBIT, TimeUnit.Seconds);
   
   // The number of iterations required to fulfill the orbitLength.
+  // given that the granularity of the orbit is always the same,
+  // one thing that happens is if the values are small then we 'miss' resolutions. E.g. for small time values...
   const nbSteps =  STEPS_PER_ORBIT * (orbitLength.type == OrbitLengthType.Time? orbitLength.value / timePeriod : orbitLength.value / 360); 
 
 

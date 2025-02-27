@@ -85,8 +85,24 @@ export class OrbitalOutline  {
 
     p0!: Vector3;
     p1!: Vector3;
+    bodyObject?: BodyObject3D;
+    _orbitLength: OrbitLength;
 
-    constructor(maxVertices=MAX_VERTICES, enabled = true, colorHue = 0.5, opacity = 0.7) {        
+    set orbitLength(value: OrbitLength){
+        this._orbitLength = value;
+        
+        this.createOrbit();
+
+    }
+
+    get orbitLength(): OrbitLength {
+        return this._orbitLength;
+    }
+
+    constructor(bodyObject?: BodyObject3D, maxVertices=MAX_VERTICES, enabled = false, colorHue = 0.5, opacity = 0.7, orbitLength={value: 350, type:OrbitLengthType.Angle}) {        
+
+        this.bodyObject = bodyObject;
+
         const geometry = new BufferGeometry();
         const positionAttribute = new Float32BufferAttribute(new Float32Array(maxVertices * 3), 3);
         geometry.setAttribute('position', positionAttribute);
@@ -94,7 +110,8 @@ export class OrbitalOutline  {
         this.line = new Line(geometry, this.material);
         this.enabled = enabled;
         this.opacity = opacity;
-        this.maxVertices=maxVertices
+        this.maxVertices = maxVertices
+        this._orbitLength = orbitLength;
     }
 
     getObject3D(): Object3D {
@@ -105,31 +122,35 @@ export class OrbitalOutline  {
         this.endIndex = 0;
     }
 
-    /**
-     * Set up an orbital circumference with a length based on degrees. 360 means an entire orbit.
-     * 
-     * @param angleDegrees the degrees to render
-     */
-    createOrbitForAngle(angleDegrees: number, bodyObject: BodyObject3D, bodySystem: BodySystem ){
-        this.createOrbit({type: OrbitLengthType.Angle, value: angleDegrees }, bodyObject, bodySystem);
+    // /**
+    //  * Set up an orbital circumference with a length based on degrees. 360 means an entire orbit.
+    //  * 
+    //  * @param angleDegrees the degrees to render
+    //  */
+    // createOrbitForAngle(angleDegrees: number, bodyObject: BodyObject3D, bodySystem: BodySystem ){
+    //     this.createOrbit({type: OrbitLengthType.Angle, value: angleDegrees }, bodyObject, bodySystem);
 
-    }
+    // }
 
-    /**
-     * Draw an orbit circumferance with a length that would be covered for a specific time. E.g. 1
-     * day Orbit would represent the orbit distance covered in a day.
-     * @param timeMs 
-     */
-    createOrbitForTime(timeMs: number, bodyObject: BodyObject3D, bodySystem: BodySystem ){
-        this.createOrbit({type: OrbitLengthType.Time, value: timeMs }, bodyObject, bodySystem);
+    // /**
+    //  * Draw an orbit circumferance with a length that would be covered for a specific time. E.g. 1
+    //  * day Orbit would represent the orbit distance covered in a day.
+    //  * @param timeMs 
+    //  */
+    // createOrbitForTime(timeMs: number, bodyObject: BodyObject3D, bodySystem: BodySystem ){
+    //     this.createOrbit({type: OrbitLengthType.Time, value: timeMs }, bodyObject, bodySystem);
 
-    }
+    // }
 
 
-    createOrbit(orbitLength: OrbitLength, bodyObject: BodyObject3D, bodySystem: BodySystem){
+    createOrbit(){
 
+        if(this.bodyObject == undefined){
+            return;
+        }
+        const bodySystem = this.bodyObject.bodySystem;
         // collection of bodies needed to create a credible orbit of this body
-        const bodyPlanetSystem = planetSystem(bodyObject.body, bodySystem);
+        const bodyPlanetSystem = planetSystem(this.bodyObject.body, this.bodyObject.bodySystem);
 
         // We send data transfer objects to the webworkers. 
         const orbitingBodies = bodyPlanetSystem.map(b => b.getBodyProperties());
@@ -138,11 +159,12 @@ export class OrbitalOutline  {
         // const sun = bodySystem.getBody("Sun")!;
         // orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
 
-        getworkerExecutorPool().execute({orbitLength:orbitLength, orbitingBodies:orbitingBodies})
+        getworkerExecutorPool().execute({orbitLength: this.orbitLength, orbitingBodies:orbitingBodies})
             .then(namedOrbitArrayBuffers => { 
                 namedOrbitArrayBuffers
                     .filter( o => o.buffer != undefined)
                     .forEach( o => {
+                        // todo: just return the orbit for this body!
                         const bodyObject3D: BodyObject3D = bodySystem.getBodyObject3D(o.name);
                         bodyObject3D.orbitOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
                         bodyObject3D.orbitOutline.nbVertices = o.index; // createOrbit determines the length of the orbit.
@@ -209,6 +231,7 @@ export class OrbitalOutline  {
             
             } else {
                 // replace p1 with position, draw range/index remains the same
+                // todo: we should move the position of the first vertice by an equal distance instead of just removing it when we add a vertex
                 this.p1 = position;
                 positionAttributeBuffer.setXYZ(this.endIndex-1, position.x, position.y, position.z);    
             }

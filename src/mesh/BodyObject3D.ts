@@ -42,7 +42,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.body = body;
         this.bodySystem = bodySystem;
         this.labels = new ObjectLabels(this);
-        this.orbitOutline = new OrbitalOutline();
+        this.orbitOutline = new OrbitalOutline(this);
         
         this.object3D.add(...this.labels.getCSS2DObjects());
         this.bodySystem.scene.add(this.orbitOutline.getObject3D())
