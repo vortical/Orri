@@ -24,7 +24,7 @@ import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
-import { OrbitLength } from '../mesh/OrbitOutline.ts';
+import { OrbitLength, OrbitLengthType } from '../mesh/OrbitOutline.ts';
 // import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
 // import { timePeriodToMs } from '../system/time.ts';
 // import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
@@ -64,7 +64,7 @@ export type BodySystemOptionsState = {
     // put orbital outlines into their own type?
     orbitalOutlinesEnabled?: boolean;
     orbitalOutlinesOpacity?: number;
-    orbitalOutlineLength?: OrbitLength;
+    orbitalOutlinesLength?: OrbitLength;
 
 };
 
@@ -108,7 +108,7 @@ export class BodySystem {
         cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
         ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType = ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
         showNames = true, showDistance = true, showAltitudeAzimuth = true,
-        location, targettingCameraMode = CameraModes.FollowTarget, orbitalOutlinesEnabled=false, orbitalOutlinesOpacity=0.5 }: BodySystemOptionsState) {
+        location, targettingCameraMode = CameraModes.FollowTarget, orbitalOutlinesEnabled=false, orbitalOutlinesOpacity=0.5, orbitalOutlinesLength={value:355, lengthType:OrbitLengthType.AngleDegrees} }: BodySystemOptionsState) {
 
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
@@ -152,6 +152,7 @@ export class BodySystem {
         this.setLayerEnabled(showDistance, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
         this.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
+        this.setOrbitalOutlineLength(orbitalOutlinesLength);
 
         if (location) {
             this.setLocation(location);
@@ -162,13 +163,7 @@ export class BodySystem {
         }
         
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this);
-        this.cameraTargetingState.postTargetSet(this.target);
-        // 6 month orbit
-        // new OrbitPathUpdater(this).renderOrbitsForTime(timePeriodToMs({days: 10*365, hours: 6/2}),[...this.bodyObjects3D.values()]);
-        // new OrbitPathUpdater(this).renderOrbitForAngle(350,[...this.bodyObjects3D.values()]);
-
-        
-        
+        this.cameraTargetingState.postTargetSet(this.target);        
         this.initializeOrbitOutlines();
     }
 
@@ -286,7 +281,7 @@ export class BodySystem {
         options.targettingCameraMode = this.getCameraTargetingMode();
         options.orbitalOutlinesEnabled = this.getOrbitalOutlinesEnabled();
         options.orbitalOutlinesOpacity = this.getOrbitalOutlinesOpacity();
-        options.orbitalOutlineLength = this.getOrbitalOutlineLength();
+        options.orbitalOutlinesLength = this.getOrbitalOutlineLength();
 
         return options;
     }
@@ -354,23 +349,23 @@ export class BodySystem {
     setOrbitalOutlineLength(value: OrbitLength){
         console.log("Line :"+value.lengthType + ", "+value.value)
         for(const bodyObject3D of this.bodyObjects3D.values()){
-            if(bodyObject3D.getName() === "Earth"){
+            // if(bodyObject3D.getName() === "Earth"){
                 bodyObject3D.orbitOutline.orbitLength = value;
 
-            }
+            // }
         }
     }
 
-    getOrbitalOutlineLength(): OrbitLength {
-        const body = this.getBodyObject3D("Earth");
-        return body.orbitOutline.orbitLength;
-    }
-
-    // getOrbitalOutlineLength(): OrbitLength{
-    //     const [firstBody] = this.bodyObjects3D.values();
-    //     return firstBody.orbitOutline.orbitLength;
-
+    // getOrbitalOutlineLength(): OrbitLength {
+    //     const body = this.getBodyObject3D("Earth");
+    //     return body.orbitOutline.orbitLength;
     // }
+
+    getOrbitalOutlineLength(): OrbitLength{
+        const [firstBody] = this.bodyObjects3D.values();
+        return firstBody.orbitOutline.orbitLength;
+
+    }
 
     hasStats(): boolean {
         return this.stats != undefined && this.stats.dom.style.display !== "none";
@@ -476,10 +471,12 @@ export class BodySystem {
     }
 
     initializeOrbitOutlines(){
-        const planets = [...this.bodyObjects3D.values()]
+
+            const planets = [...this.bodyObjects3D.values()]
             .filter(o => o.body.type == "planet")
-            .filter(o=>o.getName() == "Earth")
+            // .filter(o=>o.getName() == "Earth")
             .forEach(o => o.orbitOutline.createOrbit());
+
 
     }
 

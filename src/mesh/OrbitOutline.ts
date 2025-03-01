@@ -19,7 +19,7 @@ export type NamedArrayBuffer = {
 
 export enum OrbitLengthType {
     AngleDegrees = "AngleDegrees",
-    TimeHours = "TimeHours"
+    Time = "Time"
 };
 
 
@@ -90,9 +90,7 @@ export class OrbitalOutline  {
     _orbitLength: OrbitLength;
 
     set orbitLength(value: OrbitLength){
-        if(value.lengthType == OrbitLengthType.TimeHours){
-            value.value = value.value*1000 * 3600;
-        }
+
         this._orbitLength = value;
 
         
@@ -153,6 +151,7 @@ export class OrbitalOutline  {
         if(this.bodyObject == undefined){
             return;
         }
+
         const bodySystem = this.bodyObject.bodySystem;
         // collection of bodies needed to create a credible orbit of this body
         const bodyPlanetSystem = planetSystem(this.bodyObject.body, this.bodyObject.bodySystem);
@@ -161,8 +160,8 @@ export class OrbitalOutline  {
         const orbitingBodies = bodyPlanetSystem.map(b => b.getBodyProperties());
 
         // Determine the orbits using a stationary sun, substract its velocity. (commented out for now)
-        // const sun = bodySystem.getBody("Sun")!;
-        // orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
+        const sun = bodySystem.getBody("Sun")!;
+        orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
 
         getworkerExecutorPool().execute({orbitLength: this.orbitLength, orbitingBodies:orbitingBodies})
             .then(namedOrbitArrayBuffers => { 
@@ -191,6 +190,10 @@ export class OrbitalOutline  {
      * @param position 
      */
     addPosition(position: Vector3, maintainLength: boolean = false) {
+        // if(!this.enabled){
+        //     return;
+        // }
+        
         
         const positionAttributeBuffer: BufferAttribute = this.line.geometry.getAttribute('position') as BufferAttribute;
 
@@ -246,7 +249,7 @@ export class OrbitalOutline  {
 
                 function selectFirstPoint(startIndex: number, distance: number): [Vector, number] {
                         // console.log("Distance Added: "+distance);
-                    const p1 = that.positionAtIndex(startIndex);
+                    let p1 = that.positionAtIndex(startIndex);
                     const p2 = that.positionAtIndex(startIndex+1);
                     const firstSegment = Vector.substract(p1, p2);
                     const firstSegmentLength = firstSegment.magnitude();
@@ -257,7 +260,7 @@ export class OrbitalOutline  {
                             return selectFirstPoint(startIndex+1, distance-firstSegmentLength);
                     }
                                         
-                    p1.add(firstSegment.normalize().multiplyScalar(distance));                        
+                    p1 = p1.add(firstSegment.normalize().multiplyScalar(distance));                        
                     return [p1, startIndex];
                         
                 }
@@ -272,7 +275,7 @@ export class OrbitalOutline  {
                         // console.log(newSegment0.magnitude() +" vs "+addedDistance);
                         // console.log("Diff: "+ diff.toFixed(4));
                         if(Math.abs(diff) > 1){
-                                // should not happen - this corrups?
+                                // should not happen - TODO: fix me
                             console.log("OUPSSSS")
                         } else {
                             this.startIndex = index;                    
@@ -333,6 +336,8 @@ export class OrbitalOutline  {
     setPositionAttributeBuffer(positionAttribute: Float32Array, index: number){
         this.line.geometry.attributes['position'].array.set(positionAttribute);
         this.endIndex = index;
+        this.p0 =  this.positionAtIndex(index-2);
+        this.p1 =  this.positionAtIndex(index-1);
         this.startIndex = 0;
     }
     
@@ -360,7 +365,14 @@ export class OrbitalOutline  {
     }
 
     set enabled(value: boolean) {
+        const that = this;
+        if(value){
+            // this.createOrbit();
+            //.then(v => that.line.visible = value);
+        }
         this.line.visible = value;
+    
+
     }
 
     get enabled(): boolean {
