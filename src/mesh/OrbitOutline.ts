@@ -7,8 +7,8 @@ import { BodyProperties } from "../domain/models.ts";
 import { ExecutorPool } from "../system/ExecutorPool.ts";
 // import MyWorker from './worker?worker';
 
-// const MAX_VERTICES = 360 * 20*10;
-const MAX_VERTICES = 360 * 5;
+const MAX_VERTICES = 360 * 20*10;
+// const MAX_VERTICES = 360 * 5;
 const NB_WORKERS = 8;
 
 export type NamedArrayBuffer = {
@@ -18,12 +18,13 @@ export type NamedArrayBuffer = {
 }
 
 export enum OrbitLengthType {
-    Angle,
-    Time
+    AngleDegrees = "AngleDegrees",
+    TimeHours = "TimeHours"
 };
 
+
 export type OrbitLength = {
-    type: OrbitLengthType,
+    lengthType: OrbitLengthType,
     value: number
 };
 
@@ -89,7 +90,11 @@ export class OrbitalOutline  {
     _orbitLength: OrbitLength;
 
     set orbitLength(value: OrbitLength){
+        if(value.lengthType == OrbitLengthType.TimeHours){
+            value.value = value.value*1000 * 3600;
+        }
         this._orbitLength = value;
+
         
         this.createOrbit();
 
@@ -99,7 +104,7 @@ export class OrbitalOutline  {
         return this._orbitLength;
     }
 
-    constructor(bodyObject?: BodyObject3D, maxVertices=MAX_VERTICES, enabled = false, colorHue = 0.5, opacity = 0.7, orbitLength={value: 350, type:OrbitLengthType.Angle}) {        
+    constructor(bodyObject?: BodyObject3D, maxVertices=MAX_VERTICES, enabled = false, colorHue = 0.5, opacity = 0.7, orbitLength={value: 350, lengthType:OrbitLengthType.AngleDegrees}) {        
 
         this.bodyObject = bodyObject;
 
@@ -185,7 +190,7 @@ export class OrbitalOutline  {
      *
      * @param position 
      */
-    addPosition(position: Vector3) {
+    addPosition(position: Vector3, maintainLength: boolean = false) {
         
         const positionAttributeBuffer: BufferAttribute = this.line.geometry.getAttribute('position') as BufferAttribute;
 
@@ -218,7 +223,9 @@ export class OrbitalOutline  {
                 this.p0 = this.p1.clone();
                 this.p1 = position;
                 positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);
+                // this assume we keep a constant nb of vertices - we add a vertex, we remove one
                 if(this.endIndex-this.startIndex > this.nbVertices){
+                    // this does not insure we remove the proper distance
                     this.startIndex++;
                     // console.log(this.nbVertices+": "+this.startIndex+" -> "+this.endIndex)
 
@@ -232,11 +239,61 @@ export class OrbitalOutline  {
             } else {
                 // replace p1 with position, draw range/index remains the same
                 // todo: we should move the position of the first vertice by an equal distance instead of just removing it when we add a vertex
-                this.p1 = position;
-                positionAttributeBuffer.setXYZ(this.endIndex-1, position.x, position.y, position.z);    
-            }
 
-        }
+                // calculate distance between p1 and position
+
+                const that = this;
+
+                function selectFirstPoint(startIndex: number, distance: number): [Vector, number] {
+                        // console.log("Distance Added: "+distance);
+                    const p1 = that.positionAtIndex(startIndex);
+                    const p2 = that.positionAtIndex(startIndex+1);
+                    const firstSegment = Vector.substract(p1, p2);
+                    const firstSegmentLength = firstSegment.magnitude();
+                    if(firstSegmentLength < distance){
+                            // increaseStartIndex
+                            console.log("First Segment distance too short: removing it ");
+                    
+                            return selectFirstPoint(startIndex+1, distance-firstSegmentLength);
+                    }
+                                        
+                    p1.add(firstSegment.normalize().multiplyScalar(distance));                        
+                    return [p1, startIndex];
+                        
+                }
+                        
+                if(maintainLength){
+                        const addedDistance = v2.magnitude();
+                        const oldP0 = that.positionAtIndex(this.startIndex);
+                        // this.p0 = selectFirstPoint(addedDistance);
+                        const [newP0, index] = selectFirstPoint(this.startIndex, addedDistance);
+                        const newSegment0 = Vector.substract(newP0, oldP0);
+                        const diff = addedDistance-newSegment0.magnitude();
+                        // console.log(newSegment0.magnitude() +" vs "+addedDistance);
+                        // console.log("Diff: "+ diff.toFixed(4));
+                        if(Math.abs(diff) > 1){
+                                // should not happen - this corrups?
+                            console.log("OUPSSSS")
+                        } else {
+                            this.startIndex = index;                    
+                            positionAttributeBuffer.setXYZ(index, newP0.x, newP0.y, newP0.z)
+                        }
+                            
+                    }
+                            
+                            
+                    this.p1 = position;
+                    positionAttributeBuffer.setXYZ(this.endIndex-1, position.x, position.y, position.z);    
+                }
+                        
+            }
+    }
+    
+    positionAtIndex(i: number): Vector {
+        const sourcePositionArray: Float32Array = this.getPositionAttribute().array as Float32Array;
+        const arrayIndex = i*3;
+        //todo: Use Vector.fromBufferAttribute(attribute, index)
+        return new Vector(sourcePositionArray[arrayIndex], sourcePositionArray[arrayIndex+1], sourcePositionArray[arrayIndex+2]);
     }
 
     /**

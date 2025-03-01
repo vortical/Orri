@@ -53,6 +53,122 @@ onmessage = (event) => {
 };
 
 
+// function orbitForTime(orbitLength: OrbitLength, orbittingBodies: OrbitingBodyWithPositionAttribute[]  ): OrbitingBodyWithPositionAttribute[]  {
+
+//     // time period only based on planets. Find smallest period.
+//     const timePeriod = orbittingBodies
+//     .filter(o => o.type == "planet")
+//     .map(o => o.orbitPeriod? timePeriodToMs(o.orbitPeriod) : approximateOrbitalPeriod(o))
+//     .reduce((prev, current) => prev < current? prev: current,  Number.MAX_VALUE);
+
+
+//   // we want a minimum of 3 steps
+
+
+
+
+
+//   let stepsPerOrbit = STEPS_PER_ORBIT;
+
+//   let nbSteps =  stepsPerOrbit * orbitLength.value / timePeriod;
+
+
+
+//   if(nbSteps < 3){ // this is mostly a straight line - so we kind of want 3 vertices
+
+//     stepsPerOrbit = 3*timePeriod/orbitLength.value;
+//     nbSteps = stepsPerOrbit * orbitLength.value/timePeriod;
+//   }
+
+
+//   const timestep = timeMsToUnits(timePeriod/stepsPerOrbit, TimeUnit.Seconds);
+  
+//   // The number of iterations required to fulfill the orbitLength.
+//   // given that the granularity of the orbit is always the same,
+//   // one thing that happens is if the values are small then we 'miss' resolutions. E.g. for small time values...
+  
+//   // We want minum of 3 steps... 
+
+
+
+
+//   for(let j = 0; j < nbSteps; j++) {
+//     updateKinematics(orbittingBodies, -timestep);
+//   }
+  
+//   // The timesteps are negative, which means the lines is going backwards in time.
+//   orbittingBodies.forEach(o => o.orbitalOutline?.flipPositionBufferAttribute());
+
+
+//   return orbittingBodies;
+
+// }
+
+
+
+// function orbitForAngle(orbitLength: OrbitLength, orbittingBodies: OrbitingBodyWithPositionAttribute[]  ) : OrbitingBodyWithPositionAttribute[] {
+//   const timePeriod = orbittingBodies
+//     .filter(o => o.type == "planet")
+//     .map(o => o.orbitPeriod? timePeriodToMs(o.orbitPeriod) : approximateOrbitalPeriod(o))
+//     .reduce((prev, current) => prev < current? prev: current,  Number.MAX_VALUE);
+
+//   const timestep = timeMsToUnits(timePeriod/STEPS_PER_ORBIT, TimeUnit.Seconds);
+  
+//   // The number of iterations required to fulfill the orbitLength.
+//   // given that the granularity of the orbit is always the same,
+//   // one thing that happens is if the values are small then we 'miss' resolutions. E.g. for small time values...
+//   const nbSteps =  STEPS_PER_ORBIT *  orbitLength.value / 360; 
+
+//   for(let j = 0; j < nbSteps; j++) {
+//     updateKinematics(orbittingBodies, -timestep);
+//   }
+  
+//   // The timesteps are negative, which means the lines is going backwards in time.
+//   orbittingBodies.forEach(o => o.orbitalOutline?.flipPositionBufferAttribute());
+
+
+//   return orbittingBodies;   
+
+// }
+
+// function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBodyWithPositionAttribute[]   ): OrbitingBodyWithPositionAttribute[] {
+//   if(orbitLength.lengthType == OrbitLengthType.Angle){
+//     return orbitForAngle(orbitLength, orbittingBodies);
+//   }
+
+//   return orbitForTime(orbitLength, orbittingBodies);
+// }
+
+function iterationVariablesForAngle(timePeriodMs: number, angleDegrees: number ): [number, number] {
+  
+  let stepsPerOrbit = STEPS_PER_ORBIT;
+  let nbSteps =  stepsPerOrbit *  angleDegrees/ 360;
+  
+  // angle is less than ~ 200th of a degree. We want minimum of 3 vertices
+  if(nbSteps < 3){ 
+    stepsPerOrbit = 3*360/angleDegrees;
+    nbSteps =  stepsPerOrbit *  angleDegrees/ 360;
+  }
+  
+  const timestep = timeMsToUnits(timePeriodMs/stepsPerOrbit, TimeUnit.Seconds);
+  return [nbSteps, timestep];
+
+}
+
+function iterationVariablesForTime(timePeriodMs: number, timeMs: number): [number, number] {
+  let stepsPerOrbit = STEPS_PER_ORBIT;
+
+  let nbSteps =  stepsPerOrbit * timeMs / timePeriodMs;
+  // time is less than a 200th of a degree. Its can be represented with 3 vertices.
+  if(nbSteps < 3){ 
+    stepsPerOrbit = 3*timePeriodMs/timeMs;
+    nbSteps = stepsPerOrbit * timeMs/timePeriodMs;
+  }
+
+  const timestep = timeMsToUnits(timePeriodMs/stepsPerOrbit, TimeUnit.Seconds);
+  return [nbSteps, timestep];
+}
+
 function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBodyWithPositionAttribute[]   ): OrbitingBodyWithPositionAttribute[] {
   // time period only based on planets. Find smallest period.
   const timePeriod = orbittingBodies
@@ -60,14 +176,9 @@ function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBody
     .map(o => o.orbitPeriod? timePeriodToMs(o.orbitPeriod) : approximateOrbitalPeriod(o))
     .reduce((prev, current) => prev < current? prev: current,  Number.MAX_VALUE);
 
-  const timestep = timeMsToUnits(timePeriod/STEPS_PER_ORBIT, TimeUnit.Seconds);
-  
-  // The number of iterations required to fulfill the orbitLength.
-  // given that the granularity of the orbit is always the same,
-  // one thing that happens is if the values are small then we 'miss' resolutions. E.g. for small time values...
-  const nbSteps =  STEPS_PER_ORBIT * (orbitLength.type == OrbitLengthType.Time? orbitLength.value / timePeriod : orbitLength.value / 360); 
 
-
+  const f = orbitLength.lengthType == OrbitLengthType.AngleDegrees? iterationVariablesForAngle:iterationVariablesForTime;
+  const [nbSteps, timestep] = f(timePeriod, orbitLength.value);  
 
   for(let j = 0; j < nbSteps; j++) {
     updateKinematics(orbittingBodies, -timestep);

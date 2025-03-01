@@ -352,17 +352,25 @@ export class BodySystem {
     }
 
     setOrbitalOutlineLength(value: OrbitLength){
-        console.log("Line :"+value.type + ", "+value.value)
+        console.log("Line :"+value.lengthType + ", "+value.value)
         for(const bodyObject3D of this.bodyObjects3D.values()){
-            bodyObject3D.orbitOutline.orbitLength = value;
+            if(bodyObject3D.getName() === "Earth"){
+                bodyObject3D.orbitOutline.orbitLength = value;
+
+            }
         }
     }
 
-    getOrbitalOutlineLength(): OrbitLength{
-        const [firstBody] = this.bodyObjects3D.values();
-        return firstBody.orbitOutline.orbitLength;
-
+    getOrbitalOutlineLength(): OrbitLength {
+        const body = this.getBodyObject3D("Earth");
+        return body.orbitOutline.orbitLength;
     }
+
+    // getOrbitalOutlineLength(): OrbitLength{
+    //     const [firstBody] = this.bodyObjects3D.values();
+    //     return firstBody.orbitOutline.orbitLength;
+
+    // }
 
     hasStats(): boolean {
         return this.stats != undefined && this.stats.dom.style.display !== "none";
@@ -470,7 +478,7 @@ export class BodySystem {
     initializeOrbitOutlines(){
         const planets = [...this.bodyObjects3D.values()]
             .filter(o => o.body.type == "planet")
-            // .filter(o=>o.getName() == "Earth")
+            .filter(o=>o.getName() == "Earth")
             .forEach(o => o.orbitOutline.createOrbit());
 
     }
