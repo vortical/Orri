@@ -14,4 +14,15 @@ export class MoonBodyObject3D extends PlanetaryBodyObject3D {
     updateLabels() {
         this.labels.updateMoonLabels();
     };
+
+    update(): void {
+        super.update();
+    //    console.log("Moon update")
+    }
+
+ 
+    // setOrbitOutlineEnabled(value: boolean): void {
+    //     this.orbitOutline.enabled = value;
+    //     console.log("Moon: setOrbitOutlineEnabled:"+this.getName());
+    // }
 }

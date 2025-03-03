@@ -9,6 +9,8 @@ import { textureLoader } from '../services/textureLoader.ts';
 import { StarSurface } from './StarSurface.ts';
 // import { StarSurface } from './BodyPart.ts';
 
+import PubSub from 'pubsub-js';
+
 /**
  * We have 2 light sources: pointlight and shadow light ( a directional light). Shadow light can be enabled/disabled,
  * so when enabled, the sum of lights remains the same to when only pointlight was in effect.
@@ -189,4 +191,9 @@ export class StarBodyObject3D extends BodyObject3D {
     planetarySystem(): BodyObject3D {
         return this;
     }
+
+
+    setOrbitOutlineEnabled(value: boolean): void {
+        console.log("Start: setOrbitOutlineEnabled:"+this.getName());
+    }    
 }

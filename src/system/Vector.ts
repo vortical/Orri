@@ -25,4 +25,8 @@ export class Vector extends Vector3 implements VectorComponents {
         
     }
 
+    toString(): string {
+        return `[${this.x}, ${this.y}, ${this.z}]`;
+    }
+
 }

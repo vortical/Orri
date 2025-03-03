@@ -87,11 +87,11 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
-        orbitalOutlinesEnabled: bodySystem.getOrbitalOutlinesEnabled(),
-        orbitalOutlinesOpacity: bodySystem.getOrbitalOutlinesOpacity(),
-        orbitalOutlinesLengthType: bodySystem.getOrbitalOutlineLength().lengthType,
-        orbitalOutlinesAngleValue: (bodySystem.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time? 355: bodySystem.getOrbitalOutlineLength().value),
-        orbitalOutlinesTimeValue:(bodySystem.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees? 355: bodySystem.getOrbitalOutlineLength().value),
+        orbitalOutlinesEnabled: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled(),
+        orbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesOpacity(),
+        orbitalOutlinesLengthType: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType,
+        orbitalOutlinesAngleValue: (bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
+        orbitalOutlinesTimeValue:(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
 
 
         pushState() {
@@ -176,31 +176,31 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     const orbitalOutlinesfolder = gui.addFolder('Orbital Outlines');
 
     const orbitalOutlinesEnabledController = orbitalOutlinesfolder.add(options, "orbitalOutlinesEnabled").name('Show Orbital Outlines')
-        .onChange((v: boolean) => bodySystem.setOrbitalOutlinesEnabled(v));
+        .onChange((v: boolean) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(v));
 
 
     const orbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "orbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbital Outlines Opacity')
-        .onChange((v: number) => bodySystem.setOrbitalOutlinesOpacity(v));
+        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesOpacity(v));
     
     const updateOrbitsAngleInvoker = throttle(100, this, (v) => {
-        bodySystem.setOrbitalOutlineLength({value:v, lengthType:OrbitLengthType.AngleDegrees});
+        bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:v, lengthType:OrbitLengthType.AngleDegrees});
     });
 
 
     const updateOrbitsTimeInvoker = throttle(100, this, (v) => {
-            bodySystem.setOrbitalOutlineLength({value:unitsToMs(v, TimeUnit.Days), lengthType:OrbitLengthType.Time});
+            bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:unitsToMs(v, TimeUnit.Days), lengthType:OrbitLengthType.Time});
     });
 
 
     const orbitalOutlinesAngleValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesAngleValue", 0.001, 355, 0.01).name('Orbital Angle (degrees)')
         .onChange(updateOrbitsAngleInvoker)
-        .enable(bodySystem.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees)
-        .show(bodySystem.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees);
+        .enable(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees)
+        .show(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees);
 
     const orbitalOutlineTimeValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesTimeValue", 0.01, 365*248 , 0.01).name('Orbital Time (day)')
         .onChange(updateOrbitsTimeInvoker)
-        .enable(bodySystem.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time)
-        .show(bodySystem.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time);
+        .enable(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time)
+        .show(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time);
 
     const orbitalOutlinesLengthTypeController = orbitalOutlinesfolder.add(options, "orbitalOutlinesLengthType", OrbitLengthType).name('Orbital Outlines Type')
         .onChange((v: OrbitLengthType) => {

@@ -51,6 +51,21 @@ export abstract class BodyObject3D extends CelestialBodyPart {
 
     abstract  getSurface(): Object3D;
 
+    // abstract setOrbitOutlineEnabled(value: boolean): void;
+
+    getOrbitOutlineEnabled(): boolean {
+        return this.orbitOutline.enabled;
+    }
+
+    setOrbitOutlineEnabled(value: boolean): void {
+        if(this.getOrbitOutlineEnabled() == value){
+            return;
+        }        
+        this.orbitOutline.enabled = value;        
+    }
+
+    
+
     getObject3D(): Object3D {
         return this.object3D;
     }
@@ -145,9 +160,18 @@ export abstract class BodyObject3D extends CelestialBodyPart {
 
         this.updateLabelsInvoker();
 
+        // // does not belong here, this should be completely seperate from the body?
+
         if(this.orbitOutline.enabled){
-            this.orbitOutline.addPosition(this.body.position, true);
-            this.updateOrbitsInvoker();
+            if(this.isPlanetarySystemSelected()){
+                this.orbitOutline.addPosition(this.body.position, true);
+                this.updateOrbitsInvoker();        
+            }else{
+                if(this.body.type == "planet"){
+                    this.orbitOutline.addPosition(this.body.position, true);
+                    this.updateOrbitsInvoker();        
+                }
+            }
         }
 
     }
@@ -155,7 +179,9 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     /*
      * Limit the label updates frequency. 20 per second
      */
-    updateLabelsInvoker = throttle(1000/20, this, () => this.updateLabels());
+    updateLabelsInvoker = throttle(1000/20, this, () => {
+        this.updateLabels();
+    });
     updateOrbitsInvoker = throttle(1000/5, this, () => this.orbitOutline.needsUpdate());
 
 
@@ -166,4 +192,12 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     planetarySystem(): BodyObject3D {
         return this;
     }
+
+    isPlanetarySystemSelected() {
+        const currentTarget = this.bodySystem.getBodyObject3DTarget();
+        return this.body.planetarySystem() == currentTarget.body.planetarySystem();
+    }
+
+
+
 }

@@ -76,7 +76,7 @@ export class OrbitalOutline  {
      */
     maxVertices: number;
     // nbOf vertices representing this orbit. Defaults to nearly a full circle.
-    nbVertices: number = 355 * 4
+    nbVertices: number = 355 * 4;
 
     /**
      * Full circle is 2PI.
@@ -88,6 +88,7 @@ export class OrbitalOutline  {
     p1!: Vector3;
     bodyObject?: BodyObject3D;
     _orbitLength: OrbitLength;
+    // _enabled: boolean;
 
     set orbitLength(value: OrbitLength){
 
@@ -115,6 +116,7 @@ export class OrbitalOutline  {
         this.opacity = opacity;
         this.maxVertices = maxVertices
         this._orbitLength = orbitLength;
+        this.enabled = enabled;
     }
 
     getObject3D(): Object3D {
@@ -125,27 +127,7 @@ export class OrbitalOutline  {
         this.endIndex = 0;
     }
 
-    // /**
-    //  * Set up an orbital circumference with a length based on degrees. 360 means an entire orbit.
-    //  * 
-    //  * @param angleDegrees the degrees to render
-    //  */
-    // createOrbitForAngle(angleDegrees: number, bodyObject: BodyObject3D, bodySystem: BodySystem ){
-    //     this.createOrbit({type: OrbitLengthType.Angle, value: angleDegrees }, bodyObject, bodySystem);
-
-    // }
-
-    // /**
-    //  * Draw an orbit circumferance with a length that would be covered for a specific time. E.g. 1
-    //  * day Orbit would represent the orbit distance covered in a day.
-    //  * @param timeMs 
-    //  */
-    // createOrbitForTime(timeMs: number, bodyObject: BodyObject3D, bodySystem: BodySystem ){
-    //     this.createOrbit({type: OrbitLengthType.Time, value: timeMs }, bodyObject, bodySystem);
-
-    // }
-
-
+ 
     createOrbit(){
 
         if(this.bodyObject == undefined){
@@ -247,42 +229,46 @@ export class OrbitalOutline  {
 
                 const that = this;
 
-                function selectFirstPoint(startIndex: number, distance: number): [Vector, number] {
-                        // console.log("Distance Added: "+distance);
-                    let p1 = that.positionAtIndex(startIndex);
-                    const p2 = that.positionAtIndex(startIndex+1);
-                    const firstSegment = Vector.substract(p1, p2);
-                    const firstSegmentLength = firstSegment.magnitude();
-                    if(firstSegmentLength < distance){
-                            // increaseStartIndex
-                            console.log("First Segment distance too short: removing it ");
+                // function selectFirstPoint(startIndex: number, distance: number): [Vector, number] {
+                //     let p1 = that.positionAtIndex(startIndex);
+                //     const p2 = that.positionAtIndex(startIndex+1);
+
+                //     const firstSegment = Vector.substract(p1, p2);
+                //     const firstSegmentLength = firstSegment.magnitude();
+
+                //     // keep this debug
+                //     // console.log(`i: ${startIndex} - p1:${p1.toString()}, p2:${p2.toString()} - segment:${firstSegment.toString()}`)
                     
-                            return selectFirstPoint(startIndex+1, distance-firstSegmentLength);
-                    }
+                //     if(firstSegmentLength < distance){
+                //             // increaseStartIndex
+                //             console.log("First Segment distance too short: removing it ");
+                    
+                //             return selectFirstPoint(startIndex+1, distance-firstSegmentLength);
+                //     }
                                         
-                    p1 = p1.add(firstSegment.normalize().multiplyScalar(distance));                        
-                    return [p1, startIndex];
+                //     p1 = p1.add(firstSegment.normalize().multiplyScalar(distance));                        
+                //     return [p1, startIndex];
                         
-                }
+                // }
                         
-                if(maintainLength){
-                        const addedDistance = v2.magnitude();
-                        const oldP0 = that.positionAtIndex(this.startIndex);
-                        // this.p0 = selectFirstPoint(addedDistance);
-                        const [newP0, index] = selectFirstPoint(this.startIndex, addedDistance);
-                        const newSegment0 = Vector.substract(newP0, oldP0);
-                        const diff = addedDistance-newSegment0.magnitude();
-                        // console.log(newSegment0.magnitude() +" vs "+addedDistance);
-                        // console.log("Diff: "+ diff.toFixed(4));
-                        if(Math.abs(diff) > 1){
-                                // should not happen - TODO: fix me
-                            console.log("OUPSSSS")
-                        } else {
-                            this.startIndex = index;                    
-                            positionAttributeBuffer.setXYZ(index, newP0.x, newP0.y, newP0.z)
-                        }
+                // if(maintainLength){
+                //         const addedDistance = v2.magnitude();
+                //         const oldP0 = that.positionAtIndex(this.startIndex);
+                //         // this.p0 = selectFirstPoint(addedDistance);
+                //         const [newP0, index] = selectFirstPoint(this.startIndex, addedDistance);
+                //         const newSegment0 = Vector.substract(newP0, oldP0);
+                //         const diff = addedDistance-newSegment0.magnitude();
+                //         // console.log(newSegment0.magnitude() +" vs "+addedDistance);
+                //         // console.log("Diff: "+ diff.toFixed(4));
+                //         if(Math.abs(diff) > 1){
+                //                 // should not happen - TODO: fix me
+                //             console.log("OUPSSSS")
+                //         } else {
+                //             this.startIndex = index;                    
+                //             positionAttributeBuffer.setXYZ(index, newP0.x, newP0.y, newP0.z)
+                //         }
                             
-                    }
+                //     }
                             
                             
                     this.p1 = position;
@@ -365,14 +351,12 @@ export class OrbitalOutline  {
     }
 
     set enabled(value: boolean) {
-        const that = this;
-        if(value){
-            // this.createOrbit();
-            //.then(v => that.line.visible = value);
+        if(this.line.visible != value){
+            if(value){
+                this.createOrbit();
+            }
+            this.line.visible = value;
         }
-        this.line.visible = value;
-    
-
     }
 
     get enabled(): boolean {
