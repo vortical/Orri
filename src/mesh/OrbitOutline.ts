@@ -38,16 +38,16 @@ class OrbitOutlinerWorker {
         });
     };
 
-    run(orbitLength: OrbitLength, orbitingBodies: BodyProperties[]): Promise<NamedArrayBuffer[]>{
+    run(desiredOrbitBodyName: string, orbitLength: OrbitLength, orbitingBodies: BodyProperties[]): Promise<NamedArrayBuffer[]>{
         return new Promise<NamedArrayBuffer[]>((resolve) => {
             this.worker.onmessage = (event) => resolve(event.data.response);                
-            this.worker.postMessage({orbitLength: orbitLength, bodies: orbitingBodies })    
+            this.worker.postMessage({desiredOrbitBodyName: desiredOrbitBodyName, orbitLength: orbitLength, bodies: orbitingBodies })    
         });
     }
 }
 
 
-type OrbitOutlineWorkerParams = {orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]};
+type OrbitOutlineWorkerParams = {desiredOrbitBodyName: string, orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]};
 
 let workerPool: ExecutorPool<OrbitOutlineWorkerParams, NamedArrayBuffer[]>;
 
@@ -55,7 +55,7 @@ export function getworkerExecutorPool(): ExecutorPool<OrbitOutlineWorkerParams,N
     if(workerPool == undefined){
         const workers = Array.from({length: NB_WORKERS}).map(() => {
             const runner = new OrbitOutlinerWorker();
-            return (s: OrbitOutlineWorkerParams) => runner.run(s.orbitLength, s.orbitingBodies);        
+            return (s: OrbitOutlineWorkerParams) => runner.run(s.desiredOrbitBodyName, s.orbitLength, s.orbitingBodies);        
         });
         workerPool = new ExecutorPool(workers);
     }
@@ -94,8 +94,10 @@ export class OrbitalOutline  {
 
         this._orbitLength = value;
 
+        if(this.enabled){
+            this.createOrbit();
+        }
         
-        this.createOrbit();
 
     }
 
@@ -124,6 +126,7 @@ export class OrbitalOutline  {
     }
 
     resetOrbit(){
+        this.startIndex = 0;
         this.endIndex = 0;
     }
 
@@ -133,6 +136,9 @@ export class OrbitalOutline  {
         if(this.bodyObject == undefined){
             return;
         }
+        this.resetOrbit();
+
+        console.log("Create Orbit:"+this.bodyObject.getName());
 
         const bodySystem = this.bodyObject.bodySystem;
         // collection of bodies needed to create a credible orbit of this body
@@ -145,7 +151,7 @@ export class OrbitalOutline  {
         const sun = bodySystem.getBody("Sun")!;
         orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
 
-        getworkerExecutorPool().execute({orbitLength: this.orbitLength, orbitingBodies:orbitingBodies})
+        getworkerExecutorPool().execute({desiredOrbitBodyName: this.bodyObject.getName(), orbitLength: this.orbitLength, orbitingBodies:orbitingBodies})
             .then(namedOrbitArrayBuffers => { 
                 namedOrbitArrayBuffers
                     .filter( o => o.buffer != undefined)

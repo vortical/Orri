@@ -16,11 +16,15 @@ const STEPS_PER_ORBIT = 360*4*10;
 
 class OrbitingBodyWithPositionAttribute extends Body {
   orbitalOutline?: OrbitalOutline;
-  constructor(b: BodyProperties){
+  constructor(b: BodyProperties, withOrbitalOutline: boolean){
     super(b);
-    if(b.type == 'planet'){
+    if(withOrbitalOutline){
       this.orbitalOutline =  new OrbitalOutline();
     }
+
+    // if(b.type == 'planet'){
+    //   this.orbitalOutline =  new OrbitalOutline();
+    // }
   }
 };
 
@@ -30,7 +34,8 @@ onmessage = (event) => {
   const data = event.data;
   const bodyProperties = data.bodies as BodyProperties[];
   const orbitLength = data.orbitLength as OrbitLength;
-  const orbitingBodyWithPositionAttribute = bodyProperties.map(b =>  new OrbitingBodyWithPositionAttribute(b));
+  const desiredOrbitBodyName = data.desiredOrbitBodyName;
+  const orbitingBodyWithPositionAttribute = bodyProperties.map(b =>  new OrbitingBodyWithPositionAttribute(b, b.name == desiredOrbitBodyName));
   // set up hierarchy
   orbitingBodyWithPositionAttribute.forEach(b => b.parent = orbitingBodyWithPositionAttribute.find(o => o.name == b.parentName));
   const orbitingObjects = calculateOrbits(orbitLength, orbitingBodyWithPositionAttribute);
@@ -93,9 +98,9 @@ function iterationVariablesForTime(timePeriodMs: number, timeMs: number): [numbe
 }
 
 function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBodyWithPositionAttribute[]   ): OrbitingBodyWithPositionAttribute[] {
-  // time period only based on planets. Find smallest period.
+  // Find smallest period.
   const timePeriod = orbittingBodies
-    .filter(o => o.type == "planet")
+    .filter(o => o.type == "planet" || o.type == "moon")
     .map(o => o.orbitPeriod? timePeriodToMs(o.orbitPeriod) : approximateOrbitalPeriod(o))
     .reduce((prev, current) => prev < current? prev: current,  Number.MAX_VALUE);
 

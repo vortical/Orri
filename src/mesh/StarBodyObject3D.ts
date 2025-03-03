@@ -183,16 +183,6 @@ export class StarBodyObject3D extends BodyObject3D {
         this.flareEffect.update();
     }
 
-    /**
-     * This would be a star system.
-     * 
-     * @returns this star as the system.
-     */
-    planetarySystem(): BodyObject3D {
-        return this;
-    }
-
-
     setOrbitOutlineEnabled(value: boolean): void {
         console.log("Start: setOrbitOutlineEnabled:"+this.getName());
     }    

@@ -191,6 +191,7 @@ export class Body {
         }
     }
 
+    
     /**
      * @param body 
      * @returns Distance from this body to body 
@@ -276,3 +277,5 @@ export class Body {
         );
     }
 }
+
+// export type PlanetarySystem = Body;

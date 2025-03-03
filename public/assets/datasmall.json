@@ -95,6 +95,10 @@
         "sideralRotationPeriod": {
             "days": 27.3217
         },
+        "orbitPeriod":{
+            "days":  27.3217
+        },        
+
         "sideralRotation": {
             "x": 0,
             "y": 0,
@@ -140,6 +144,10 @@
         "sideralRotationPeriod": {
             "days": 0.31891023
         },
+        "orbitPeriod":{
+            "days": 0.31891023
+        },        
+
         "gltf": {
             "uri": "/assets/gltf/planets/phobos.glb",
             "scale": 1,
@@ -158,6 +166,10 @@
         "sideralRotationPeriod": {
             "hours": 30.312
         },
+        
+        "orbitPeriod":{
+            "hours": 30.312
+        },        
         "gltf": {
             "uri": "/assets/gltf/planets/deimos.glb",
             "scale": 1,
@@ -203,6 +215,9 @@
         "sideralRotationPeriod": {
             "hours": 42.456
         },
+        "orbitPeriod":{
+            "hours": 42.456
+        },        
         "textures": {
             "textureUri": "/assets/textures/planets/io_map.jpg",
             "normalUri": "/assets/textures/planets/io_normal.jpg",
@@ -221,6 +236,9 @@
         "sideralRotationPeriod": {
             "days": 3.551
         },
+        "orbitPeriod":{
+            "days": 3.551
+        },                
         "textures": {
             "textureUri": "/assets/textures/planets/europa_map.jpg",
             "bumpMapUri": "/assets/textures/planets/europa_bump.jpg"
@@ -238,6 +256,9 @@
         "sideralRotationPeriod": {
             "days": 7.155
         },
+        "orbitPeriod":{
+            "days": 7.155
+        },                        
         "textures": {
             "textureUri": "/assets/textures/planets/ganymede_map.jpg"
         }
@@ -254,6 +275,9 @@
         "sideralRotationPeriod": {
             "days": 16.689
         },
+        "orbitPeriod":{
+            "days": 16.689
+        },                                
         "textures": {
             "textureUri": "/assets/textures/planets/callisto_map.jpg"
         }
@@ -296,6 +320,10 @@
         "sideralRotationPeriod": {
             "days": 15.945
         },
+        "orbitPeriod":{
+            "days": 15.945
+        },                                        
+
         "textures": {
             "textureUri": "/assets/textures/planets/titan_map.jpg"
         }
@@ -312,6 +340,10 @@
         "sideralRotationPeriod": {
             "days": 4.518212
         },
+        "orbitPeriod":{
+            "days": 4.518212
+        },                                        
+
         "textures": {
             "textureUri": "/assets/textures/planets/rhea_map.jpg"
         }
@@ -328,6 +360,10 @@
         "sideralRotationPeriod": {
             "days": 0.942421959
         },
+        "orbitPeriod":{
+            "days": 0.942421959
+        },                                        
+
         "textures": {
             "author": "oleg-pluton",
             "textureUri": "/assets/textures/planets/mimas_map.jpg"
@@ -345,6 +381,9 @@
         "sideralRotationPeriod": {
             "days": 1.370218
         },
+        "orbitPeriod":{
+            "days": 1.370218
+        },                                                
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/enceladus_map.jpg"
@@ -362,6 +401,9 @@
         "sideralRotationPeriod": {
             "days": 1.887802
         },
+        "orbitPeriod":{
+            "days": 1.887802
+        },                                                        
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/tethys_map.jpg"
@@ -379,6 +421,10 @@
         "sideralRotationPeriod": {
             "days": 2.736915
         },
+        "orbitPeriod":{
+            "days": 2.736915
+        },        
+
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/dione_map.jpg"
@@ -396,6 +442,10 @@
         "sideralRotationPeriod": {
             "days": 79.3215
         },
+        "orbitPeriod":{
+            "days": 79.3215
+        },        
+
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/iapetus_map.jpg"
@@ -440,6 +490,10 @@
         "sideralRotationPeriod": {
             "days": 0.33503384
         },
+        "orbitPeriod":{
+            "days": 0.33503384
+        },        
+
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -458,6 +512,9 @@
         "sideralRotationPeriod": {
             "days": 0.493065490
         },
+        "orbitPeriod":{
+            "days": 0.493065490
+        },        
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -476,6 +533,9 @@
         "sideralRotationPeriod": {
             "days": 0.5131959201
         },
+        "orbitPeriod":{
+            "days": 0.5131959201
+        },                
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -494,6 +554,9 @@
         "sideralRotationPeriod": {
             "days": 0.76183287
         },
+        "orbitPeriod":{
+            "days": 0.76183287
+        },                        
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -512,6 +575,10 @@
         "sideralRotationPeriod": {
             "days": 1.413479
         },
+        "orbitPeriod":{
+            "days": 1.413479
+        },                        
+
         "textures": {
             "author": "https://www.johnstonsarchive.net/spaceart/cylmaps.html",
             "textureUri": "/assets/textures/planets/miranda_map.jpg"
@@ -529,6 +596,9 @@
         "sideralRotationPeriod": {
             "days": 2.520
         },
+        "orbitPeriod":{
+            "days": 2.520
+        },        
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/ariel_map.jpg"
@@ -547,6 +617,9 @@
         "sideralRotationPeriod": {
             "days": 4.144
         },
+        "orbitPeriod":{
+            "days": 4.144
+        },        
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/umbriel_map.jpg"
@@ -566,6 +639,10 @@
         "sideralRotationPeriod": {
             "days": 8.706234
         },
+        "orbitPeriod":{
+            "days": 8.706234
+        },        
+
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/titania_map.jpg"
@@ -584,6 +661,10 @@
         "sideralRotationPeriod": {
             "days": 13.463234
         },
+        "orbitPeriod":{
+            "days": 13.463234
+        },        
+
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/oberon_map.jpg"
@@ -622,6 +703,9 @@
         "sideralRotationPeriod": {
             "days": 5.876854
         },
+        "orbitPeriod":{
+            "days": 5.876854
+        },                        
         "textures": {
             "author": "https://www.deviantart.com/neptuneprogaming/art/Triton-Texture-Map-713512330",
             "textureUri": "/assets/textures/planets/triton_map.jpg"
@@ -640,6 +724,9 @@
         "sideralRotationPeriod": {
             "days": 1.12231477
         },
+        "orbitPeriod":{
+            "days": 1.12231477
+        },                                
         "textures": {
             "author": "https://solarviews.com/thumb/nep/proteus2.gif",
             "textureUri": "/assets/textures/planets/proteus_map.jpg"
@@ -681,6 +768,9 @@
         "sideralRotationPeriod": {
             "days": 6.387221
         },
+        "orbitPeriod":{
+            "days": 6.387221
+        },                                        
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Charon-Texture-Map-762245061",
             "textureUri": "/assets/textures/planets/charon_map.jpg"

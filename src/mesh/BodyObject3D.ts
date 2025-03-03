@@ -189,13 +189,13 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.labels.updateBodyLabels();
     };
 
-    planetarySystem(): BodyObject3D {
-        return this;
+    planetarySystem(): Body {
+        return this.body.planetarySystem();
     }
 
     isPlanetarySystemSelected() {
         const currentTarget = this.bodySystem.getBodyObject3DTarget();
-        return this.body.planetarySystem() == currentTarget.body.planetarySystem();
+        return this.planetarySystem() == currentTarget.planetarySystem();
     }
 
 
