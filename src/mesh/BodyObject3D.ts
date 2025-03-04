@@ -10,6 +10,7 @@ import { Vector } from '../system/Vector.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 import { LatLon } from '../system/LatLon.ts';
 import { BodySurface } from './BodySurface.ts';
+import { OrbitalOutline } from './OrbitOutline.ts';
 
 
 /**
@@ -29,6 +30,8 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     readonly object3D: Object3D;
     readonly body: Body;
     readonly bodySystem: BodySystem;
+    readonly orbitOutline: OrbitalOutline;
+    
     readonly labels: ObjectLabels;
     pins: LocationPin[] = [];
     northPin?: LocationPin;
@@ -39,11 +42,29 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.body = body;
         this.bodySystem = bodySystem;
         this.labels = new ObjectLabels(this);
+        this.orbitOutline = new OrbitalOutline(this);
+        
         this.object3D.add(...this.labels.getCSS2DObjects());
+        this.bodySystem.scene.add(this.orbitOutline.getObject3D())
     
     }
 
     abstract  getSurface(): Object3D;
+
+    // abstract setOrbitOutlineEnabled(value: boolean): void;
+
+    getOrbitOutlineEnabled(): boolean {
+        return this.orbitOutline.enabled;
+    }
+
+    setOrbitOutlineEnabled(value: boolean): void {
+        if(this.getOrbitOutlineEnabled() == value){
+            return;
+        }        
+        this.orbitOutline.enabled = value;        
+    }
+
+    
 
     getObject3D(): Object3D {
         return this.object3D;
@@ -72,11 +93,22 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.bodySystem.setTarget(this);
     }
 
+    /**
+     * 
+     * @param fromSurface true if distance is to be measured from surface of body as opposed to center.
+     * 
+     * @returns distance in km
+     */
     cameraDistance(fromSurface: boolean = false): number {
         const distance = this.bodySystem.camera.position.distanceTo(this.object3D.position);
         return fromSurface ? distance - (this.body.radius / 1000) : distance;
     }
 
+    /**
+     * Alias of cameraDistance(true)
+     * 
+     * @returns 
+     */
     cameraDistanceFromSurface(): number {
         return this.cameraDistance(true);
     }
@@ -123,20 +155,49 @@ export abstract class BodyObject3D extends CelestialBodyPart {
      */
     updatePart(): void {
         const body = this.body;
-        this.object3D.position.set(body.position.x / 1000, body.position.y / 1000, body.position.z / 1000);
+        const x = body.position.x / 1000, y = body.position.y / 1000, z = body.position.z / 1000;
+        this.object3D.position.set(x, y, z);
+
         this.updateLabelsInvoker();
+
+        // // does not belong here, this should be completely seperate from the body?
+
+        if(this.orbitOutline.enabled){
+            if(this.isPlanetarySystemSelected()){
+                this.orbitOutline.addPosition(this.body.position, true);
+                this.updateOrbitsInvoker();        
+            }else{
+                if(this.body.type == "planet"){
+                    this.orbitOutline.addPosition(this.body.position, true);
+                    this.updateOrbitsInvoker();        
+                }
+            }
+        }
+
     }
 
     /*
-     * Limit the label updates to 20 per second.
+     * Limit the label updates frequency. 20 per second
      */
-    updateLabelsInvoker = throttle(1000/20, this, () => this.updateLabels());
+    updateLabelsInvoker = throttle(1000/20, this, () => {
+        this.updateLabels();
+    });
+    updateOrbitsInvoker = throttle(1000/5, this, () => this.orbitOutline.needsUpdate());
+
 
     updateLabels(): void {
         this.labels.updateBodyLabels();
     };
 
-    planetarySystem(): BodyObject3D {
-        return this;
+    planetarySystem(): Body {
+        return this.body.planetarySystem();
     }
+
+    isPlanetarySystemSelected() {
+        const currentTarget = this.bodySystem.getBodyObject3DTarget();
+        return this.planetarySystem() == currentTarget.planetarySystem();
+    }
+
+
+
 }

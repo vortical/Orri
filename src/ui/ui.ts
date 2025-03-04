@@ -16,6 +16,9 @@ import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
 import { DistanceUnit, DistanceUnits } from '../system/distance.ts';
 import { TimeControls } from './TimeControls.ts';
+import { OrbitLengthType } from '../mesh/OrbitOutline.ts';
+import { throttle } from '../system/throttle.ts';
+import { TimeUnit, unitsToMs } from '../system/time.ts';
 
 
 export const userNotify: INotifyService = new NotifyService();
@@ -51,13 +54,13 @@ export class SimpleUI {
  * Manage the initialValue of lil-gui controllers, if an exception arises then
  * call reset on the lil-gui component: reset rolls back the value to initialValue.
  * 
- * @param callback 
+ * @param f 
  * @returns 
  */
-function withRollback(callback: (v: any) => void) {
+function withRollback(f: (v: any) => void) {
     return function (v: any) {
         try {
-            callback.call(this, v);
+            f.call(this, v);
             this.initialValue = v;
         } catch (e) {
             this.reset();
@@ -78,12 +81,18 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         showNameLabels: bodySystem.isLayerEnabled(CameraLayer.NameLabel),
         showDistanceLabels: bodySystem.isLayerEnabled(CameraLayer.DistanceLabel),
         showAltitudeAzimuthLabels: bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel),
-        projectShadows: bodySystem.areShadowsEnabled(),
+        projectShadows: bodySystem.getShadowsEnabled(),
         shadowType: bodySystem.getShadowType(),
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
+        orbitalOutlinesEnabled: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled(),
+        orbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesOpacity(),
+        orbitalOutlinesLengthType: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType,
+        orbitalOutlinesAngleValue: (bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
+        orbitalOutlinesTimeValue:(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
+
 
         pushState() {
             const state = bodySystem.getState();
@@ -132,6 +141,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         }));
 
 
+
     const locationController = gui.add(options, "location").name("Coordinates (lat, lon)").listen()
         .onFinishChange(withRollback((v: string) => {
             try {
@@ -162,6 +172,58 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
 
     const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
+
+    const orbitalOutlinesfolder = gui.addFolder('Orbital Outlines');
+
+    const orbitalOutlinesEnabledController = orbitalOutlinesfolder.add(options, "orbitalOutlinesEnabled").name('Show Orbital Outlines')
+        .onChange((v: boolean) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(v));
+
+
+    const orbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "orbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbital Outlines Opacity')
+        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesOpacity(v));
+    
+    const updateOrbitsAngleInvoker = throttle(100, this, (v) => {
+        bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:v, lengthType:OrbitLengthType.AngleDegrees});
+    });
+
+
+    const updateOrbitsTimeInvoker = throttle(100, this, (v) => {
+            bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:unitsToMs(v, TimeUnit.Days), lengthType:OrbitLengthType.Time});
+    });
+
+
+    const orbitalOutlinesAngleValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesAngleValue", 0.001, 355, 0.01).name('Orbital Angle (degrees)')
+        .onChange(updateOrbitsAngleInvoker)
+        .enable(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees)
+        .show(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees);
+
+    const orbitalOutlineTimeValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesTimeValue", 0.01, 365*248 , 0.01).name('Orbital Time (day)')
+        .onChange(updateOrbitsTimeInvoker)
+        .enable(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time)
+        .show(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time);
+
+    const orbitalOutlinesLengthTypeController = orbitalOutlinesfolder.add(options, "orbitalOutlinesLengthType", OrbitLengthType).name('Orbital Outlines Type')
+        .onChange((v: OrbitLengthType) => {
+            if(v == OrbitLengthType.AngleDegrees){
+                orbitalOutlinesAngleValueController.enable();
+                orbitalOutlinesAngleValueController.show();
+                orbitalOutlineTimeValueController.disable();
+                orbitalOutlineTimeValueController.hide();
+                const value = orbitalOutlinesAngleValueController.getValue();
+                updateOrbitsAngleInvoker(value);
+
+
+            }else{
+                orbitalOutlinesAngleValueController.disable();
+                orbitalOutlineTimeValueController.enable();
+                orbitalOutlineTimeValueController.show()
+                orbitalOutlinesAngleValueController.hide();
+                const value = orbitalOutlineTimeValueController.getValue();
+                updateOrbitsTimeInvoker(value);
+            }
+
+        });
+
 
     const shadowsSettingsfolder = gui.addFolder('Eclipse/shadow Settings');
 

@@ -21,7 +21,7 @@
     {
         "type": "planet",
         "name": "Mercury",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 3.3022e23,
         "radius": 2.44e6,
         "castShadow": false,
@@ -29,6 +29,9 @@
         "obliquityToOrbit": 0.034,
         "sideralRotationPeriod": {
             "days": 58.646
+        },
+        "orbitPeriod":{
+            "days":  87.97
         },
         "textures": {
             "textureUri": "/assets/textures/planets/mercury_map.jpg",
@@ -38,7 +41,7 @@
     {
         "type": "planet",
         "name": "Venus",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 4.869e24,
         "radius": 6.05e6,
         "castShadow": false,
@@ -46,6 +49,9 @@
         "obliquityToOrbit": 177.4,
         "sideralRotationPeriod": {
             "days": 243.022
+        },
+        "orbitPeriod":{
+            "days":  224.7
         },
         "textures": {
             "textureUri": "/assets/textures/planets/venus_map.jpg",
@@ -55,7 +61,7 @@
     {
         "type": "planet",
         "name": "Earth",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 5.9736e24,
         "radius": 6.378e6,
         "castShadow": false,
@@ -65,6 +71,9 @@
             "hours": 23,
             "minutes": 56,
             "seconds": 4.0905
+        },
+        "orbitPeriod":{
+            "days":  365.26
         },
         "textures": {
             "textureUri": "/assets/textures/planets/earth_map.jpg",
@@ -77,7 +86,7 @@
     {
         "type": "moon",
         "name": "Moon",
-        "parent": "Earth",
+        "parentName": "Earth",
         "mass": 7.3477e22,
         "radius": 1.737400e6,
         "castShadow": true,
@@ -86,6 +95,10 @@
         "sideralRotationPeriod": {
             "days": 27.3217
         },
+        "orbitPeriod":{
+            "days":  27.3217
+        },        
+
         "sideralRotation": {
             "x": 0,
             "y": 0,
@@ -100,7 +113,7 @@
     {
         "type": "planet",
         "name": "Mars",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 6.4185e23,
         "radius": 3.185500e6,
         "castShadow": false,
@@ -109,6 +122,10 @@
         "sideralRotationPeriod": {
             "hours": 24.6229
         },
+        "orbitPeriod":{
+            "days":   686.98
+        },
+
         "textures": {
             "textureUri": "/assets/textures/planets/mars_map.jpg",
             "normalUri": "/assets/textures/planets/mars_normal.jpg",
@@ -118,7 +135,7 @@
     {
         "type": "moon",
         "name": "Phobos",
-        "parent": "Mars",
+        "parentName": "Mars",
         "mass": 1.060e16,
         "radius": 11080,
         "castShadow": false,
@@ -127,6 +144,10 @@
         "sideralRotationPeriod": {
             "days": 0.31891023
         },
+        "orbitPeriod":{
+            "days": 0.31891023
+        },        
+
         "gltf": {
             "uri": "/assets/gltf/planets/phobos.glb",
             "scale": 1,
@@ -136,7 +157,7 @@
     {
         "type": "moon",
         "name": "Deimos",
-        "parent": "Mars",
+        "parentName": "Mars",
         "mass": 1.51e15,
         "radius": 6270,
         "castShadow": false,
@@ -145,6 +166,10 @@
         "sideralRotationPeriod": {
             "hours": 30.312
         },
+        
+        "orbitPeriod":{
+            "hours": 30.312
+        },        
         "gltf": {
             "uri": "/assets/gltf/planets/deimos.glb",
             "scale": 1,
@@ -154,7 +179,7 @@
     {
         "type": "planet",
         "name": "Jupiter",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 1898e24,
         "radius": 71.492e6,
         "castShadow": false,
@@ -162,6 +187,9 @@
         "obliquityToOrbit": 3.1,
         "sideralRotationPeriod": {
             "hours": 9.93
+        },        
+        "orbitPeriod":{
+            "days": 4332.82
         },
         "rings": {
             "opacity": 0.2,
@@ -178,7 +206,7 @@
     {
         "type": "moon",
         "name": "Io",
-        "parent": "Jupiter",
+        "parentName": "Jupiter",
         "mass": 8.932e22,
         "radius": 1.8213e6,
         "castShadow": true,
@@ -187,6 +215,9 @@
         "sideralRotationPeriod": {
             "hours": 42.456
         },
+        "orbitPeriod":{
+            "hours": 42.456
+        },        
         "textures": {
             "textureUri": "/assets/textures/planets/io_map.jpg",
             "normalUri": "/assets/textures/planets/io_normal.jpg",
@@ -196,7 +227,7 @@
     {
         "type": "moon",
         "name": "Europa",
-        "parent": "Jupiter",
+        "parentName": "Jupiter",
         "mass": 4.8e22,
         "radius": 1.561e6,
         "castShadow": true,
@@ -205,6 +236,9 @@
         "sideralRotationPeriod": {
             "days": 3.551
         },
+        "orbitPeriod":{
+            "days": 3.551
+        },                
         "textures": {
             "textureUri": "/assets/textures/planets/europa_map.jpg",
             "bumpMapUri": "/assets/textures/planets/europa_bump.jpg"
@@ -213,7 +247,7 @@
     {
         "type": "moon",
         "name": "Ganymede",
-        "parent": "Jupiter",
+        "parentName": "Jupiter",
         "mass": 14.819e22,
         "radius": 2.6341e6,
         "castShadow": true,
@@ -222,6 +256,9 @@
         "sideralRotationPeriod": {
             "days": 7.155
         },
+        "orbitPeriod":{
+            "days": 7.155
+        },                        
         "textures": {
             "textureUri": "/assets/textures/planets/ganymede_map.jpg"
         }
@@ -229,7 +266,7 @@
     {
         "type": "moon",
         "name": "Callisto",
-        "parent": "Jupiter",
+        "parentName": "Jupiter",
         "mass": 10.76e22,
         "radius": 2.41e6,
         "castShadow": true,
@@ -238,6 +275,9 @@
         "sideralRotationPeriod": {
             "days": 16.689
         },
+        "orbitPeriod":{
+            "days": 16.689
+        },                                
         "textures": {
             "textureUri": "/assets/textures/planets/callisto_map.jpg"
         }
@@ -245,7 +285,7 @@
     {
         "type": "planet",
         "name": "Saturn",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 568e24,
         "radius": 60.268e6,
         "castShadow": false,
@@ -253,6 +293,9 @@
         "obliquityToOrbit": 26.73,
         "sideralRotationPeriod": {
             "hours": 10.656
+        },
+        "orbitPeriod":{
+            "days": 10755.70
         },
         "rings": {
             "opacity": 0.95,
@@ -268,7 +311,7 @@
     {
         "type": "moon",
         "name": "Titan",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 13.452e22,
         "radius": 2.5747e6,
         "castShadow": true,
@@ -277,6 +320,10 @@
         "sideralRotationPeriod": {
             "days": 15.945
         },
+        "orbitPeriod":{
+            "days": 15.945
+        },                                        
+
         "textures": {
             "textureUri": "/assets/textures/planets/titan_map.jpg"
         }
@@ -284,7 +331,7 @@
     {
         "type": "moon",
         "name": "Rhea",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 2.3064854e21,
         "radius": 763500,
         "castShadow": false,
@@ -293,6 +340,10 @@
         "sideralRotationPeriod": {
             "days": 4.518212
         },
+        "orbitPeriod":{
+            "days": 4.518212
+        },                                        
+
         "textures": {
             "textureUri": "/assets/textures/planets/rhea_map.jpg"
         }
@@ -300,7 +351,7 @@
     {
         "type": "moon",
         "name": "Mimas",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 3.75094e19,
         "radius": 198200,
         "castShadow": false,
@@ -309,6 +360,10 @@
         "sideralRotationPeriod": {
             "days": 0.942421959
         },
+        "orbitPeriod":{
+            "days": 0.942421959
+        },                                        
+
         "textures": {
             "author": "oleg-pluton",
             "textureUri": "/assets/textures/planets/mimas_map.jpg"
@@ -317,7 +372,7 @@
     {
         "type": "moon",
         "name": "Enceladus",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 1.080318e20,
         "radius": 252100,
         "castShadow": false,
@@ -326,6 +381,9 @@
         "sideralRotationPeriod": {
             "days": 1.370218
         },
+        "orbitPeriod":{
+            "days": 1.370218
+        },                                                
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/enceladus_map.jpg"
@@ -334,7 +392,7 @@
     {
         "type": "moon",
         "name": "Tethys",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 6.1749e20,
         "radius": 531100,
         "castShadow": false,
@@ -343,6 +401,9 @@
         "sideralRotationPeriod": {
             "days": 1.887802
         },
+        "orbitPeriod":{
+            "days": 1.887802
+        },                                                        
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/tethys_map.jpg"
@@ -351,7 +412,7 @@
     {
         "type": "moon",
         "name": "Dione",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 1.0954868e21,
         "radius": 561400,
         "castShadow": false,
@@ -360,6 +421,10 @@
         "sideralRotationPeriod": {
             "days": 2.736915
         },
+        "orbitPeriod":{
+            "days": 2.736915
+        },        
+
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/dione_map.jpg"
@@ -368,7 +433,7 @@
     {
         "type": "moon",
         "name": "Iapetus",
-        "parent": "Saturn",
+        "parentName": "Saturn",
         "mass": 1.80565e21,
         "radius": 734400,
         "castShadow": false,
@@ -377,6 +442,10 @@
         "sideralRotationPeriod": {
             "days": 79.3215
         },
+        "orbitPeriod":{
+            "days": 79.3215
+        },        
+
         "textures": {
             "author": "jpl",
             "textureUri": "/assets/textures/planets/iapetus_map.jpg"
@@ -385,7 +454,7 @@
     {
         "type": "planet",
         "name": "Uranus",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 86.8e24,
         "radius": 25.559000e6,
         "castShadow": false,
@@ -393,6 +462,9 @@
         "obliquityToOrbit": 97.77,
         "sideralRotationPeriod": {
             "hours": 17.24
+        },
+        "orbitPeriod":{
+            "days":  30687.15
         },
         "rings": {
             "opacity": 0.3,
@@ -408,7 +480,7 @@
     {
         "type": "moon",
         "name": "Cordelia",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 6.08e16,
         "radiusfoo": "50,36,36",
         "radius": 22000,
@@ -418,6 +490,10 @@
         "sideralRotationPeriod": {
             "days": 0.33503384
         },
+        "orbitPeriod":{
+            "days": 0.33503384
+        },        
+
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -426,7 +502,7 @@
     {
         "type": "moon",
         "name": "Juliet",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 3.871e17,
         "radiusfoo":"(150 × 74 × 74 km)",
         "radius": 55000,
@@ -436,6 +512,9 @@
         "sideralRotationPeriod": {
             "days": 0.493065490
         },
+        "orbitPeriod":{
+            "days": 0.493065490
+        },        
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -444,7 +523,7 @@
     {
         "type": "moon",
         "name": "Portia",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 1.1671e18 ,
         "radiusfoo":"(156 × 126)",
         "radius": 67000,
@@ -454,6 +533,9 @@
         "sideralRotationPeriod": {
             "days": 0.5131959201
         },
+        "orbitPeriod":{
+            "days": 0.5131959201
+        },                
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -463,7 +545,7 @@
     {
         "type": "moon",
         "name": "Puck",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 1.91e18 ,
         "radius": 81000,
         "castShadow": false,
@@ -472,6 +554,9 @@
         "sideralRotationPeriod": {
             "days": 0.76183287
         },
+        "orbitPeriod":{
+            "days": 0.76183287
+        },                        
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Puck-Texture-Map-767284858",
             "textureUri": "/assets/textures/planets/puck_map.jpg"
@@ -481,7 +566,7 @@
     {
         "type": "moon",
         "name": "Miranda",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 6.293e19 ,
         "radius": 235000,
         "castShadow": false,
@@ -490,6 +575,10 @@
         "sideralRotationPeriod": {
             "days": 1.413479
         },
+        "orbitPeriod":{
+            "days": 1.413479
+        },                        
+
         "textures": {
             "author": "https://www.johnstonsarchive.net/spaceart/cylmaps.html",
             "textureUri": "/assets/textures/planets/miranda_map.jpg"
@@ -498,7 +587,7 @@
     {
         "type": "moon",
         "name": "Ariel",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 1.2331e21 ,
         "radius": 578900,
         "castShadow": false,
@@ -507,6 +596,9 @@
         "sideralRotationPeriod": {
             "days": 2.520
         },
+        "orbitPeriod":{
+            "days": 2.520
+        },        
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/ariel_map.jpg"
@@ -516,7 +608,7 @@
     {
         "type": "moon",
         "name": "Umbriel",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 1.2885e21 ,
         "radius": 584700,
         "castShadow": false,
@@ -525,6 +617,9 @@
         "sideralRotationPeriod": {
             "days": 4.144
         },
+        "orbitPeriod":{
+            "days": 4.144
+        },        
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/umbriel_map.jpg"
@@ -535,7 +630,7 @@
     {
         "type": "moon",
         "name": "Titania",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 3.4550e21 ,
         "radius": 788400,
         "castShadow": false,
@@ -544,6 +639,10 @@
         "sideralRotationPeriod": {
             "days": 8.706234
         },
+        "orbitPeriod":{
+            "days": 8.706234
+        },        
+
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/titania_map.jpg"
@@ -553,7 +652,7 @@
     {
         "type": "moon",
         "name": "Oberon",
-        "parent": "Uranus",
+        "parentName": "Uranus",
         "mass": 3.1104e21 ,
         "radius": 761400,
         "castShadow": false,
@@ -562,6 +661,10 @@
         "sideralRotationPeriod": {
             "days": 13.463234
         },
+        "orbitPeriod":{
+            "days": 13.463234
+        },        
+
         "textures": {
             "author": "https://stevealbers.net/albers/sos/sos.html",
             "textureUri": "/assets/textures/planets/oberon_map.jpg"
@@ -572,7 +675,7 @@
     {
         "type": "planet",
         "name": "Neptune",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 102e24,
         "radius": 24.764e6,
         "castShadow": false,
@@ -581,6 +684,9 @@
         "sideralRotationPeriod": {
             "hours": 16.11
         },
+        "orbitPeriod":{
+            "days":  60190.03
+        },        
         "textures": {
             "textureUri": "/assets/textures/planets/neptune_map.jpg"
         }
@@ -588,7 +694,7 @@
     {
         "type": "moon",
         "name": "Triton",
-        "parent": "Neptune",
+        "parentName": "Neptune",
         "mass": 2.1389e22 ,
         "radius": 1353.400e3,
         "castShadow": false,
@@ -597,6 +703,9 @@
         "sideralRotationPeriod": {
             "days": 5.876854
         },
+        "orbitPeriod":{
+            "days": 5.876854
+        },                        
         "textures": {
             "author": "https://www.deviantart.com/neptuneprogaming/art/Triton-Texture-Map-713512330",
             "textureUri": "/assets/textures/planets/triton_map.jpg"
@@ -606,7 +715,7 @@
     {
         "type": "moon",
         "name": "Proteus",
-        "parent": "Neptune",
+        "parentName": "Neptune",
         "mass": 3.10e19 ,
         "radius": 209e3,
         "castShadow": false,
@@ -615,6 +724,9 @@
         "sideralRotationPeriod": {
             "days": 1.12231477
         },
+        "orbitPeriod":{
+            "days": 1.12231477
+        },                                
         "textures": {
             "author": "https://solarviews.com/thumb/nep/proteus2.gif",
             "textureUri": "/assets/textures/planets/proteus_map.jpg"
@@ -624,7 +736,7 @@
     {
         "type": "planet",
         "name": "Pluto",
-        "parent": "Sun",
+        "parentName": "Sun",
         "mass": 1.3025e22,
         "radius": 1.188e6,
         "castShadow": false,
@@ -633,16 +745,21 @@
         "sideralRotationPeriod": {
             "hours": 153.2928
         },
+        "orbitPeriod":{
+            "days":  90560.085
+        },                
         "textures": {
             "textureUri": "/assets/textures/planets/pluto_map.jpg",
             "bumpMapUri": "/assets/textures/planets/pluto_bump.jpg"
-        }
+        },
+        "binarySibbling":["Charon"]
+
     },
 
     {
         "type": "moon",
         "name": "Charon",
-        "parent": "Pluto",
+        "parentName": "Pluto",
         "mass": 1.5897e21 ,
         "radius": 606e3,
         "castShadow": false,
@@ -651,6 +768,9 @@
         "sideralRotationPeriod": {
             "days": 6.387221
         },
+        "orbitPeriod":{
+            "days": 6.387221
+        },                                        
         "textures": {
             "author": "https://www.deviantart.com/askaniy/art/Charon-Texture-Map-762245061",
             "textureUri": "/assets/textures/planets/charon_map.jpg"

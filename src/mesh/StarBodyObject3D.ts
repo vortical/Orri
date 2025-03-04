@@ -9,6 +9,8 @@ import { textureLoader } from '../services/textureLoader.ts';
 import { StarSurface } from './StarSurface.ts';
 // import { StarSurface } from './BodyPart.ts';
 
+import PubSub from 'pubsub-js';
+
 /**
  * We have 2 light sources: pointlight and shadow light ( a directional light). Shadow light can be enabled/disabled,
  * so when enabled, the sum of lights remains the same to when only pointlight was in effect.
@@ -126,7 +128,7 @@ export class StarBodyObject3D extends BodyObject3D {
         return this.surface.getObject3D();
     }
 
-    areShadowsEnabled(): boolean {
+    getShadowsEnabled(): boolean {
         return this.shadowingLight !== undefined;
     }
 
@@ -140,7 +142,7 @@ export class StarBodyObject3D extends BodyObject3D {
      * will be twice as intense as shadowed areas.
      */
     #updateLightIntensities() {
-        if (this.areShadowsEnabled()) {
+        if (this.getShadowsEnabled()) {
             this.shadowingLight!.intensity = SHADOW_LIGHT_TO_POINT_LIGHT_RATIO * this.lightProperties.intensity / (1 + SHADOW_LIGHT_TO_POINT_LIGHT_RATIO);
             this.pointLight.intensity = 1 * this.lightProperties.intensity / (1 + SHADOW_LIGHT_TO_POINT_LIGHT_RATIO);
         } else {
@@ -149,7 +151,7 @@ export class StarBodyObject3D extends BodyObject3D {
     }
 
     #disableShadowLight() {
-        if (!this.areShadowsEnabled()) return;
+        if (!this.getShadowsEnabled()) return;
 
         this.shadowingLight?.removeFromParent();
         this.shadowingLight?.dispose();
@@ -158,7 +160,7 @@ export class StarBodyObject3D extends BodyObject3D {
     }
 
     #enableShadowLight() {
-        if (this.areShadowsEnabled()) return this;
+        if (this.getShadowsEnabled()) return this;
 
         const light = this.createShadowLight();
         const target = this.bodySystem.getBodyObject3DTarget().object3D;
@@ -181,12 +183,7 @@ export class StarBodyObject3D extends BodyObject3D {
         this.flareEffect.update();
     }
 
-    /**
-     * This would be a star system.
-     * 
-     * @returns this star as the system.
-     */
-    planetarySystem(): BodyObject3D {
-        return this;
-    }
+    setOrbitOutlineEnabled(value: boolean): void {
+        console.log("Start: setOrbitOutlineEnabled:"+this.getName());
+    }    
 }
