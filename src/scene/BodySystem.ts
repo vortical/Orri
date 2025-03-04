@@ -141,7 +141,7 @@ export class BodySystem {
         this.controls.update();
         this.scene.add(...Array.from(this.bodyObjects3D.values()).map(o => o.object3D));
         this.orbitOutlinesStateHandler = new OrbitOutlinesStateHandler(this);
-
+        this.orbitOutlinesStateHandler.setPlanetaryMoonOrbitalOutlinesColorHues();
         this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
         this.orbitOutlinesStateHandler.setOrbitalOutlinesOpacity(orbitalOutlinesOpacity);
 

@@ -23,14 +23,29 @@ Here are some quick links:
 * [Saturn](https://vortical.github.io/Orri/?state=%7B%22cameraPosition%22:%7B%22x%22:1384893497.1778412,%22y%22:-210542956.98469165,%22z%22:365295222.85550684%7D,%22targetPosition%22:%7B%22x%22:1385520174.7539697,%22y%22:-210744967.26439902,%22z%22:365738834.422764%7D,%22target%22:%22Saturn%22,%22sizeScale%22:1,%22timeScale%22:60,%22fov%22:35.2,%22ambientLightLevel%22:0.03,%22showAxes%22:false,%22castShadows%22:false,%22shadowType%22:%22Penumbra%22,%22date%22:1719163634078,%22showNames%22:true,%22showDistance%22:true,%22showAltitudeAzimuth%22:true,%22location%22:%7B%22lat%22:43.3752261,%22lon%22:-73.6368939%7D,%22targettingCameraMode%22:%7B%22name%22:%22Follow%20Target%22%7D%7D) - With its [Tidally locked](https://en.wikipedia.org/wiki/Tidal_locking) moons... as are most moons in our solar system.
 
 
-It has some educational benefits:
-
 * [Watching the horizon/sun from a position abve the arctic cirle](https://vortical.github.io/Orri/?state=%7B%22cameraPosition%22:%7B%22x%22:8000451.26175115,%22y%22:-60574651.21789649,%22z%22:139828578.9001477%7D,%22targetPosition%22:%7B%22x%22:-1046845.5693388648,%22y%22:-212161.4899726349,%22z%22:564069.0322610444%7D,%22target%22:%22Sun%22,%22sizeScale%22:1,%22timeScale%22:86400,%22fov%22:81.4337,%22ambientLightLevel%22:0.03,%22showAxes%22:false,%22castShadows%22:false,%22shadowType%22:%22Penumbra%22,%22date%22:1719256305629,%22showNames%22:true,%22showDistance%22:true,%22showAltitudeAzimuth%22:true,%22location%22:%7B%22lat%22:80,%22lon%22:0%7D,%22targettingCameraMode%22:%7B%22name%22:%22View%20From%20lat,lon%22%7D%7D) - 1 day per second/86,400X ! Endless days...
 
 * Etc ... 
 
 
-Please note that this application is somewhat still in early stages of development, and there may be some rough edges. Especially the mouse/touchpad interaction has some known issues. If you drag the mouse to orbit around the scene and release the mouse while its over a body, then that body will be selected.
+Please note that this application is somewhat still in early stages of development, and there may be some rough edges. 
+
+
+### Running
+
+#### Docker compose
+
+You can pull the images and run locally
+
+```cmd
+docker compose up
+```
+
+
+
+
+
+The app 
 
 
 ### Navigating Between Celestial Bodies

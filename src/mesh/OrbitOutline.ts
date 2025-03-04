@@ -7,7 +7,7 @@ import { BodyProperties } from "../domain/models.ts";
 import { ExecutorPool } from "../system/ExecutorPool.ts";
 // import MyWorker from './worker?worker';
 
-const MAX_VERTICES = 360 * 20*10;
+const MAX_VERTICES = 360 * 50*4;
 // const MAX_VERTICES = 360 * 5;
 const NB_WORKERS = 8;
 
@@ -112,6 +112,7 @@ export class OrbitalOutline  {
         const geometry = new BufferGeometry();
         const positionAttribute = new Float32BufferAttribute(new Float32Array(maxVertices * 3), 3);
         geometry.setAttribute('position', positionAttribute);
+
         this.material = new LineBasicMaterial({ color: 0xffffff, opacity: opacity, transparent: true });
         this.line = new Line(geometry, this.material);
         this.enabled = enabled;
@@ -128,6 +129,7 @@ export class OrbitalOutline  {
     resetOrbit(){
         this.startIndex = 0;
         this.endIndex = 0;
+        this.nbVertices  = 0;
     }
 
  
@@ -178,11 +180,6 @@ export class OrbitalOutline  {
      * @param position 
      */
     addPosition(position: Vector3, maintainLength: boolean = false) {
-        // if(!this.enabled){
-        //     return;
-        // }
-        
-        
         const positionAttributeBuffer: BufferAttribute = this.line.geometry.getAttribute('position') as BufferAttribute;
 
         // Positions are in km in the scene...

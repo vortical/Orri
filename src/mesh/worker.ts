@@ -7,7 +7,7 @@ import { OrbitLength, OrbitLengthType } from './OrbitOutline.ts';
 import { OrbitalOutline } from './OrbitOutline.ts';
 import { convertDistance, DistanceUnits } from '../system/distance.ts';
 import { toDeg } from '../system/geometry.ts';
-import { BodyProperties } from '../domain/models.ts';
+import { BodyProperties, BodyType } from '../domain/models.ts';
 
 const UNIT_PERIOD = timePeriodToMs({days: 365, hours: 6});
 const UNIT_DISTANCE = DistanceUnits.au;
@@ -35,6 +35,7 @@ onmessage = (event) => {
   const bodyProperties = data.bodies as BodyProperties[];
   const orbitLength = data.orbitLength as OrbitLength;
   const desiredOrbitBodyName = data.desiredOrbitBodyName;
+ 
   const orbitingBodyWithPositionAttribute = bodyProperties.map(b =>  new OrbitingBodyWithPositionAttribute(b, b.name == desiredOrbitBodyName));
   // set up hierarchy
   orbitingBodyWithPositionAttribute.forEach(b => b.parent = orbitingBodyWithPositionAttribute.find(o => o.name == b.parentName));
@@ -59,7 +60,7 @@ onmessage = (event) => {
 
 
 
-function iterationVariablesForAngle(timePeriodMs: number, angleDegrees: number ): [number, number] {
+function iterationVariablesForAngle(timePeriodMs: number, angleDegrees: number,type: BodyType ): [number, number] {
   
   let stepsPerOrbit = STEPS_PER_ORBIT;
   let nbSteps =  stepsPerOrbit *  angleDegrees/ 360;
@@ -75,11 +76,15 @@ function iterationVariablesForAngle(timePeriodMs: number, angleDegrees: number )
 
 }
 
-function iterationVariablesForTime(timePeriodMs: number, timeMs: number): [number, number] {
+function iterationVariablesForTime(timePeriodMs: number, timeMs: number, type: BodyType): [number, number] {
   // TODO: just convert the time to degrees and use iterationVariablesForAngle
 
-  // limit to one
-  timeMs = Math.min(timePeriodMs, timeMs);
+  // limit to one if type planet - else limit to 30 orbits
+  if(type == "moon"){
+    timeMs = Math.min(timePeriodMs*30, timeMs);
+  }else{
+    timeMs = Math.min(timePeriodMs, timeMs);
+  }
 
   if(timeMs < 0.001){
     timeMs = 0.001;
@@ -104,12 +109,14 @@ function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBody
     .map(o => o.orbitPeriod? timePeriodToMs(o.orbitPeriod) : approximateOrbitalPeriod(o))
     .reduce((prev, current) => prev < current? prev: current,  Number.MAX_VALUE);
 
-    if(timePeriod ==  Number.MAX_VALUE){
-      return orbittingBodies;  
-    }
+  if(timePeriod ==  Number.MAX_VALUE){
+    return orbittingBodies;  
+  }
 
-  const f = orbitLength.lengthType == OrbitLengthType.AngleDegrees? iterationVariablesForAngle:iterationVariablesForTime;
-  const [nbSteps, timestep] = f(timePeriod, orbitLength.value);  
+  const type = orbittingBodies.find(b => b.orbitalOutline != null)!.type;
+
+  const iterationVariables = orbitLength.lengthType == OrbitLengthType.AngleDegrees? iterationVariablesForAngle:iterationVariablesForTime;
+  const [nbSteps, timestep] = iterationVariables(timePeriod, orbitLength.value, type);  
 
   for(let j = 0; j < nbSteps; j++) {
     updateKinematics(orbittingBodies, -timestep);

@@ -3,6 +3,7 @@ import { OrbitLength } from "../mesh/OrbitOutline";
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from "../system/event-types";
 import { BodySystem } from "./BodySystem";
 import { Body } from "../body/Body";
+import { hashCode } from "../system/functions";
 
 
 export class OrbitOutlinesStateHandler {
@@ -35,16 +36,22 @@ export class OrbitOutlinesStateHandler {
         if(targetSystem.planetarySystem() != this.selectedSystem){
             if(this.selectedSystem){
                 // unselect existing selected system
-                this.setPlanetaryMoonOrbitalOutlinesEnabled(this.selectedSystem, false);
+                this.setMoonOrbitalOutlinesEnabled(this.selectedSystem, false);
             }
             this.selectedSystem = targetSystem.planetarySystem();
-            this.setPlanetaryMoonOrbitalOutlinesEnabled(this.selectedSystem, true);
+            this.setMoonOrbitalOutlinesEnabled(this.selectedSystem, true);
         }
         
     }
 
+    setPlanetaryMoonOrbitalOutlinesColorHues(){
+        [...this.bodySystem.bodyObjects3D.values()]
+        .filter(b => b.body.type == "moon")
+        .forEach(b => b.orbitOutline.colorHue = (hashCode(b.getName()) % 100)/100);
 
-    setPlanetaryMoonOrbitalOutlinesEnabled(system: Body, value: boolean) {
+    }
+
+    setMoonOrbitalOutlinesEnabled(system: Body, value: boolean) {
         [...this.bodySystem.bodyObjects3D.values()]
         .filter(b => b.body.parent == system)
         .forEach(b => b.setOrbitOutlineEnabled(value ))
