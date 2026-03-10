@@ -4,7 +4,7 @@ A 3D web application crafted to faithfully visualize celestial bodies within our
 Initial positions and velocities are retrieved from a [simple ephemeris like REST API](https://vortical.hopto.org/spacefield/docs) which I created to support the Web Application. It is on [my github](https://github.com/vortical/spacefield).
 
 
-Once the initial conditions are established, positions and velocities are maintained with a [leap frog approach](https://en.wikipedia.org/wiki/Leapfrog_integration) to update the state based on clock time and scale. The N-Body calculations naively consider all the bodies given that we only have around 40 bodies to update. I have another algorithm which implements [BarnsHut in 3D](https://github.com/vortical/BarnsHut) which offers the option to view the octree. It should eventually makes its way into this web application.
+Once the initial conditions are established, positions and velocities are maintained with a [leap frog approach](https://en.wikipedia.org/wiki/Leapfrog_integration) to update the state based on clock time and scale. The N-Body calculations naively consider all the bodies given that we only have around 40 bodies to update. I have another algorithm which implements [BarnsHut in 3D](https://github.com/vortical/BarnsHut) which offers the option to [view the octree](https://vortical.github.io/BarnsHut/). 
 
 
 The web app is currently hosted on github [https://vortical.github.io/Orri/](https://vortical.github.io/Orri/) and [https://vortical.hopto.org/Orri/](https://vortical.hopto.org/Orri/), be aware that the inital load of imagery may take some time.
