@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vector } from '../system/Vector.ts';
-import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod } from '../domain/models.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod, MissionWindow, BurnEvent } from '../domain/models.ts';
 import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
@@ -34,7 +34,7 @@ export class Body {
     /** 
      * in meters
      */
-    position!: Vector;
+    position: Vector;
 
     /**
      * angle of rotation around its axis (i.e. its time of day)
@@ -47,7 +47,7 @@ export class Body {
     /**
      * in meters/s
      */
-    velocity!: Vector;
+    velocity: Vector;
     acceleration?: Vector;
 
     // rotation angle along its obliquity axis.
@@ -63,12 +63,15 @@ export class Body {
     rings?: RingProperties;
     color: string;
     // things that change: speeds, postitions, axis directions...
-    kinematics!: KinematicObject;
+    kinematics?: KinematicObject;
     textures?: MaterialProperties;
     gltf?: GLTFModelProperties;
+    missionWindow?: MissionWindow;
+    burnEvents: BurnEvent[] = [];
 
+    _isActive: boolean = true;
 
-    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf }: BodyProperties) {
+    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf, missionWindow, burnEvents=[] }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parentName;
@@ -86,6 +89,30 @@ export class Body {
         this.color = color;
         this.textures = textures;
         this.gltf = gltf;
+        this.missionWindow = missionWindow;
+        this.burnEvents = burnEvents;
+    }
+
+
+    isActive(): boolean {
+      return this._isActive;
+    }
+
+    setIsActive(value: boolean){
+      this._isActive = value;
+    }
+
+    isActiveAt(time: number): boolean {
+      if(this.missionWindow){
+        return this.missionWindow.startMs <= time && this.missionWindow.endMs >= time;
+      }
+      return true;
+    }
+
+
+    getBurnEvent(timeMs: number): BurnEvent | undefined {
+      const event = this.burnEvents.find(e => e.startMs <= timeMs && e.endMs >= timeMs);
+      return event;
     }
 
 
@@ -101,8 +128,10 @@ export class Body {
             parentName: this.parentName,
             orbitPeriod: this.orbitPeriod,
             // needsOrbit: sourceBodyObject.body.type == "planet"|| sourceBodyObject.body.type  == "star"
+            missionWindow: this.missionWindow,
+            burnEvents: this.burnEvents
             
-        };
+        } as BodyProperties;
     }
 
     /**
@@ -139,7 +168,7 @@ export class Body {
         return up.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector(0, 1, 0), body_orbital_norm));
     }
 
-    getKinematics(): KinematicObject {
+    getKinematics(): KinematicObject | undefined {
         return this.kinematics;
     }
 
@@ -147,15 +176,18 @@ export class Body {
      * Reset a body's velocity, position, rotation.
      * @param kinematics 
      */
-    setKinematics(kinematics: KinematicObject) {
+    setKinematics(kinematics: KinematicObject | undefined) {
         this.kinematics = kinematics;
+        if(kinematics == undefined) {
+          return;
+        }
 
         const baseTimeMs = kinematics.datetime.getTime()
         const baseRotation = toRad(kinematics.axis?.rotation || 0);
 
         this.axisDirection = kinematics.axis?.direction ? Vector.fromVectorComponents(kinematics.axis.direction) : undefined;
-        this.velocity = Vector.fromVectorComponents(kinematics.ephemeris.velocity);
-        this.position = Vector.fromVectorComponents(kinematics.ephemeris.position);
+        this.velocity = Vector.fromVectorComponents(kinematics.ephemeris?.velocity);
+        this.position = Vector.fromVectorComponents(kinematics.ephemeris?.position);
 
         // RotationCalculator; rotation are calculated from:
         //  baseRotation,
@@ -188,6 +220,8 @@ export class Body {
                 return this;
             case "moon":
                 return this.parent!;
+            default:
+              return this;
         }
     }
 

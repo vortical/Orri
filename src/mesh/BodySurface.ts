@@ -28,7 +28,7 @@ export abstract class BodySurface extends CelestialBodyPart {
     /**
      * Calculate sideral rotation
      */
-    updatePart(): void {
+    updatePart(): void {      
         this.getObject3D().rotation.set(this.body.sideralRotation.x, this.body.sideralRotation.y, this.body.sideralRotation.z);
     }
 

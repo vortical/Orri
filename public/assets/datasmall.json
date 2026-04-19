@@ -1,4 +1,5 @@
 [
+
     {
         "type": "star",
         "name": "Sun",
@@ -18,6 +19,28 @@
             "alphaUri": "/assets/textures/planets/sun_alpha.jpg"
         }
     },
+    {
+        "type": "spacecraft",
+        "name": "Artemis2",
+        "parentName": "Earth",
+        "mass": 27e3,
+        "radius": 10e4,
+        "castShadow": false,
+        "receiveShadow": false,
+        "obliquityToOrbit": 0,
+        "sideralRotationPeriod": {
+            "days": 25
+        },
+        "textures": {
+            "textureUri": "/assets/textures/planets/mercury_map.jpg"
+            
+        },
+        "missionWindow": {
+          "startMs": 1743559200000,
+          "endMs": 1775865060000
+        }
+    },      
+
     {
         "type": "planet",
         "name": "Mercury",
@@ -64,8 +87,8 @@
         "parentName": "Sun",
         "mass": 5.9736e24,
         "radius": 6.378e6,
-        "castShadow": false,
-        "receiveShadow": true,
+        "castShadow": true,
+        "receiveShadow": false,
         "obliquityToOrbit": 23.44,
         "sideralRotationPeriod": {
             "hours": 23,
@@ -89,8 +112,8 @@
         "parentName": "Earth",
         "mass": 7.3477e22,
         "radius": 1.737400e6,
-        "castShadow": true,
-        "receiveShadow": false,
+        "castShadow": false,
+        "receiveShadow": true,
         "obliquityToOrbit": 1.5424,
         "sideralRotationPeriod": {
             "days": 27.3217

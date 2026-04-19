@@ -2,6 +2,7 @@ import { Body } from "../body/Body.ts";
 import { BodyObject3D } from "./BodyObject3D";
 import { StarBodyObject3D } from "./StarBodyObject3D";
 import { PlanetaryBodyObject3D } from "./PlanetBodyObject3D";
+import { SpacecraftBodyObject3D} from "./SpaceCraftBodyObject3D.ts"
 import { MoonBodyObject3D } from "./MoonBodyObject3D.ts";
 import { BodySystem } from "../scene/BodySystem.ts";
 // import { ModelBodyObject3D } from "./ModelBodyObject3D.ts";
@@ -17,6 +18,10 @@ export const BodyObject3DFactory = {
                 return new PlanetaryBodyObject3D(body, bodySystem);
             case "moon":
                 return new MoonBodyObject3D(body, bodySystem);
+            case "spacecraft":
+              console.log("create artemis")
+              //return new PlanetaryBodyObject3D(body, bodySystem);
+              return new SpacecraftBodyObject3D(body, bodySystem);
 
             default:
                 throw new Error("Invalid body type: " + body.type);

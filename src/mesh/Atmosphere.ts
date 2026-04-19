@@ -26,7 +26,7 @@ export class Atmosphere extends CelestialBodyPart {
         );
 
         mesh.userData = { type: "atmosphere" };
-        mesh.receiveShadow = body.receiveShadow;
+        mesh.receiveShadow = body.receiveShadow || false;
         this.mesh = mesh;
     }
 

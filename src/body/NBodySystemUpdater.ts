@@ -5,6 +5,7 @@ import { TimeUnit, timeMsToUnits } from '../system/time.ts';
 import { Clock } from "../system/Clock.ts";
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { VectorComponents } from '../domain/models.ts';
+import { BODY_ACTIVE_TOPIC } from '../system/event-types.ts';
 
 
 
@@ -24,20 +25,49 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   accelerations?: VectorComponents[];
 
 
+  manageActivityStatus(bodies: BodyObject3D[], timeMs: number){
+    // if a body changes activity state - fire an event
+    for(const b of bodies){
+      const isActiveAtTime = b.isActiveAt(timeMs);
+
+      if( b.isActive() != isActiveAtTime){
+        // fire event
+        b.setIsActive(isActiveAtTime);
+        PubSub.publish(BODY_ACTIVE_TOPIC, {body: b, isActive: isActiveAtTime});
+      }
+    }
+
+    
+
+  
+  }
+
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
+    
     const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
     // const { timestep, iterations} = desiredLoopParamProviderProvider(timestepMs);
-    const bodies = Array.from(bodyObject3Ds.values()).map(o => o.body);
+    
+    const timeMs = clock.getTime();
+    //
+    const allBodies = Array.from(bodyObject3Ds.values());
+
+    this.manageActivityStatus(allBodies, timeMs);
+    // filter out inactive bodies
+    const bodies = Array.from(bodyObject3Ds.values())
+      .map(o => o.body)
+      .filter(b => b.isActive());
+
 
     for (let i = 0; i < iterations; i++) {
       this.updateBodyProperties(bodies, timestep);
     }
 
     bodies.forEach((body) => {
-      body.sideralRotation = body.rotationAtTime(clock.getTime());
+      body.sideralRotation = body.rotationAtTime(timeMs);
     });
 
-    bodyObject3Ds.forEach(b => b.update());
+    // if a body was not active, there my be undefined accelerations!
+    bodyObject3Ds.forEach(b => b.isActive() && b.update());
     return bodyObject3Ds;
   }
 
@@ -71,9 +101,9 @@ export class NBodySystemUpdater implements BodySystemUpdater {
    * 
    * @returns side effect: bodies are updated...
    */
-  updateBodyProperties(bodies: Body[], timeMs: number): Body[] {
+  updateBodyProperties(bodies: Body[], timeStepMs: number): Body[] {
     // our units are seconds in the formulas.
-    const time = timeMsToUnits(timeMs, TimeUnit.Seconds);
+    const timeStep = timeMsToUnits(timeStepMs, TimeUnit.Seconds);
 
     /**
      * Calculate accelerations of all bodies given their current
@@ -126,7 +156,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
     const accelerations_i1 = this.accelerations || nBodyAccelerations(bodies);
 
     bodies.forEach((body, index) => {
-      body.position = body.nextPosition(accelerations_i1[index], time);
+        body.position = body.nextPosition(accelerations_i1[index], timeStep);
     });
 
     const accelerations_i2 = nBodyAccelerations(bodies);
@@ -139,7 +169,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
       const a = accelerations_i1[index];
       const b = accelerations_i2[index];
       const avgAcceleration = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 };
-      body.velocity = body.nextSpeed(avgAcceleration, time)
+      body.velocity = body.nextSpeed(avgAcceleration, timeStep)
     });
 
     // save accelerations for next iteration.

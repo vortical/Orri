@@ -17,19 +17,33 @@ export interface Axis {
     direction?: VectorComponents
 }
 
+
 export interface KinematicObject {
-    name: string;
-    ephemeris: Ephemeris;
-    axis?: Axis,
-    datetime: Date;
+  name: string;
+  ephemeris?: Ephemeris;
+  axis?: Axis,
+  datetime: Date;
+}
+
+export type MissionWindow = {
+      startMs: number;                                                                            
+      endMs: number;
+}
+
+
+ 
+export type BurnEvent = {
+      startMs: number;                                                                           
+      endMs: number;
+      burnVector: VectorComponents;
 }
 
 export type TimePeriod = {
-    days?: number
-    hours?: number
-    minutes?: number
-    seconds?: number
-    millis?: number
+    days?: number;
+    hours?: number;
+    minutes?: number;
+    seconds?: number;
+    millis?: number;
 };
 
 export type MaterialProperties = {
@@ -64,7 +78,7 @@ export type RingProperties = {
     colorMapUri?: string;
 };
 
-export type BodyType = "star" | "planet" | "moon" ;
+export type BodyType = "star" | "planet" | "moon" |"spacecraft";
 
 
 export type BodyProperties = {
@@ -77,6 +91,8 @@ export type BodyProperties = {
     velocity?: VectorComponents;
     castShadow?: boolean;
     receiveShadow?: boolean;
+    missionWindow?: MissionWindow;
+    burnEvents: BurnEvent[];
 
     /**
      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body

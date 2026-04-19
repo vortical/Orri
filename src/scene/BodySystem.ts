@@ -119,6 +119,8 @@ export class BodySystem {
         this.parentElement = parentElement;
         this.distanceformatter = new DistanceFormatter(distanceUnit);
         this.clock = new Clock(date);
+        const timeMs = this.clock.clockTimeMs;
+
         this.addUpdater(bodySystemUpdater);
         this.bodies = bodies;
         this.camera = createCamera();
@@ -128,7 +130,7 @@ export class BodySystem {
         parentElement.append(this.renderer.domElement);
         this.labelRenderer = createLabelRender();
         parentElement.append(this.labelRenderer.domElement);
-        this.bodyObjects3D = this.createObjects3D(this.bodies);
+        this.bodyObjects3D = this.createObjects3D(this.bodies, timeMs);
         this.controls = createControls(this.camera, this.labelRenderer.domElement);
         this.controls.enabled = false;
 
@@ -139,7 +141,9 @@ export class BodySystem {
         this.ambiantLight = createAmbiantLight(ambientLightLevel);
         this.scene.add(this.ambiantLight);
         this.controls.update();
-        this.scene.add(...Array.from(this.bodyObjects3D.values()).map(o => o.object3D));
+        this.addToScene(Array.from(this.bodyObjects3D.values()));
+        
+        
         this.orbitOutlinesStateHandler = new OrbitOutlinesStateHandler(this);
         this.orbitOutlinesStateHandler.setPlanetaryMoonOrbitalOutlinesColorHues();
         this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
@@ -174,7 +178,28 @@ export class BodySystem {
     }
 
 
+    addToScene(bodies: BodyObject3D[]){
+      
+      this.scene.add(...bodies
+                      .filter(o => o.isActive())
+                      .map(o => o.object3D)
+      );
+    }
 
+
+    setBodyActive(body: BodyObject3D, isActive: boolean){
+      // add remote objects from scene (or set object3D visibility?)
+      // probably better to add/remove from scene as most of the time these objects would not be visible.
+
+      if(isActive){
+        // todo: check that scene does not add existing objects
+        //  if(this.scene.getObjectById(body.getObject3D().id())...
+      
+        this.scene.add(body.object3D);
+      }else{
+        this.scene.remove(body.object3D);
+      }
+    }
     /**
      * Moving near frustrum plane.
      * 
@@ -196,7 +221,8 @@ export class BodySystem {
         return new Promise(async (resolve) => {
             try {
                 const time = new Date(datetime);
-                const kinematics = await this.dataService.loadKinematics(Array.from(this.bodyObjects3D.keys()), time);
+                const bodies = Array.from(this.bodyObjects3D.values()).map(o => o.body);
+                const kinematics = await this.dataService.loadKinematics(bodies, time);
                 this.addUpdater(new BodiesAtTimeUpdater(kinematics, time));
             } catch (e) {
                 console.log(e)
@@ -515,7 +541,7 @@ export class BodySystem {
         if (this.target != bodyObject3D) {
             this.target = bodyObject3D;
             this.cameraTargetingState.postTargetSet(bodyObject3D);
-            this.fireEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: bodyObject3D } });
+            this.fireSelectEvent({ topic: BODY_SELECT_TOPIC.toString(), message: { body: bodyObject3D } });
         }
     }
 
@@ -573,7 +599,7 @@ export class BodySystem {
         this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z!);
     }
 
-    fireEvent(event: BodySystemEvent<BodySelectEventMessageType>) {
+    fireSelectEvent(event: BodySystemEvent<BodySelectEventMessageType>) {
         PubSub.publish(event.topic, event.message);
     }
 
@@ -626,11 +652,22 @@ export class BodySystem {
      * @param bodies 
      * @returns Map<string, BodyObject3D> 
      */
-    createObjects3D(bodies: Body[]): Map<string, BodyObject3D> {
-        return bodies.reduce((m: Map<string, BodyObject3D>, body: Body) =>
-            m.set(body.name.toLowerCase(), BodyObject3DFactory.create(body, this)),
-            new Map<string, BodyObject3D>()
-        );
+    createObjects3D(bodies: Body[], timeMs: number): Map<string, BodyObject3D> {
+
+      const bodySystem = this;
+
+      function createObject3D(body: Body){
+        const body3D = BodyObject3DFactory.create(body, bodySystem);
+        body3D.setIsActive(body3D.isActiveAt(timeMs));
+        return body3D;
+      }
+
+      const map = bodies.reduce((m: Map<string, BodyObject3D>, body: Body) =>
+            m.set(body.name.toLowerCase(), createObject3D(body)), new Map<string, BodyObject3D>()
+      );
+      
+    
+      return map;
     }
 }
 

@@ -27,6 +27,7 @@ export abstract class CelestialBodyPart {
     }
 
     update(): void {
+      
         this.updatePart();
         this.childParts.forEach(p => p.update())
     }

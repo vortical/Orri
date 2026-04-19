@@ -154,25 +154,28 @@ export abstract class BodyObject3D extends CelestialBodyPart {
      * will update the 3d properties of the Obect3D
      */
     updatePart(): void {
-        const body = this.body;
-        const x = body.position.x / 1000, y = body.position.y / 1000, z = body.position.z / 1000;
-        this.object3D.position.set(x, y, z);
 
-        this.updateLabelsInvoker();
+      if(!this.isActive()) return;
 
-        // // does not belong here, this should be completely seperate from the body?
+      const body = this.body;
+      const x = body.position.x / 1000, y = body.position.y / 1000, z = body.position.z / 1000;
+      this.object3D.position.set(x, y, z);
 
-        if(this.orbitOutline.enabled){
-            if(this.isPlanetarySystemSelected()){
-                this.orbitOutline.addPosition(this.body.position, true);
-                this.updateOrbitsInvoker();        
-            }else{
-                if(this.body.type == "planet"){
-                    this.orbitOutline.addPosition(this.body.position, true);
-                    this.updateOrbitsInvoker();        
-                }
-            }
-        }
+      this.updateLabelsInvoker();
+
+      // // does not belong here, this should be completely seperate from the body?
+
+      if(this.orbitOutline.enabled){
+          if(this.isPlanetarySystemSelected()){
+              this.orbitOutline.addPosition(this.body.position, true);
+              this.updateOrbitsInvoker();        
+          }else{
+              if(this.body.type == "planet"){
+                  this.orbitOutline.addPosition(this.body.position, true);
+                  this.updateOrbitsInvoker();        
+              }
+          }
+      }
 
     }
 
@@ -182,7 +185,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     updateLabelsInvoker = throttle(1000/20, this, () => {
         this.updateLabels();
     });
-    updateOrbitsInvoker = throttle(1000/5, this, () => this.orbitOutline.needsUpdate());
+    updateOrbitsInvoker = throttle(1000/20, this, () => this.orbitOutline.needsUpdate());
 
 
     updateLabels(): void {
@@ -198,6 +201,30 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         return this.planetarySystem() == currentTarget.planetarySystem();
     }
 
+
+
+    isActive(): boolean {
+      return this.body.isActive();
+    }
+    isActiveAt(timeMs: number): boolean {
+      return this.body.isActiveAt(timeMs);
+    }
+    setIsActive(value: boolean){
+      if(this.isActive() != value){
+        return;
+      }
+
+      this.body.setIsActive(value);
+      
+    }
+
+    setVisible(isVisible: boolean){
+      this.object3D.visible = isVisible;
+    }
+
+    isVisible(): boolean {
+      return this.object3D.visible;
+    }
 
 
 }
