@@ -24,21 +24,22 @@
         "name": "Artemis2",
         "parentName": "Earth",
         "mass": 27e3,
-        "radius": 10e4,
+        "radius": 10,
         "castShadow": false,
         "receiveShadow": false,
         "obliquityToOrbit": 0,
         "sideralRotationPeriod": {
             "days": 25
         },
-        "textures": {
-            "textureUri": "/assets/textures/planets/mercury_map.jpg"
-            
-        },
+
+        "gltf": {
+            "uri": "/assets/gltf/spacecraft/orion.glb",
+            "credits": "Orion Spacecraft (https://skfb.ly/pIroy) by WISEMANmods is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/)."
+        },        
         "missionWindow": {
-          "startMs": 1743559200000,
-          "endMs": 1775865060000
-        }
+          "start": "2026-04-02T01:58:50.814342Z",
+          "end": "2026-04-10T23:49:50.814373Z"         
+         }
     },      
 
     {
@@ -173,9 +174,11 @@
 
         "gltf": {
             "uri": "/assets/gltf/planets/phobos.glb",
-            "scale": 1,
+
             "credits": "https://science.nasa.gov/resource/phobos-3d-model/"
         }
+
+        
     },
     {
         "type": "moon",
@@ -195,7 +198,7 @@
         },        
         "gltf": {
             "uri": "/assets/gltf/planets/deimos.glb",
-            "scale": 1,
+
             "credits": "https://science.nasa.gov/resource/deimos-3d-model/"
         }
     },

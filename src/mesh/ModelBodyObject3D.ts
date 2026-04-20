@@ -1,6 +1,6 @@
 import { BodySystem } from "../scene/BodySystem";
 import { Body } from "../body/Body";
-import { Box3, Group, Object3D, Sphere, Spherical, Vector3 } from "three";
+import { Box3, Group, Object3D, Sphere } from "three";
 import { Model3DLoader } from "../services/Model3DLoader";
 import { BodySurface } from "./BodySurface";
 import { DistanceUnits, convertDistance } from "../system/distance";
@@ -17,13 +17,12 @@ export class ModelBodySurface extends BodySurface {
     createSurfaceObject3D(body: Body, bodySystem: BodySystem): Object3D {
         const object3D = new Group();
         const uri = body.gltf?.uri!;
-        new Model3DLoader(bodySystem).load(uri).then(m => {            
-            const scale = body.gltf?.baseScale || 1;
+        new Model3DLoader(bodySystem).load(uri).then(m => {
+            const naturalRadius = new Box3().setFromObject(m).getBoundingSphere(new Sphere()).radius;
+            const targetRadiusKm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
+            const scale = naturalRadius > 0 ? targetRadiusKm / naturalRadius : 1;
             m.scale.set(scale, scale, scale);
-            const box = new Box3().setFromObject( m ); 
-            // body.radius based on model's bounding sphere; not an actual radius.
-            body.radius = convertDistance(box.getBoundingSphere(new Sphere()).radius, DistanceUnits.km, DistanceUnits.m);
-            object3D.add(m)
+            object3D.add(m);
         });
         return object3D;
     }

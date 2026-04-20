@@ -26,16 +26,18 @@ export interface KinematicObject {
 }
 
 export type MissionWindow = {
-      startMs: number;                                                                            
-      endMs: number;
+    start: string;
+    end: string;
+    startMs: number;                                                                            
+    endMs: number;
 }
 
 
- 
+
 export type BurnEvent = {
-      startMs: number;                                                                           
-      endMs: number;
-      burnVector: VectorComponents;
+    startMs: number;
+    endMs: number;
+    accelerations: VectorComponents[]; // per-minute, m/s², coordinate-transformed
 }
 
 export type TimePeriod = {
@@ -60,7 +62,7 @@ export type MaterialProperties = {
 
 export type GLTFModelProperties = {
     uri: string,
-    baseScale: number
+    credits?: string
 }
 
 export type LightProperties = {
@@ -92,7 +94,7 @@ export type BodyProperties = {
     castShadow?: boolean;
     receiveShadow?: boolean;
     missionWindow?: MissionWindow;
-    burnEvents: BurnEvent[];
+    burnEvents?: BurnEvent[];
 
     /**
      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body

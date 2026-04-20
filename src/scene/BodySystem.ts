@@ -26,6 +26,7 @@ import { CameraLayer } from './CameraLayer.ts';
 import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distance.ts';
 import { OrbitLength, OrbitLengthType } from '../mesh/OrbitOutline.ts';
 import { OrbitOutlinesStateHandler } from './OrbitOutlinesStateHandler.ts';
+import { BodyActiveStateHandler } from './ObjectActiveStateHandler.ts';
 // import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
 // import { timePeriodToMs } from '../system/time.ts';
 // import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
@@ -145,6 +146,7 @@ export class BodySystem {
         
         
         this.orbitOutlinesStateHandler = new OrbitOutlinesStateHandler(this);
+        new BodyActiveStateHandler(this);
         this.orbitOutlinesStateHandler.setPlanetaryMoonOrbitalOutlinesColorHues();
         this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
         this.orbitOutlinesStateHandler.setOrbitalOutlinesOpacity(orbitalOutlinesOpacity);
@@ -196,7 +198,9 @@ export class BodySystem {
         //  if(this.scene.getObjectById(body.getObject3D().id())...
       
         this.scene.add(body.object3D);
+        console.log("Scene add body: ", body.getName())
       }else{
+        console.log("Scene remove body: ", body.getName())
         this.scene.remove(body.object3D);
       }
     }

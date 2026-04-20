@@ -210,12 +210,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
       return this.body.isActiveAt(timeMs);
     }
     setIsActive(value: boolean){
-      if(this.isActive() != value){
-        return;
-      }
-
       this.body.setIsActive(value);
-      
     }
 
     setVisible(isVisible: boolean){

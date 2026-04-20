@@ -91,6 +91,7 @@ export class Body {
         this.gltf = gltf;
         this.missionWindow = missionWindow;
         this.burnEvents = burnEvents;
+        
     }
 
 
@@ -110,9 +111,11 @@ export class Body {
     }
 
 
-    getBurnEvent(timeMs: number): BurnEvent | undefined {
-      const event = this.burnEvents.find(e => e.startMs <= timeMs && e.endMs >= timeMs);
-      return event;
+    getActiveBurnAcceleration(timeMs: number): VectorComponents | undefined {
+      const burn = this.burnEvents.find(b => b.startMs <= timeMs && b.endMs >= timeMs);
+      if (!burn) return undefined;
+      const idx = Math.floor((timeMs - burn.startMs) / 60000);
+      return burn.accelerations[idx];
     }
 
 

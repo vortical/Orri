@@ -1,5 +1,5 @@
 import { Body } from "../body/Body.ts";
-import { BodyProperties, BurnEvent, KinematicObject, VectorComponents } from "../domain/models.ts";
+import { BodyProperties, BurnEvent, KinematicObject, MissionWindow, VectorComponents } from "../domain/models.ts";
 
 
 /**
@@ -50,10 +50,10 @@ export class DataService {
       const response = await fetch(apiUrl, requestOptions);
       const json = await response.json();
 
-      return json.map((e: { start: string; end: string; burnVector: VectorComponents; }): BurnEvent => ({
-        startMs: Date.parse(e.start), 
-        endMs: Date.parse(e.end), 
-        burnVector: transform_to_local_coordinate_system(e.burnVector)
+      return json.map((e: { start: string; end: string; accelerations: { datetime: string; acceleration: VectorComponents }[] }): BurnEvent => ({
+        startMs: Date.parse(e.start),
+        endMs: Date.parse(e.end),
+        accelerations: e.accelerations.map(a => transform_to_local_coordinate_system(a.acceleration))
       }));
   }
 
@@ -101,6 +101,7 @@ export class DataService {
   
        
   async loadKinematics(bodies: Body[], time: Date): Promise<KinematicObject[]> {
+      
       return Promise.all(bodies.map(async (body) => this.loadEphemeris(body, time)))
   }
 
@@ -122,6 +123,14 @@ export class DataService {
           }));
       }
 
+      function parseMissionWindow(raw: {start: string, end: string}): MissionWindow {
+        return {
+          ...raw,
+          startMs: Date.parse(raw.start),
+          endMs: Date.parse(raw.end),
+        };
+      }
+
       const response = await fetch(`${this.assetsBaseUrl}assets/datasmall.json`).catch((err: Error) => {
           console.error(err);
           throw new Error(`Could not load body data: could not fetch data ${err.message}`);
@@ -131,7 +140,12 @@ export class DataService {
           throw new Error(`Could not load body data: invalid json data: ${err.message}`);
       })
 
-      let bodies = payloadBodies.map((payload) => new Body(payload));
+      let bodies = payloadBodies.map((payload) => {
+        if(payload.missionWindow){
+          payload.missionWindow = parseMissionWindow(payload.missionWindow);
+        }
+        return new Body(payload);
+      });
       return postCreate(bodies);
   }
 }

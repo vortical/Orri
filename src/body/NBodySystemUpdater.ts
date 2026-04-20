@@ -1,6 +1,5 @@
 import { Body } from './Body.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
-import { zipCombine } from '../system/functions.ts';
 import { TimeUnit, timeMsToUnits } from '../system/time.ts';
 import { Clock } from "../system/Clock.ts";
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
@@ -9,171 +8,115 @@ import { BODY_ACTIVE_TOPIC } from '../system/event-types.ts';
 
 
 
-/**
- * Each body in a system has an effect on all other bodies, regardless of size and distance. 
- * If there are m bodies, there will be m*(m-1) forces taken into account... 
- * 
- * The plan is:
- * Introduce a few different implementations, each with their own use cases:
- * - Leveraging octree
- * - Leveraging webworkers
- *  
- */
 export class NBodySystemUpdater implements BodySystemUpdater {
   isOneTimeUpdate = false;
   isEnabled = true;
-  accelerations?: VectorComponents[];
+  gravAccelerations?: VectorComponents[];
 
 
   manageActivityStatus(bodies: BodyObject3D[], timeMs: number){
-    // if a body changes activity state - fire an event
     for(const b of bodies){
       const isActiveAtTime = b.isActiveAt(timeMs);
-
-      if( b.isActive() != isActiveAtTime){
-        // fire event
+      if(b.isActive() != isActiveAtTime){
         b.setIsActive(isActiveAtTime);
         PubSub.publish(BODY_ACTIVE_TOPIC, {body: b, isActive: isActiveAtTime});
       }
     }
-
-    
-
-  
   }
 
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
-    
     const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
-    // const { timestep, iterations} = desiredLoopParamProviderProvider(timestepMs);
-    
     const timeMs = clock.getTime();
-    //
     const allBodies = Array.from(bodyObject3Ds.values());
 
     this.manageActivityStatus(allBodies, timeMs);
-    // filter out inactive bodies
-    const bodies = Array.from(bodyObject3Ds.values())
-      .map(o => o.body)
-      .filter(b => b.isActive());
 
+    const activeBodies = allBodies.map(o => o.body).filter(b => b.isActive());
 
     for (let i = 0; i < iterations; i++) {
-      this.updateBodyProperties(bodies, timestep);
+      this.updateBodyProperties(activeBodies, timestep, timeMs + i * timestep);
     }
 
-    bodies.forEach((body) => {
+    activeBodies.forEach((body) => {
       body.sideralRotation = body.rotationAtTime(timeMs);
     });
 
-    // if a body was not active, there my be undefined accelerations!
     bodyObject3Ds.forEach(b => b.isActive() && b.update());
     return bodyObject3Ds;
   }
 
-  /**
-   * updateBodyProperties based on a Leapfrog algorithm (https://en.wikipedia.org/wiki/Leapfrog_integration)
-   * 
-   * Calculates and updates the positions and velocities of the (n-bodies). Accelerations are
-   * based on the usual F = GMiMj/(R*R).
-   * 
-   * For each body: update positions, velocities and accelerations for time i+1 
-   * such that:
-   * 
-   * Ai = Accelerations(Xi) is the accelereration from previous update. If there is no 
-   * previous update: calculate it with existing positions.
-   * 
-   * For positions:
-   * Xi+1 = Xi + Vi*dt + Ai*(dt*dt)/2
-   * 
-   * Once positions at i+1 are determined, we calculate velocities using the averages of
-   * accelerations at i and i+1;  so we calcualte accelerations based on the positions at i+1.
-   * 
-   * A(i+1) = Accelerations(Xi+1)
-   *     
-   * So for velocities we use:
-   * Vi+1 = Vi + (Ai + Ai+1)/2*dt
-   * 
-   * 
-   *       
-   * @param bodies 
-   * @param time delta 
-   * 
-   * @returns side effect: bodies are updated...
-   */
-  updateBodyProperties(bodies: Body[], timeStepMs: number): Body[] {
-    // our units are seconds in the formulas.
+  updateBodyProperties(bodies: Body[], timeStepMs: number, timeMs: number): Body[] {
     const timeStep = timeMsToUnits(timeStepMs, TimeUnit.Seconds);
 
-    /**
-     * Calculate accelerations of all bodies given their current
-     * position and speed properties.
-     * 
-     * @param bodies 
-     * @returns each body's acceleration vector.
-     */
-    function nBodyAccelerations(bodies: Body[]): VectorComponents[] {
-      let accelerationContributions: VectorComponents[][] = [];
-      let bodyAccelerations: VectorComponents[] = [];
+    const massiveBodies = bodies.filter(b => b.type !== 'spacecraft');
+    const spacecraft = bodies.filter(b => b.type === 'spacecraft');
 
-      for (let i = 0; i < bodies.length; i++) {
-        for (let j = 0; j < bodies.length; j++) {
+    function massiveBodyAccelerations(): VectorComponents[] {
+      const accContributions: VectorComponents[][] = [];
+      const accs: VectorComponents[] = [];
+
+      for (let i = 0; i < massiveBodies.length; i++) {
+        for (let j = 0; j < massiveBodies.length; j++) {
           if (i < j) {
-
-            // is a 'symetric' matrix, twoBodyAccelerations returns 2 accelerations:
-            // [a(i,j) and a(j,i)], so we just skip looping on j,i 
-
-            const aij_ji = Body.twoBodyAccelerations(bodies[i], bodies[j]);
-            if (!accelerationContributions[i]) {
-              accelerationContributions[i] = [];
-            }
-
-            // a(i,j)
-            accelerationContributions[i][j] = aij_ji.get("ij")!;
-            if (!accelerationContributions[j]) {
-              accelerationContributions[j] = [];
-            }
-
-            // a(j,i) 
-            accelerationContributions[j][i] = aij_ji.get("ji")!;
+            const aij_ji = Body.twoBodyAccelerations(massiveBodies[i], massiveBodies[j]);
+            if (!accContributions[i]) accContributions[i] = [];
+            if (!accContributions[j]) accContributions[j] = [];
+            accContributions[i][j] = aij_ji.get("ij")!;
+            accContributions[j][i] = aij_ji.get("ji")!;
           }
         }
-        // And here we are: A body's total acceleration is the sum of ALL
-        // other contributions.
-        bodyAccelerations[i] = accelerationContributions[i].reduce((accumulator, current) => {
-          return {
-            x: (current.x + accumulator.x),
-            y: (current.y + accumulator.y),
-            z: (current.z + accumulator.z)
-          }
-        }, { x: 0, y: 0, z: 0 });
+        accs[i] = (accContributions[i] || []).reduce(
+          (sum, a) => ({ x: sum.x + a.x, y: sum.y + a.y, z: sum.z + a.z }),
+          { x: 0, y: 0, z: 0 }
+        );
       }
-      return bodyAccelerations;
+      return accs;
     }
 
-    //   Ai = Accelerations(Xi) is the accelereration from previous update. If there is no 
-    //   previous update: calculate it with existing positions.
-    const accelerations_i1 = this.accelerations || nBodyAccelerations(bodies);
+    function spacecraftGravity(sc: Body): VectorComponents {
+      return massiveBodies.reduce((acc, mb) => {
+        const a = Body.twoBodyAcceleration(sc, mb);
+        return { x: acc.x + a.x, y: acc.y + a.y, z: acc.z + a.z };
+      }, { x: 0, y: 0, z: 0 });
+    }
 
-    bodies.forEach((body, index) => {
-        body.position = body.nextPosition(accelerations_i1[index], timeStep);
+    function allGravAccelerations(): VectorComponents[] {
+      return [
+        ...massiveBodyAccelerations(),
+        ...spacecraft.map(spacecraftGravity)
+      ];
+    }
+
+    function addBurn(gravAcc: VectorComponents, sc: Body, t: number): VectorComponents {
+      const burn = sc.getActiveBurnAcceleration(t);
+      if (!burn) return gravAcc;
+      return { x: gravAcc.x + burn.x, y: gravAcc.y + burn.y, z: gravAcc.z + burn.z };
+    }
+
+    const gravAccs_i1 = this.gravAccelerations || allGravAccelerations();
+    const mLen = massiveBodies.length;
+
+    massiveBodies.forEach((body, idx) => {
+      body.position = body.nextPosition(gravAccs_i1[idx], timeStep);
+    });
+    spacecraft.forEach((sc, idx) => {
+      sc.position = sc.nextPosition(addBurn(gravAccs_i1[mLen + idx], sc, timeMs), timeStep);
     });
 
-    const accelerations_i2 = nBodyAccelerations(bodies);
+    const gravAccs_i2 = allGravAccelerations();
 
-    // const avgAccelerations = zipCombine(accelerations_i1, accelerations_i2, (a, b) => {
-    //   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 }
-    // });
-
-    bodies.forEach((body, index) => {
-      const a = accelerations_i1[index];
-      const b = accelerations_i2[index];
-      const avgAcceleration = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 };
-      body.velocity = body.nextSpeed(avgAcceleration, timeStep)
+    massiveBodies.forEach((body, idx) => {
+      const avgAcc = { x: (gravAccs_i1[idx].x + gravAccs_i2[idx].x) / 2, y: (gravAccs_i1[idx].y + gravAccs_i2[idx].y) / 2, z: (gravAccs_i1[idx].z + gravAccs_i2[idx].z) / 2 };
+      body.velocity = body.nextSpeed(avgAcc, timeStep);
+    });
+    spacecraft.forEach((sc, idx) => {
+      const a1 = addBurn(gravAccs_i1[mLen + idx], sc, timeMs);
+      const a2 = addBurn(gravAccs_i2[mLen + idx], sc, timeMs);
+      const avgAcc = { x: (a1.x + a2.x) / 2, y: (a1.y + a2.y) / 2, z: (a1.z + a2.z) / 2 };
+      sc.velocity = sc.nextSpeed(avgAcc, timeStep);
     });
 
-    // save accelerations for next iteration.
-    this.accelerations = accelerations_i2;
+    this.gravAccelerations = gravAccs_i2;
 
     return bodies;
   }
@@ -184,43 +127,13 @@ type UpdaterLoopParam = {
   timestep: number
 };
 
-type loopParamProvider = (timestepMs: number) => UpdaterLoopParam;
 
-
-/**
- * Generally, for celestial bodies, a step of about 600 seconds is pretty 'stable'.
- * So break down the update so that we don't exceed maxStableTimestepMs per update.
- * If this is exceeded, then break down the update into 'iterations' loops.
- *
- * @param timestepMs 
- * @returns 
- */
 const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam => {
   if (timestepMs == 0) {
     return { iterations: 0, timestep: 0 }
   }
 
-  const maxStableTimestepMs = 200 * 1000; // make this adjustable.
+  const maxStableTimestepMs = 200 * 1000;
   const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
   return { timestep: timestepMs / iterations, iterations: iterations };
-}
-
-/**
- * It optimizes the resource available (i.e: the number of iterations). So given a desiredTimestep and
- * a maxIterations.  It will attempt to minimize the timestep size once the timestep argument exceeds
- * the desiredTimeStep.
- * 
- * @param timestepMs 
- */
-const desiredLoopParamProviderProvider = (timestepMs: number): UpdaterLoopParam => {
-  if (timestepMs == 0) {
-    return { iterations: 0, timestep: 0 }
-  }
-
-  const maxIterations = 100;
-  const desiredTimestepMs = 1 * 1000;
-  const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
-  const desiredStepFactor = Math.ceil(desiredIterations / maxIterations);
-  const iterations = Math.ceil(Math.abs(timestepMs) / (desiredTimestepMs * desiredStepFactor));
-  return { iterations: iterations, timestep: timestepMs / iterations };
 }
