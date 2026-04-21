@@ -14,13 +14,27 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   gravAccelerations?: VectorComponents[];
 
 
-  manageActivityStatus(bodies: BodyObject3D[], timeMs: number){
+  handleActivityTransitions(bodies: BodyObject3D[], stepTimeMs: number, timestep: number){
     for(const b of bodies){
-      const isActiveAtTime = b.isActiveAt(timeMs);
-      if(b.isActive() != isActiveAtTime){
-        b.setIsActive(isActiveAtTime);
-        PubSub.publish(BODY_ACTIVE_TOPIC, {body: b, isActive: isActiveAtTime});
+      const shouldBeActive = b.isActiveAt(stepTimeMs);
+      if(b.isActive() == shouldBeActive) continue;
+
+      if(shouldBeActive){
+        const mw = b.body.missionWindow;
+        if(mw){
+          if(timestep >= 0 && mw.startKinematics){
+            b.body.setKinematics(mw.startKinematics);
+          } else if(timestep < 0 && mw.endKinematics){
+            b.body.setKinematics(mw.endKinematics);
+          }
+        }
+        b.setIsActive(true);
+      } else {
+        b.setIsActive(false);
       }
+
+      PubSub.publish(BODY_ACTIVE_TOPIC, {body: b, isActive: shouldBeActive});
+      this.gravAccelerations = undefined;
     }
   }
 
@@ -28,17 +42,16 @@ export class NBodySystemUpdater implements BodySystemUpdater {
     const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
     const timeMs = clock.getTime();
     const allBodies = Array.from(bodyObject3Ds.values());
-
-    this.manageActivityStatus(allBodies, timeMs);
-
-    const activeBodies = allBodies.map(o => o.body).filter(b => b.isActive());
+    const allBodyData = allBodies.map(o => o.body);
 
     for (let i = 0; i < iterations; i++) {
-      this.updateBodyProperties(activeBodies, timestep, timeMs + i * timestep);
+      const stepTimeMs = timeMs + i * timestep;
+      this.handleActivityTransitions(allBodies, stepTimeMs, timestep);
+      this.updateBodyProperties(allBodyData, timestep, stepTimeMs);
     }
 
-    activeBodies.forEach((body) => {
-      body.sideralRotation = body.rotationAtTime(timeMs);
+    allBodyData.forEach((body) => {
+      if(body.isActive()) body.sideralRotation = body.rotationAtTime(timeMs);
     });
 
     bodyObject3Ds.forEach(b => b.isActive() && b.update());
@@ -48,8 +61,8 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   updateBodyProperties(bodies: Body[], timeStepMs: number, timeMs: number): Body[] {
     const timeStep = timeMsToUnits(timeStepMs, TimeUnit.Seconds);
 
-    const massiveBodies = bodies.filter(b => b.type !== 'spacecraft');
-    const spacecraft = bodies.filter(b => b.type === 'spacecraft');
+    const massiveBodies = bodies.filter(b => b.type !== 'spacecraft' && b.isActive());
+    const spacecraft = bodies.filter(b => b.type === 'spacecraft' && b.isActive());
 
     function massiveBodyAccelerations(): VectorComponents[] {
       const accContributions: VectorComponents[][] = [];

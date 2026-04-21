@@ -28,8 +28,10 @@ export interface KinematicObject {
 export type MissionWindow = {
     start: string;
     end: string;
-    startMs: number;                                                                            
+    startMs: number;
     endMs: number;
+    startKinematics?: KinematicObject;
+    endKinematics?: KinematicObject;
 }
 
 

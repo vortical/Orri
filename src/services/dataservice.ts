@@ -119,6 +119,14 @@ export class DataService {
               const kinematicObject = await that.loadEphemeris(body, time);
               body.setKinematics(kinematicObject);
               body.burnEvents = await that.loadBurnEvents(body);
+              if (body.missionWindow) {
+                  const [startK, endK] = await Promise.all([
+                      that.loadEphemeris(body, new Date(body.missionWindow.startMs)),
+                      that.loadEphemeris(body, new Date(body.missionWindow.endMs)),
+                  ]);
+                  body.missionWindow.startKinematics = startK;
+                  body.missionWindow.endKinematics = endK;
+              }
               return body;
           }));
       }
