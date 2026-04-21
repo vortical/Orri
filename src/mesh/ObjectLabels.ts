@@ -86,6 +86,14 @@ export class ObjectLabels {
         this.getLabels().forEach((l: Label) => l.setValue(""));
     }
 
+    setVisible(visible: boolean) {
+        const display = visible ? '' : 'none';
+        this.getCSS2DObjects().forEach((obj) => {
+            obj.visible = visible;
+            obj.element.style.display = display;
+        });
+    }
+
     updateBodyLabels() {
 
         if (this.bodyObject3D.bodySystem.isLayerEnabled(CameraLayer.DistanceLabel)) {

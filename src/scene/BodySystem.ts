@@ -196,13 +196,14 @@ export class BodySystem {
       if(isActive){
         // todo: check that scene does not add existing objects
         //  if(this.scene.getObjectById(body.getObject3D().id())...
-      
+
         this.scene.add(body.object3D);
         console.log("Scene add body: ", body.getName())
       }else{
         console.log("Scene remove body: ", body.getName())
         this.scene.remove(body.object3D);
       }
+      body.labels.setVisible(isActive);
     }
     /**
      * Moving near frustrum plane.
