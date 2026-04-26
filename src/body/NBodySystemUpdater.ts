@@ -40,6 +40,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
 
   update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
     const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
+  //  console.log("ts:"+timestepMs+". timestep: "+timestep+", iter: "+iterations);
     const timeMs = clock.getTime();
     const allBodies = Array.from(bodyObject3Ds.values());
     const allBodyData = allBodies.map(o => o.body);
@@ -146,7 +147,10 @@ const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam =>
     return { iterations: 0, timestep: 0 }
   }
 
-  const maxStableTimestepMs = 200 * 1000;
-  const iterations = Math.ceil(Math.abs(timestepMs / maxStableTimestepMs));
-  return { timestep: timestepMs / iterations, iterations: iterations };
+  const maxIterations = 100;
+  const desiredTimestepMs = 1 * 1000;
+  const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
+  const desiredStepFactor = Math.ceil(desiredIterations / maxIterations);
+  const iterations = Math.ceil(Math.abs(timestepMs) / (desiredTimestepMs * desiredStepFactor));
+  return { iterations: iterations, timestep: timestepMs / iterations };
 }

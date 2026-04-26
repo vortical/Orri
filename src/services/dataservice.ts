@@ -50,10 +50,13 @@ export class DataService {
       const response = await fetch(apiUrl, requestOptions);
       const json = await response.json();
 
-      return json.map((e: { start: string; end: string; accelerations: { datetime: string; acceleration: VectorComponents }[] }): BurnEvent => ({
+      return json.map((e: { start: string; end: string; accelerations: { datetime: string; acceleration: [number, number, number] }[] }): BurnEvent => ({
         startMs: Date.parse(e.start),
         endMs: Date.parse(e.end),
-        accelerations: e.accelerations.map(a => transform_to_local_coordinate_system(a.acceleration))
+        accelerations: e.accelerations.map(a => {
+          const [x, y, z] = a.acceleration;
+          return transform_to_local_coordinate_system({ x:x, y:y, z:z });
+        })
       }));
   }
 
@@ -130,6 +133,8 @@ export class DataService {
               return body;
           }));
       }
+
+      
 
       function parseMissionWindow(raw: {start: string, end: string}): MissionWindow {
         return {

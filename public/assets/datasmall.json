@@ -37,8 +37,8 @@
             "credits": "Orion Spacecraft (https://skfb.ly/pIroy) by WISEMANmods is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/)."
         },        
         "missionWindow": {
-          "start": "2026-04-02T01:58:50.814342Z",
-          "end": "2026-04-10T23:49:50.814373Z"         
+            "start": "2026-04-02T02:00:00Z",
+            "end": "2026-04-10T23:51:00Z"
          }
     },      
 

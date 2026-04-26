@@ -112,10 +112,27 @@ export class Body {
 
 
     getActiveBurnAcceleration(timeMs: number): VectorComponents | undefined {
-      const burn = this.burnEvents.find(b => b.startMs <= timeMs && b.endMs >= timeMs);
+      const burn = this.burnEvents.find(b => b.startMs <= timeMs && b.endMs > timeMs);
       if (!burn) return undefined;
-      const idx = Math.floor((timeMs - burn.startMs) / 60000);
-      return burn.accelerations[idx];
+      const elapsedTimeMs = timeMs - burn.startMs;
+      const idx = Math.floor(elapsedTimeMs / 60000);
+      
+      if (idx >= burn.accelerations.length - 1) {
+        return burn.accelerations[burn.accelerations.length - 1];
+      }
+
+
+      // Linear interpolation between adjacent samples
+      const t = (elapsedTimeMs % 60000) / 60000;  // 0..1 within the current minute
+      const a0 = burn.accelerations[idx];
+      const a1 = burn.accelerations[idx + 1];
+
+
+      return {     
+        x: a0.x + t * (a1.x - a0.x),
+        y: a0.y + t * (a1.y - a0.y),
+        z: a0.z + t * (a1.z - a0.z)
+      }
     }
 
 
