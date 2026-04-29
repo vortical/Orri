@@ -1,4 +1,4 @@
-import { BodySystem } from '../scene/BodySystem.ts'
+import { BodySystem, SpacecraftMode, SpacecraftModes } from '../scene/BodySystem.ts'
 import { CameraLayer } from '../scene/CameraLayer.ts';
 import GUI from 'lil-gui';
 import PubSub from 'pubsub-js';
@@ -87,6 +87,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
+        spacecraftMode: bodySystem.getSpacecraftMode(),
         orbitalOutlinesEnabled: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled(),
         orbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesOpacity(),
         orbitalOutlinesLengthType: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType,
@@ -139,6 +140,9 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
                 throw (e);
             }
         }));
+
+    gui.add(options, 'spacecraftMode', SpacecraftModes).name("Spacecraft Mode")
+        .onChange((v: SpacecraftMode) => bodySystem.setSpacecraftMode(v));
 
 
 

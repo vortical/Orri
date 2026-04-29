@@ -1,5 +1,5 @@
 import { Body } from "../body/Body.ts";
-import { BodyProperties, BurnEvent, KinematicObject, MissionWindow, VectorComponents } from "../domain/models.ts";
+import { BodyProperties, BurnEvent, KinematicObject, MissionWindow, TrajectoryPoint, VectorComponents } from "../domain/models.ts";
 
 
 /**
@@ -58,6 +58,28 @@ export class DataService {
           return transform_to_local_coordinate_system({ x:x, y:y, z:z });
         })
       }));
+  }
+
+
+  async loadTrajectory(body: Body): Promise<TrajectoryPoint[]> {
+      if (body.type !== "spacecraft"){
+        return [];
+      }
+
+      const apiUrl = `${this.spaceFieldBaseURL}/ephemeris/spacecraft/${body.name.toLowerCase()}/trajectory`;
+      const response = await fetch(apiUrl, { method: 'GET' });
+      const json = await response.json();
+
+      return json.map((p: { datetime: string; position: [number, number, number]; velocity: [number, number, number] }): TrajectoryPoint => {
+        const [px, py, pz] = p.position;
+        const [vx, vy, vz] = p.velocity;
+        // (x,y,z) → (x,z,-y) coordinate swap, kept as a 3-element array
+        return {
+          timeMs: Date.parse(p.datetime),
+          position: [px, pz, -py],
+          velocity: [vx, vz, -vy],
+        };
+      });
   }
 
 
@@ -121,14 +143,17 @@ export class DataService {
           return await Promise.all(bodies.map(async (body) => {
               const kinematicObject = await that.loadEphemeris(body, time);
               body.setKinematics(kinematicObject);
-              body.burnEvents = await that.loadBurnEvents(body);
               if (body.missionWindow) {
-                  const [startK, endK] = await Promise.all([
+                  const [startK, endK, burns, trajectory] = await Promise.all([
                       that.loadEphemeris(body, new Date(body.missionWindow.startMs)),
                       that.loadEphemeris(body, new Date(body.missionWindow.endMs)),
+                      that.loadBurnEvents(body),
+                      that.loadTrajectory(body),
                   ]);
                   body.missionWindow.startKinematics = startK;
                   body.missionWindow.endKinematics = endK;
+                  body.missionWindow.burnEvents = burns;
+                  body.missionWindow.trajectory = trajectory;
               }
               return body;
           }));

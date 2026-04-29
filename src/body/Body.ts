@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vector } from '../system/Vector.ts';
-import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod, MissionWindow, BurnEvent } from '../domain/models.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod, MissionWindow } from '../domain/models.ts';
 import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
@@ -67,11 +67,11 @@ export class Body {
     textures?: MaterialProperties;
     gltf?: GLTFModelProperties;
     missionWindow?: MissionWindow;
-    burnEvents: BurnEvent[] = [];
+    useTrajectory: boolean = false;
 
     _isActive: boolean = true;
 
-    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf, missionWindow, burnEvents=[] }: BodyProperties) {
+    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf, missionWindow }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parentName;
@@ -90,8 +90,7 @@ export class Body {
         this.textures = textures;
         this.gltf = gltf;
         this.missionWindow = missionWindow;
-        this.burnEvents = burnEvents;
-        
+
     }
 
 
@@ -112,7 +111,9 @@ export class Body {
 
 
     getActiveBurnAcceleration(timeMs: number): VectorComponents | undefined {
-      const burn = this.burnEvents.find(b => b.startMs <= timeMs && b.endMs > timeMs);
+      const burns = this.missionWindow?.burnEvents;
+      if (!burns) return undefined;
+      const burn = burns.find(b => b.startMs <= timeMs && b.endMs > timeMs);
       if (!burn) return undefined;
       const elapsedTimeMs = timeMs - burn.startMs;
       const idx = Math.floor(elapsedTimeMs / 60000);
@@ -149,8 +150,7 @@ export class Body {
             orbitPeriod: this.orbitPeriod,
             // needsOrbit: sourceBodyObject.body.type == "planet"|| sourceBodyObject.body.type  == "star"
             missionWindow: this.missionWindow,
-            burnEvents: this.burnEvents
-            
+
         } as BodyProperties;
     }
 

@@ -63,7 +63,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
     const timeStep = timeMsToUnits(timeStepMs, TimeUnit.Seconds);
 
     const massiveBodies = bodies.filter(b => b.type !== 'spacecraft' && b.isActive());
-    const spacecraft = bodies.filter(b => b.type === 'spacecraft' && b.isActive());
+    const spacecraft = bodies.filter(b => b.type === 'spacecraft' && b.isActive() && !b.useTrajectory);
 
     function massiveBodyAccelerations(): VectorComponents[] {
       const accContributions: VectorComponents[][] = [];

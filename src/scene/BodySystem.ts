@@ -70,6 +70,12 @@ export type BodySystemOptionsState = {
 
 };
 
+export const SpacecraftModes = {
+    NBody: 'NBody',
+    Trajectory: 'Trajectory',
+} as const;
+export type SpacecraftMode = typeof SpacecraftModes[keyof typeof SpacecraftModes];
+
 const CAMERA_NEAR = 500;
 // const CAMERA_FAR = 33000000;
 // const CAMERA_FAR = 3300000000; // this shows shadows correctly...
@@ -252,6 +258,19 @@ export class BodySystem {
         return this.cameraTargetingState.cameraMode;
     }
 
+    getSpacecraftMode(): SpacecraftMode {
+        return this.bodies.some(b => b.type === 'spacecraft' && b.useTrajectory)
+            ? SpacecraftModes.Trajectory
+            : SpacecraftModes.NBody;
+    }
+
+    setSpacecraftMode(mode: SpacecraftMode) {
+        const useTrajectory = mode === SpacecraftModes.Trajectory;
+        this.bodies
+            .filter(b => b.type === 'spacecraft')
+            .forEach(b => { b.useTrajectory = useTrajectory; });
+    }
+
     setCameraTargetingMode(cameraMode: CameraMode) {
         if (this.cameraTargetingState.cameraMode == cameraMode) {
             return;
@@ -360,53 +379,7 @@ export class BodySystem {
         return starBodies.reduce((prev: boolean, current) => (current.getShadowsEnabled() && prev), true);
     }
 
-    // setOrbitalOutlinesEnabled(value: boolean) {
-    //     [...this.bodyObjects3D.values()]
-    //     .filter(b => b.body.type == "planet")
-    //     .forEach(b => b.setOrbitOutlineEnabled(value));
-
-    //     // moon orbits are only shown if their planet is the target
-    //     [...this.bodyObjects3D.values()]
-    //     .filter(b => b.body.type == "moon")
-    //     .forEach(b => b.setOrbitOutlineEnabled(b.isPlanetarySystemSelected() && value ))
-    // }
-
-    // getOrbitalOutlinesEnabled(): boolean {
-    //     const firstBody = [...this.bodyObjects3D.values()].find(v => v.body.type == "planet")!;
-    //     return firstBody.orbitOutline.enabled;
-    // }
-
-    // setOrbitalOutlinesOpacity(value: number) {
-
-    //     for(const bodyObject3D of this.bodyObjects3D.values()){
-    //         bodyObject3D.orbitOutline.opacity = value;
-    //     }
-    // }    
-    // getOrbitalOutlinesOpacity(): number {
-    //     const [firstBody] = this.bodyObjects3D.values();
-    //     return firstBody.orbitOutline.opacity;
-    // }
-
-    // setOrbitalOutlineLength(value: OrbitLength){
-    //     console.log("Line :"+value.lengthType + ", "+value.value)
-    //     for(const bodyObject3D of this.bodyObjects3D.values()){
-    //         // if(bodyObject3D.getName() === "Earth"){
-    //             bodyObject3D.orbitOutline.orbitLength = value;
-
-    //         // }
-    //     }
-    // }
-
-    // // getOrbitalOutlineLength(): OrbitLength {
-    // //     const body = this.getBodyObject3D("Earth");
-    // //     return body.orbitOutline.orbitLength;
-    // // }
-
-    // getOrbitalOutlineLength(): OrbitLength{
-    //     const [firstBody] = this.bodyObjects3D.values();
-    //     return firstBody.orbitOutline.orbitLength;
-
-    // }
+  
 
     hasStats(): boolean {
         return this.stats != undefined && this.stats.dom.style.display !== "none";
@@ -514,15 +487,6 @@ export class BodySystem {
         this.cameraTargetingState.moveToTarget(bodyObject3D, forceMoveCloser);
     }
 
-    initializeOrbitOutlines(){
-
-                // const planets = [...this.bodyObjects3D.values()]
-                // .filter(o => o.body.type == "planet")
-                // // .filter(o=>o.getName() == "Earth")
-                // .forEach(o => o.orbitOutline.createOrbit());
-
-
-    }
 
     /**
      * Used for tracking a body frame to frame.
