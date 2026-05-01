@@ -1,5 +1,5 @@
 import { BodyObject3D } from "../mesh/BodyObject3D";
-
+import { Body } from "../body/Body"
 export const SYSTEM_TIME_TOPIC = Symbol('Topic for time messages from a clock');
 export const MOUSE_HOVER_OVER_BODY_TOPIC = Symbol('Topic for mouse hovered over a body');
 export const MOUSE_CLICK_ON_BODY_TOPIC = Symbol('Topic for mouse clicked body');
@@ -17,6 +17,6 @@ export type BodySelectEventMessageType = {
 
 
 export type BodyActiveEventMessageType = {
-    body: BodyObject3D;
+    body: Body;
     isActive: boolean;
 }

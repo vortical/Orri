@@ -9,7 +9,7 @@ import { throttle } from "../system/throttle.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
-import { Clock } from "../system/Clock.ts";
+import { Clock, Mark } from "../system/Clock.ts";
 import { Vector } from '../system/Vector.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
@@ -195,21 +195,23 @@ export class BodySystem {
     }
 
 
-    setBodyActive(body: BodyObject3D, isActive: boolean){
+    setBodyActive(body: Body, isActive: boolean){
       // add remote objects from scene (or set object3D visibility?)
       // probably better to add/remove from scene as most of the time these objects would not be visible.
+
+      const bodyObject = this.getBodyObject3D(body.name);
 
       if(isActive){
         // todo: check that scene does not add existing objects
         //  if(this.scene.getObjectById(body.getObject3D().id())...
 
-        this.scene.add(body.object3D);
-        console.log("Scene add body: ", body.getName())
+        this.scene.add(bodyObject.object3D);
+        console.log("Scene add body: ", bodyObject.getName())
       }else{
-        console.log("Scene remove body: ", body.getName())
-        this.scene.remove(body.object3D);
+        console.log("Scene remove body: ", bodyObject.getName())
+        this.scene.remove(bodyObject.object3D);
       }
-      body.labels.setVisible(isActive);
+      bodyObject.labels.setVisible(isActive);
     }
     /**
      * Moving near frustrum plane.
@@ -549,8 +551,9 @@ export class BodySystem {
         this.controls.enabled = true;
 
         this.renderer.setAnimationLoop(async () => {
-            const delta = timer.getDelta()!;
-            await this.tick(delta);
+            this.clock.mark();
+            //const delta = timer.getDelta()!;
+            await this.tick(this.clock.getMark());
             
             if (this.controls.enabled) {
                 this.followTarget(this.target);
@@ -599,9 +602,9 @@ export class BodySystem {
      * @param deltaTime 
      * @returns 
      */
-    tick(deltaTime: number) {
+    tick(mark: Mark) {
         return new Promise((resolve) => {
-            this.bodySystemUpdater.update(this.bodyObjects3D, deltaTime, this.clock);
+            this.bodySystemUpdater.update(this.bodyObjects3D, mark.deltaMs, mark.timeMs, this.clock);
             resolve(null);
         });
     }

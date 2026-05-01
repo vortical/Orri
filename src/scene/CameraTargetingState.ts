@@ -96,7 +96,13 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition);
         const newTargetVectorNormal = newTargetVector.clone().normalize();
         const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
-        const totalDistance = Math.max(Math.min(currentDistanceToSurface + bodyObject3D.body.radius / 1000, this.max_distance_ratio * bodyObject3D.body.radius / 1000), this.minCameraDistance(bodyObject3D));
+        const totalDistance = Math.max(
+          Math.min(
+            currentDistanceToSurface + bodyObject3D.body.radius / 1000, 
+            this.max_distance_ratio * bodyObject3D.body.radius / 1000
+          ), 
+          this.minCameraDistance(bodyObject3D)
+        );
         const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
 
         // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
@@ -111,7 +117,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
             .easing(TWEEN.Easing.Quintic.In)
             .dynamic(true);
 
-        const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
+        const distanceToNewTarget = currentCameraPosition.distanceTo(bodyObject3D.object3D.position);
 
         // Reposition camera: travel at 1000 times the speed of light or slower for 2.5 seconds wich ever is the most.
         const positionDisplacementTime = Math.max((distanceToNewTarget / 3300000), 2500);

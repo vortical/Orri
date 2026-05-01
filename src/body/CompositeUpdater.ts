@@ -18,11 +18,11 @@ export class CompositeUpdater implements BodySystemUpdater {
         this.bodySystemUpdaters = Array.from(bodySystemUpdaters);
     }
 
-    update(bodyObjects3D: Map<string, BodyObject3D>, timeStepmS: number, clock: Clock): Map<string, BodyObject3D> {
+    update(bodyObjects3D: Map<string, BodyObject3D>, timeStepmS: number, timeMs: number, clock: Clock): Map<string, BodyObject3D> {
 
         this.bodySystemUpdaters.forEach(updater => {
             if (updater.isEnabled) {
-                updater.update(bodyObjects3D, timeStepmS, clock);
+                updater.update(bodyObjects3D, timeStepmS, timeMs, clock);
             }
         });
 

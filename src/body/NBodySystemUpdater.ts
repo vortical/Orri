@@ -1,4 +1,4 @@
-import { Body } from './Body.ts';
+import { Body, handleActivityTransitions } from './Body.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { TimeUnit, timeMsToUnits } from '../system/time.ts';
 import { Clock } from "../system/Clock.ts";
@@ -14,48 +14,35 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   gravAccelerations?: VectorComponents[];
 
 
-  handleActivityTransitions(bodies: BodyObject3D[], stepTimeMs: number, timestep: number){
-    for(const b of bodies){
-      const shouldBeActive = b.isActiveAt(stepTimeMs);
-      if(b.isActive() == shouldBeActive) continue;
 
-      if(shouldBeActive){
-        const mw = b.body.missionWindow;
-        if(mw){
-          if(timestep >= 0 && mw.startKinematics){
-            b.body.setKinematics(mw.startKinematics);
-          } else if(timestep < 0 && mw.endKinematics){
-            b.body.setKinematics(mw.endKinematics);
-          }
-        }
-        b.setIsActive(true);
-      } else {
-        b.setIsActive(false);
-      }
 
-      PubSub.publish(BODY_ACTIVE_TOPIC, {body: b, isActive: shouldBeActive});
-      this.gravAccelerations = undefined;
-    }
-  }
-
-  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
+  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, timeMs: number, clock: Clock): Map<string, BodyObject3D> {
     const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
   //  console.log("ts:"+timestepMs+". timestep: "+timestep+", iter: "+iterations);
-    const timeMs = clock.getTime();
-    const allBodies = Array.from(bodyObject3Ds.values());
-    const allBodyData = allBodies.map(o => o.body);
+    // timeMs is the final time of the update
+    // timestepMs is the delta from our previous time. 
+    const startTimeMs = timeMs - timestepMs;
+
+    const allBodyData: Body[] = Array.from(bodyObject3Ds.values())
+      .map((o:BodyObject3D) => o.body)
+      .filter(b => !b.useTrajectory);
+    // const allBodyData = allBodies.map(o => o.body).filter(b => !b.useTrajectory);
 
     for (let i = 0; i < iterations; i++) {
-      const stepTimeMs = timeMs + i * timestep;
-      this.handleActivityTransitions(allBodies, stepTimeMs, timestep);
+      const stepTimeMs = startTimeMs + i * timestep;
+      if(handleActivityTransitions(allBodyData, stepTimeMs, timestep)){
+        // if there are state transitions, our existing accelerations need to be invalidated.
+        this.gravAccelerations = undefined;
+      }
       this.updateBodyProperties(allBodyData, timestep, stepTimeMs);
     }
 
     allBodyData.forEach((body) => {
+      // BUG: considering this should be: timeMs + timestepMs
       if(body.isActive()) body.sideralRotation = body.rotationAtTime(timeMs);
     });
 
-    bodyObject3Ds.forEach(b => b.isActive() && b.update());
+    bodyObject3Ds.forEach(b => b.isActive() && !b.body.useTrajectory && b.update());
     return bodyObject3Ds;
   }
 
@@ -148,6 +135,7 @@ const defaulUpdaterLoopParamProvider = (timestepMs: number): UpdaterLoopParam =>
   }
 
   const maxIterations = 100;
+  // const desiredTimestepMs = 1 * 50000;
   const desiredTimestepMs = 1 * 1000;
   const desiredIterations = Math.abs(timestepMs / desiredTimestepMs);
   const desiredStepFactor = Math.ceil(desiredIterations / maxIterations);

@@ -13,6 +13,10 @@ import { Timer } from "./Timer";
  *
  */
 
+export interface Mark {
+  timeMs: number
+  deltaMs: number
+}
 
 export class Clock {
 
@@ -36,6 +40,10 @@ export class Clock {
     scale: number = 1;
     savedScale: number = 1;
     timers = new Map<string, Timer>();
+
+    private markedTimeMs?: number;
+    private prevMarkedTimeMs?: number;                                                              
+                                                       
 
     /**
      * references the pub/sub publisher once started, else indefined
@@ -75,22 +83,41 @@ export class Clock {
     }
 
     isPaused(): boolean {
-        return this._isPaused;
+      return this._isPaused;
     }
 
     setTime(timeMs: number) {
-        this.realTimestampMs = Date.now();
-        this.clockTimeMs = timeMs;
+      this.realTimestampMs = performance.now();
+      this.clockTimeMs = timeMs;
     }
 
     getTime(): number {
-        const realTimeDelta = Date.now() - this.realTimestampMs;
-        const clockTime = this.clockTimeMs + (realTimeDelta) * this.scale;
-        return clockTime;
+      const now = performance.now();        
+      return this.clockTimeMs + (now - this.realTimestampMs) * this.scale;        
+    }
+
+    mark(): void {
+      const now = this.getTime();
+      this.prevMarkedTimeMs = this.markedTimeMs ?? now;    
+      this.markedTimeMs = now;
+    }
+
+    getMark(): Mark {
+      return {timeMs: this.getMarkTime(), deltaMs: this.getMarkDelta()};
+    }
+
+    getMarkTime(): number {
+      if (this.markedTimeMs === undefined) throw new Error('mark() not called')
+      return this.markedTimeMs;
+    }
+
+    getMarkDelta(): number {
+      if (this.markedTimeMs === undefined || this.prevMarkedTimeMs === undefined) return 0
+      return this.markedTimeMs - this.prevMarkedTimeMs
     }
 
     getScale(): number {
-        return this.isPaused() ? this.savedScale : this.scale;
+      return this.isPaused() ? this.savedScale : this.scale;
     }
 
     publishTimeScale = throttle(200, undefined, (scale: number) => PubSub.publish(TIME_SCALE_TOPIC, scale));

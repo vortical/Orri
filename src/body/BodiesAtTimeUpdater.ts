@@ -24,7 +24,7 @@ export class BodiesAtTimeUpdater implements BodySystemUpdater {
   /**
    * Update all: positions, velocities, rotations and the clock time!
    */
-  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
+  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, timeMs: number, clock: Clock): Map<string, BodyObject3D> {
     // this updater is a 'OneTimeUpdate'. It disables itself once it starts to run.
     this.isEnabled = false;
     this.kinematics.forEach(kinematic => {

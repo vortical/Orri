@@ -7,7 +7,7 @@ import { BodyObject3D } from '../mesh/BodyObject3D.ts';
  * is to set the properties of each body based on the time.  
  */
 export interface BodySystemUpdater {
-    update(bodies: Map<string, BodyObject3D>, timeStepmS: number, clock: Clock): Map<string, BodyObject3D>
+    update(bodies: Map<string, BodyObject3D>, timeStepmS: number, timeMs: number, clock: Clock): Map<string, BodyObject3D>
     isOneTimeUpdate: boolean;
     isEnabled: boolean;
 }

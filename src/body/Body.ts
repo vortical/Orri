@@ -4,6 +4,7 @@ import { Vector } from '../system/Vector.ts';
 import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod, MissionWindow } from '../domain/models.ts';
 import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
+import { BODY_ACTIVE_TOPIC } from '../system/event-types.ts';
 
 /**
  * G is the universal gravitational constant 
@@ -13,6 +14,34 @@ const G: number = 6.674e-11;
 interface RotationCalculator {
     (timeMs: number): Vector;
 }
+
+
+
+export  function handleActivityTransitions(bodies: Body[], timeMs: number, timestep: number): boolean{
+    for(const body of bodies){
+      const shouldBeActive = body.isActiveAt(timeMs);
+      if(body.isActive() == shouldBeActive) continue;
+
+      if(shouldBeActive){
+        const mw = body.missionWindow;
+        if(mw){
+          if(timestep >= 0 && mw.startKinematics){
+            body.setKinematics(mw.startKinematics);
+          } else if(timestep < 0 && mw.endKinematics){
+            body.setKinematics(mw.endKinematics);
+          }
+        }
+        body.setIsActive(true);
+      } else {
+        body.setIsActive(false);
+      }
+
+      PubSub.publish(BODY_ACTIVE_TOPIC, {body: body, isActive: shouldBeActive});
+      return true;
+      // this.gravAccelerations = undefined;
+    }
+    return false;
+  }
 
 /**
  * Represents the non 3D characteristics of a body: position, speed, mass, axis tilt, rotation period etc...
