@@ -269,6 +269,8 @@ export class Body {
                 return this;
             case "moon":
                 return this.parent!;
+            case "spacecraft":
+                return this.parent!;
             default:
               return this;
         }

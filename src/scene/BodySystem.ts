@@ -65,7 +65,8 @@ export type BodySystemOptionsState = {
     targettingCameraMode?: CameraMode;
     // put orbital outlines into their own type?
     orbitalOutlinesEnabled?: boolean;
-    orbitalOutlinesOpacity?: number;
+    selectedOrbitalOutlinesOpacity?: number;
+    unselectedOrbitalOutlinesOpacity?: number;
     orbitalOutlinesLength?: OrbitLength;
 
 };
@@ -118,7 +119,7 @@ export class BodySystem {
         cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
         ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType = ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
         showNames = true, showDistance = true, showAltitudeAzimuth = true,
-        location, targettingCameraMode = CameraModes.FollowTarget, orbitalOutlinesEnabled=false, orbitalOutlinesOpacity=0.5, orbitalOutlinesLength={value:355, lengthType:OrbitLengthType.AngleDegrees} }: BodySystemOptionsState) {
+        location, targettingCameraMode = CameraModes.FollowTarget, orbitalOutlinesEnabled=false, unselectedOrbitalOutlinesOpacity=0.2, selectedOrbitalOutlinesOpacity=0.5, orbitalOutlinesLength={value:355, lengthType:OrbitLengthType.AngleDegrees} }: BodySystemOptionsState) {
 
         const targetName = target;
         const canvasSize = new Dim(parentElement.clientWidth, parentElement.clientHeight);
@@ -155,7 +156,8 @@ export class BodySystem {
         new BodyActiveStateHandler(this);
         this.orbitOutlinesStateHandler.setPlanetaryMoonOrbitalOutlinesColorHues();
         this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
-        this.orbitOutlinesStateHandler.setOrbitalOutlinesOpacity(orbitalOutlinesOpacity);
+        this.orbitOutlinesStateHandler.setSelectedOrbitalOutlinesOpacity(selectedOrbitalOutlinesOpacity);
+        this.orbitOutlinesStateHandler.setUnselectedOrbitalOutlinesOpacity(unselectedOrbitalOutlinesOpacity);
 
         this.setAxesHelper(showAxes);
         this.setScale(sizeScale);
@@ -182,6 +184,7 @@ export class BodySystem {
         
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this);
         this.cameraTargetingState.postTargetSet(this.target);        
+        this.orbitOutlinesStateHandler.setTargetBody(this.target);
         // this.initializeOrbitOutlines();
     }
 
@@ -338,7 +341,8 @@ export class BodySystem {
         options.location = this.getLocation();
         options.targettingCameraMode = this.getCameraTargetingMode();
         options.orbitalOutlinesEnabled = this.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled();
-        options.orbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getOrbitalOutlinesOpacity();
+        options.selectedOrbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getSelectedOrbitalOutlinesOpacity();
+        options.unselectedOrbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getUnselectedOrbitalOutlinesOpacity();
         options.orbitalOutlinesLength = this.orbitOutlinesStateHandler.getOrbitalOutlineLength();
 
         return options;

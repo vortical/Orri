@@ -19,10 +19,7 @@ export const BodyObject3DFactory = {
             case "moon":
                 return new MoonBodyObject3D(body, bodySystem);
             case "spacecraft":
-              console.log("create artemis")
-              //return new PlanetaryBodyObject3D(body, bodySystem);
               return new SpacecraftBodyObject3D(body, bodySystem);
-
             default:
                 throw new Error("Invalid body type: " + body.type);
         }

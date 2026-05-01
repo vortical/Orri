@@ -184,6 +184,6 @@ export class StarBodyObject3D extends BodyObject3D {
     }
 
     setOrbitOutlineEnabled(value: boolean): void {
-        console.log("Start: setOrbitOutlineEnabled:"+this.getName());
+        console.log("Star: setOrbitOutlineEnabled:"+this.getName());
     }    
 }

@@ -116,10 +116,11 @@ export class OrbitalOutline  {
         this.material = new LineBasicMaterial({ color: 0xffffff, opacity: opacity, transparent: true });
         this.line = new Line(geometry, this.material);
         this.enabled = enabled;
+        
         this.opacity = opacity;
         this.maxVertices = maxVertices
         this._orbitLength = orbitLength;
-        this.enabled = enabled;
+        
     }
 
     getObject3D(): Object3D {

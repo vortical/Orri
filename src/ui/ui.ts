@@ -89,7 +89,8 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
         spacecraftMode: bodySystem.getSpacecraftMode(),
         orbitalOutlinesEnabled: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled(),
-        orbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesOpacity(),
+        selectedOrbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getSelectedOrbitalOutlinesOpacity(),
+        unselectedOrbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getUnselectedOrbitalOutlinesOpacity(),
         orbitalOutlinesLengthType: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType,
         orbitalOutlinesAngleValue: (bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
         orbitalOutlinesTimeValue:(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
@@ -183,9 +184,12 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         .onChange((v: boolean) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(v));
 
 
-    const orbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "orbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbital Outlines Opacity')
-        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesOpacity(v));
+    const selectedOrbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "selectedOrbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbit Opacity (selected)')
+        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setSelectedOrbitalOutlinesOpacity(v));
     
+    const unselectedOrbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "unselectedOrbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbit Opacity (unselected)')
+        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setUnselectedOrbitalOutlinesOpacity(v));
+            
     const updateOrbitsAngleInvoker = throttle(100, this, (v) => {
         bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:v, lengthType:OrbitLengthType.AngleDegrees});
     });

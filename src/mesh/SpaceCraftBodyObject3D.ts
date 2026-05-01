@@ -27,5 +27,7 @@ export class SpacecraftBodyObject3D extends BodyObject3D {
         return this.surface.getObject3D();
     }
 
-
+    setOrbitOutlineEnabled(value: boolean): void {
+        console.log("Starcraft: setOrbitOutlineEnabled:"+this.getName());
+    }   
 }
