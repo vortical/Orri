@@ -144,14 +144,10 @@ export class DataService {
               const kinematicObject = await that.loadEphemeris(body, time);
               body.setKinematics(kinematicObject);
               if (body.missionWindow) {
-                  const [startK, endK, burns, trajectory] = await Promise.all([
-                      that.loadEphemeris(body, new Date(body.missionWindow.startMs)),
-                      that.loadEphemeris(body, new Date(body.missionWindow.endMs)),
+                  const [burns, trajectory] = await Promise.all([
                       that.loadBurnEvents(body),
                       that.loadTrajectory(body),
                   ]);
-                  body.missionWindow.startKinematics = startK;
-                  body.missionWindow.endKinematics = endK;
                   body.missionWindow.burnEvents = burns;
                   body.missionWindow.trajectory = trajectory;
               }

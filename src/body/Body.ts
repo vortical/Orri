@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { toRad } from '../system/geometry.ts';
 import { Vector } from '../system/Vector.ts';
-import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod, MissionWindow } from '../domain/models.ts';
+import { RingProperties, BodyProperties, LightProperties, KinematicObject, BodyType, VectorComponents, MaterialProperties, GLTFModelProperties, TimePeriod, MissionWindow, Vec3, Ephemeris } from '../domain/models.ts';
 import { timePeriodToMs } from '../system/time.ts';
 import { degToRad } from 'three/src/math/MathUtils.js';
 import { BODY_ACTIVE_TOPIC } from '../system/event-types.ts';
@@ -17,31 +17,33 @@ interface RotationCalculator {
 
 
 
-export  function handleActivityTransitions(bodies: Body[], timeMs: number, timestep: number): boolean{
-    for(const body of bodies){
-      const shouldBeActive = body.isActiveAt(timeMs);
-      if(body.isActive() == shouldBeActive) continue;
+// export  function handleActivityTransitions(bodies: Body[], timeMs: number, timestep: number): boolean{
+//     for(const body of bodies){
+//       const shouldBeActive = body.isActiveAt(timeMs);
+//       if(body.isActive() == shouldBeActive) continue;
+//       // body is not active yet!
 
-      if(shouldBeActive){
-        const mw = body.missionWindow;
-        if(mw){
-          if(timestep >= 0 && mw.startKinematics){
-            body.setKinematics(mw.startKinematics);
-          } else if(timestep < 0 && mw.endKinematics){
-            body.setKinematics(mw.endKinematics);
-          }
-        }
-        body.setIsActive(true);
-      } else {
-        body.setIsActive(false);
-      }
+//       if(shouldBeActive){
+//         const missionWindow = body.missionWindow;
+//         // use SpaceCracftTrajectoryUpdater hermit sample.
+//         if(missionWindow){
+//           if(timestep >= 0 && missionWindow.startKinematics){
+//             body.setKinematics(missionWindow.startKinematics);
+//           } else if(timestep < 0 && missionWindow.endKinematics){
+//             body.setKinematics(missionWindow.endKinematics);
+//           }
+//         }
+//         body.setIsActive(true);
+//       } else {
+//         body.setIsActive(false);
+//       }
 
-      PubSub.publish(BODY_ACTIVE_TOPIC, {body: body, isActive: shouldBeActive});
-      return true;
-      // this.gravAccelerations = undefined;
-    }
-    return false;
-  }
+//       PubSub.publish(BODY_ACTIVE_TOPIC, {body: body, isActive: shouldBeActive});
+//       return true;
+//       // this.gravAccelerations = undefined;
+//     }
+//     return false;
+//   }
 
 /**
  * Represents the non 3D characteristics of a body: position, speed, mass, axis tilt, rotation period etc...
@@ -131,9 +133,9 @@ export class Body {
       this._isActive = value;
     }
 
-    isActiveAt(time: number): boolean {
+    isActiveAt(timeMs: number): boolean {
       if(this.missionWindow){
-        return this.missionWindow.startMs <= time && this.missionWindow.endMs >= time;
+        return this.missionWindow.startMs <= timeMs && this.missionWindow.endMs >= timeMs;
       }
       return true;
     }
@@ -361,6 +363,59 @@ export class Body {
             this.position.z + (this.velocity.z * time) + (acc.z * time2),
         );
     }
+
+
+  /**
+   * Hermite cubic interpolation between two trajectory points.
+   *
+   * Returns interpolated [position, velocity] at time `t`, or undefined if `t` falls
+   * outside the trajectory's covered range.
+   */
+  hermiteSample(timeMs: number): Ephemeris| undefined {
+    const trajectory = this.missionWindow?.trajectory;
+    if(trajectory == undefined) return undefined;
+
+    const last = trajectory.length - 1;
+
+    if (timeMs < trajectory[0].timeMs || timeMs > trajectory[last].timeMs) return undefined;
+
+    const span = trajectory[1].timeMs - trajectory[0].timeMs;
+    let idx = Math.floor((timeMs - trajectory[0].timeMs) / span);
+    if (idx < 0) idx = 0;
+    if (idx > last - 1) idx = last - 1;
+
+    const a = trajectory[idx];
+    const b = trajectory[idx + 1];
+
+    const dtMs = b.timeMs - a.timeMs;
+    const dt = dtMs / 1000; // seconds — velocities are m/s
+    const s = (timeMs - a.timeMs) / dtMs;
+
+    const s2 = s * s;
+    const s3 = s2 * s;
+
+    const h00 = 2 * s3 - 3 * s2 + 1;
+    const h10 = s3 - 2 * s2 + s;
+    const h01 = -2 * s3 + 3 * s2;
+    const h11 = s3 - s2;
+
+    // dp/dt = (1/dt) * dp/ds
+    const dh00 = (6 * s2 - 6 * s) / dt;
+    const dh10 = 3 * s2 - 4 * s + 1;
+    const dh01 = (-6 * s2 + 6 * s) / dt;
+    const dh11 = 3 * s2 - 2 * s;
+
+    const p: Vec3 = [0, 0, 0];
+    const v: Vec3 = [0, 0, 0];
+    for (let i = 0; i < 3; i++) {
+      p[i] = h00 * a.position[i] + h10 * dt * a.velocity[i] + h01 * b.position[i] + h11 * dt * b.velocity[i];
+      v[i] = dh00 * a.position[i] + dh10 * a.velocity[i] + dh01 * b.position[i] + dh11 * b.velocity[i];
+    }
+
+    return {position: Vector.fromV3(p), velocity: Vector.fromV3(v)};
+  }
+
+
 }
 
 // export type PlanetarySystem = Body;

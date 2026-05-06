@@ -1,8 +1,8 @@
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
-import { Clock } from '../system/Clock.ts';
+import { Clock, TimeMark } from '../system/Clock.ts';
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { Vector } from '../system/Vector.ts';
-import { TrajectoryPoint } from '../domain/models.ts';
+import { KinematicObject, TrajectoryPoint } from '../domain/models.ts';
 
 type Vec3 = [number, number, number];
 
@@ -12,6 +12,12 @@ export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
 
   timeMs: number = 0;
 
+  constructor(){
+
+    console.log("construct: SpacecraftTrajectoryUpdate");
+
+
+  }
 
   logDeltas(p1: Vector, p2: Vector, v1: Vector, v2: Vector, timestepMs: number, timeMs: number) {
     const diff = (timeMs - this.timeMs)/1000;
@@ -23,17 +29,17 @@ export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
 
   }
 
-  update(bodyObjects3D: Map<string, BodyObject3D>, timestepMs: number, timeMs: number, clock: Clock): Map<string, BodyObject3D> {
-    const t = timeMs;
+  update(bodyObjects3D: BodyObject3D[], timemark: TimeMark):BodyObject3D[] {
+    const timeMs = timemark.timeMs;
 
-    for (const o of bodyObjects3D.values()) {
+    for (const o of bodyObjects3D) {
       const b = o.body;
       if (b.type !== 'spacecraft' || !b.useTrajectory || !b.isActive()) continue;
 
       const pts = b.missionWindow?.trajectory;
       if (!pts || pts.length < 2) continue;
 
-      const sample = hermiteSample(pts, t);
+      const sample = hermiteSample(pts, timeMs);
       if (!sample) continue;
 
       const [p, v] = sample;
@@ -45,7 +51,8 @@ export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
 
       // this.logDeltas(p0, b.position, v0, b.velocity, timestepMs, timeMs)
 
-      b.sideralRotation = b.rotationAtTime(t);
+      b.sideralRotation = b.rotationAtTime(timeMs);
+      // console.log(b.position,b.velocity,)
       o.update();
 
     }
@@ -55,12 +62,7 @@ export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
 }
 
 
-/**
- * Hermite cubic interpolation between two trajectory points.
- *
- * Returns interpolated [position, velocity] at time `t`, or undefined if `t` falls
- * outside the trajectory's covered range.
- */
+
 export function lerpSample(pts: TrajectoryPoint[], t: number): [Vector, Vector] | undefined {
   const last = pts.length - 1;
   if (t < pts[0].timeMs || t > pts[last].timeMs) return undefined;
@@ -86,13 +88,18 @@ export function lerpSample(pts: TrajectoryPoint[], t: number): [Vector, Vector] 
 }
 
 
-
-export function hermiteSample(pts: TrajectoryPoint[], t: number): [Vector, Vector] | undefined {
+/**
+ * Hermite cubic interpolation between two trajectory points.
+ *
+ * Returns interpolated [position, velocity] at time `t`, or undefined if `t` falls
+ * outside the trajectory's covered range.
+ */
+export function hermiteSample(pts: TrajectoryPoint[], timeMs: number): [Vector, Vector] | undefined {
   const last = pts.length - 1;
-  if (t < pts[0].timeMs || t > pts[last].timeMs) return undefined;
+  if (timeMs < pts[0].timeMs || timeMs > pts[last].timeMs) return undefined;
 
   const span = pts[1].timeMs - pts[0].timeMs;
-  let idx = Math.floor((t - pts[0].timeMs) / span);
+  let idx = Math.floor((timeMs - pts[0].timeMs) / span);
   if (idx < 0) idx = 0;
   if (idx > last - 1) idx = last - 1;
 
@@ -101,7 +108,7 @@ export function hermiteSample(pts: TrajectoryPoint[], t: number): [Vector, Vecto
 
   const dtMs = b.timeMs - a.timeMs;
   const dt = dtMs / 1000; // seconds — velocities are m/s
-  const s = (t - a.timeMs) / dtMs;
+  const s = (timeMs - a.timeMs) / dtMs;
 
   const s2 = s * s;
   const s3 = s2 * s;
@@ -126,3 +133,4 @@ export function hermiteSample(pts: TrajectoryPoint[], t: number): [Vector, Vecto
 
   return [Vector.fromV3(p), Vector.fromV3(v)];
 }
+

@@ -23,12 +23,12 @@ export class PlanetaryBodyObject3D extends BodyObject3D {
         this.getObject3D().applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
     }
 
-    isTarget(): boolean {
-        return this.bodySystem.getTarget() == this;
-    }
+    // isTarget(): boolean {
+    //     return this.bodySystem.getTarget() == this;
+    // }
 
     getMoons(): MoonBodyObject3D[]{
-        return [...this.bodySystem.bodyObjects3D.values()]
+        return [...this.bodySystem.bodyObjects3DMap.values()]
         .filter(b => b.body.parent == this.body) as MoonBodyObject3D[];
     } 
 

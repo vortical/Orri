@@ -4,6 +4,8 @@ import { BodyObject3D } from './BodyObject3D.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { BodySurface } from './BodySurface.ts';
 import { BodySurfaceBuilder } from './BodySurfaceBuilder.ts';
+import { TrajectoryOutline } from './TrajectoryOutline.ts';
+import { SpacecraftTrajectoryOutline } from './SpacecraftTrajectoryOutline.ts';
 
 export class SpacecraftBodyObject3D extends BodyObject3D {
     readonly surface: BodySurface;
@@ -18,16 +20,23 @@ export class SpacecraftBodyObject3D extends BodyObject3D {
         this.getObject3D().applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(axis.x, axis.y, axis.z)));
     }
 
-    isTarget(): boolean {
-        return this.bodySystem.getTarget() == this;
-    }
+    protected createTrajectoryOutline(): TrajectoryOutline {    
+      const trajectory = this.body.missionWindow!.trajectory!;
+      // itentionaly not lenght - 1
+      const length = trajectory.length;
 
+      return new SpacecraftTrajectoryOutline(this, length);
+    }
 
     getSurface(): Object3D {
         return this.surface.getObject3D();
     }
 
-    setOrbitOutlineEnabled(value: boolean): void {
-        console.log("Starcraft: setOrbitOutlineEnabled:"+this.getName());
-    }   
+
+
+
+    updateBodyKinematics(timeMs: number) {
+      // use the mission window trajectory date.
+    }
+
 }

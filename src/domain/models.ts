@@ -1,3 +1,5 @@
+export type Vec3 = [number, number, number];
+
 export interface VectorComponents {
     x: number;
     y: number;
@@ -30,8 +32,6 @@ export type MissionWindow = {
     end: string;
     startMs: number;
     endMs: number;
-    startKinematics?: KinematicObject;
-    endKinematics?: KinematicObject;
     burnEvents?: BurnEvent[];
     trajectory?: TrajectoryPoint[];
 }

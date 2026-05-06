@@ -13,7 +13,7 @@ import { Timer } from "./Timer";
  *
  */
 
-export interface Mark {
+export interface TimeMark {
   timeMs: number
   deltaMs: number
 }
@@ -41,8 +41,9 @@ export class Clock {
     savedScale: number = 1;
     timers = new Map<string, Timer>();
 
-    private markedTimeMs?: number;
-    private prevMarkedTimeMs?: number;                                                              
+
+
+    private timeMark?: TimeMark;
                                                        
 
     /**
@@ -96,24 +97,26 @@ export class Clock {
       return this.clockTimeMs + (now - this.realTimestampMs) * this.scale;        
     }
 
-    mark(): void {
+    mark(): TimeMark {
       const now = this.getTime();
-      this.prevMarkedTimeMs = this.markedTimeMs ?? now;    
-      this.markedTimeMs = now;
+
+    
+      if(this.timeMark){
+        this.timeMark = {timeMs: now, deltaMs: now - this.timeMark.timeMs};
+
+      }else{
+        this.timeMark = {timeMs: now, deltaMs: 0};
+      }
+
+      return this.timeMark;
+      
     }
 
-    getMark(): Mark {
-      return {timeMs: this.getMarkTime(), deltaMs: this.getMarkDelta()};
-    }
-
-    getMarkTime(): number {
-      if (this.markedTimeMs === undefined) throw new Error('mark() not called')
-      return this.markedTimeMs;
-    }
-
-    getMarkDelta(): number {
-      if (this.markedTimeMs === undefined || this.prevMarkedTimeMs === undefined) return 0
-      return this.markedTimeMs - this.prevMarkedTimeMs
+    getMark(): TimeMark {
+      if(this.timeMark){
+        return this.timeMark;
+      }
+      return this.mark();
     }
 
     getScale(): number {

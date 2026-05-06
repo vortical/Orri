@@ -1,10 +1,13 @@
-import { Body, handleActivityTransitions } from './Body.ts';
+import { Body } from './Body.ts';
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { TimeUnit, timeMsToUnits } from '../system/time.ts';
-import { Clock } from "../system/Clock.ts";
+import { Clock, TimeMark } from "../system/Clock.ts";
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
 import { VectorComponents } from '../domain/models.ts';
 import { BODY_ACTIVE_TOPIC } from '../system/event-types.ts';
+
+
+
 
 
 
@@ -13,33 +16,42 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   isEnabled = true;
   gravAccelerations?: VectorComponents[];
 
+  totalstepMs: number = 0;
+  invalidateNextUpdate: boolean = false;
+
+  invalidate(){
+    this.invalidateNextUpdate = true;
+
+  }
 
 
+  update(bodyObject3Ds: BodyObject3D[], timeMark: TimeMark,  doInvalidate: boolean=false): BodyObject3D[] {
+    const { timestep, iterations } = defaulUpdaterLoopParamProvider(timeMark.deltaMs);
+    const timeMs = timeMark.timeMs; // this is now - we have have to catch up to this time.
+    const timestepMs = timeMark.deltaMs;
 
-  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, timeMs: number, clock: Clock): Map<string, BodyObject3D> {
-    const { timestep, iterations } = defaulUpdaterLoopParamProvider(timestepMs);
-  //  console.log("ts:"+timestepMs+". timestep: "+timestep+", iter: "+iterations);
-    // timeMs is the final time of the update
-    // timestepMs is the delta from our previous time. 
-    const startTimeMs = timeMs - timestepMs;
+    const startTimeMs = timeMs - timestepMs; // Our start time
+    if(doInvalidate || this.invalidateNextUpdate){
+      // we cache accelerations at previous time, some constraints can force us to invalidate them
+      // e.g.: adding/removing bodies from our system...
+      this.gravAccelerations = undefined;
+      this.invalidateNextUpdate = false;
+    }
 
     const allBodyData: Body[] = Array.from(bodyObject3Ds.values())
       .map((o:BodyObject3D) => o.body)
       .filter(b => !b.useTrajectory);
-    // const allBodyData = allBodies.map(o => o.body).filter(b => !b.useTrajectory);
+
 
     for (let i = 0; i < iterations; i++) {
       const stepTimeMs = startTimeMs + i * timestep;
-      if(handleActivityTransitions(allBodyData, stepTimeMs, timestep)){
-        // if there are state transitions, our existing accelerations need to be invalidated.
-        this.gravAccelerations = undefined;
-      }
       this.updateBodyProperties(allBodyData, timestep, stepTimeMs);
     }
 
     allBodyData.forEach((body) => {
-      // BUG: considering this should be: timeMs + timestepMs
-      if(body.isActive()) body.sideralRotation = body.rotationAtTime(timeMs);
+      if(body.isActive()){
+        body.sideralRotation = body.rotationAtTime(timeMs);
+      }
     });
 
     bodyObject3Ds.forEach(b => b.isActive() && !b.body.useTrajectory && b.update());
@@ -47,6 +59,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   }
 
   updateBodyProperties(bodies: Body[], timeStepMs: number, timeMs: number): Body[] {
+    this.totalstepMs += timeStepMs;
     const timeStep = timeMsToUnits(timeStepMs, TimeUnit.Seconds);
 
     const massiveBodies = bodies.filter(b => b.type !== 'spacecraft' && b.isActive());

@@ -1,5 +1,5 @@
 import { BodyObject3D } from "../mesh/BodyObject3D";
-import { OrbitLength } from "../mesh/OrbitOutline";
+import { OrbitLength, OrbitLengthType, OrbitTrajectoryOutline } from "../mesh/OrbitOutline";
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from "../system/event-types";
 import { BodySystem } from "./BodySystem";
 import { Body } from "../body/Body";
@@ -15,6 +15,7 @@ export class OrbitOutlinesStateHandler {
     orbitsEnabled: boolean =  false;
     unselectedSystemOpacity: number = 0.2;
     selectedSystemOpacity: number = 0.5;
+    orbitalLength: OrbitLength = {value: 350, lengthType: OrbitLengthType.AngleDegrees};
 
 
 
@@ -29,12 +30,13 @@ export class OrbitOutlinesStateHandler {
     }
 
     createBodySelectionSubscribtion() {
-        PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event: BodySelectEventMessageType) => {            
-            if(this.getOrbitalOutlinesEnabled()){            
+        PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event: BodySelectEventMessageType) => {        
+          console.log("OrbitOutline body selected");    
+            
                 const selectedBody = event.body;
                 this.setTargetBody(selectedBody);
                 
-            }
+            
         });
     }
 
@@ -46,17 +48,16 @@ export class OrbitOutlinesStateHandler {
       }
     }
     setTargetSystem(targetSystem: Body){
-        if(targetSystem.planetarySystem() != this.selectedSystem){
+        if(targetSystem != this.selectedSystem){
             if(this.selectedSystem){
                 // unselect existing selected system
                 this.setMoonOrbitalOutlinesEnabled(this.selectedSystem, false);
             }
             
-            this.selectedSystem = targetSystem.planetarySystem();
+            this.selectedSystem = targetSystem;
             this.setSelectedOrbitalOutlinesOpacity(this.selectedSystemOpacity);
             this.setUnselectedOrbitalOutlinesOpacity(this.unselectedSystemOpacity);
-            this.setMoonOrbitalOutlinesEnabled(this.selectedSystem, true);
-
+            this.setMoonOrbitalOutlinesEnabled(this.selectedSystem, this.orbitsEnabled);
         }
         
     }
@@ -64,56 +65,58 @@ export class OrbitOutlinesStateHandler {
 
 
     setPlanetaryMoonOrbitalOutlinesColorHues(){
-        [...this.bodySystem.bodyObjects3D.values()]
+        this.bodySystem.bodyObjects3DList
         .filter(b => b.body.type == "moon")
-        .forEach(b => b.orbitOutline.colorHue = (hashCode(b.getName()) % 100)/100);
+        .forEach(b => b.trajectoryOutline.colorHue = (hashCode(b.getName()) % 100)/100);
 
     }
 
     setMoonOrbitalOutlinesEnabled(system: Body, value: boolean) {
-        [...this.bodySystem.bodyObjects3D.values()]
+        this.bodySystem.bodyObjects3DList
         .filter(b => b.body.parent == system)
         .forEach(b => b.setOrbitOutlineEnabled(value ))
     }
 
     setOrbitalOutlinesEnabled(value: boolean) {
 
-      [...this.bodySystem.bodyObjects3D.values()]
+      this.orbitsEnabled = value;
+
+      // these are managed elswhere
+      this.bodySystem.bodyObjects3DList
         .filter(b => b.body.type == "spacecraft")
         .forEach(b => b.setOrbitOutlineEnabled(false));
 
 
-        [...this.bodySystem.bodyObjects3D.values()]
+        this.bodySystem.bodyObjects3DList
         .filter(b => b.body.type == "planet")
         .forEach(b => b.setOrbitOutlineEnabled(value));
 
         // moon orbits are only shown if their planet is the target
-        [...this.bodySystem.bodyObjects3D.values()]
+        this.bodySystem.bodyObjects3DList
         .filter(b => b.body.type == "moon")
         .forEach(b => b.setOrbitOutlineEnabled(b.isPlanetarySystemSelected() && value ))
     }
 
     getOrbitalOutlinesEnabled(): boolean {
-        const firstBody = [...this.bodySystem.bodyObjects3D.values()].find(v => v.body.type == "planet")!;
-        return firstBody.orbitOutline.enabled;
+      return this.orbitsEnabled;
     }
 
     setSelectedOrbitalOutlinesOpacity(value: number) {
       this.selectedSystemOpacity = value;
 
-      const objects = [...this.bodySystem.bodyObjects3D.values()]
+      const objects = this.bodySystem.bodyObjects3DList
         .filter(bodyObject => bodyObject.planetarySystem() == this.selectedSystem)
 
-      objects.forEach(bodyObject => bodyObject.orbitOutline.opacity = value);
+      objects.forEach(bodyObject => bodyObject.trajectoryOutline.opacity = value);
     }
 
     setUnselectedOrbitalOutlinesOpacity(value: number) {
       this.unselectedSystemOpacity = value;
 
-      [...this.bodySystem.bodyObjects3D.values()]
+      this.bodySystem.bodyObjects3DList
         .filter(bodyObject => bodyObject.planetarySystem() != this.selectedSystem)
-        .forEach(bodyObject => bodyObject.orbitOutline.opacity = value);
-    }    
+        .forEach(bodyObject => bodyObject.trajectoryOutline.opacity = value);
+    }
 
  
     getSelectedOrbitalOutlinesOpacity(): number {
@@ -127,15 +130,19 @@ export class OrbitOutlinesStateHandler {
 
     setOrbitalOutlineLength(value: OrbitLength){
         console.log("Line :"+value.lengthType + ", "+value.value)
-        for(const bodyObject3D of this.bodySystem.bodyObjects3D.values()){
-            bodyObject3D.orbitOutline.orbitLength = value;
+        for(const bodyObject3D of this.bodySystem.bodyObjects3DList){
+            const outline = bodyObject3D.trajectoryOutline;
+            if (outline instanceof OrbitTrajectoryOutline) {
+                outline.orbitLength = value;
+            }
         }
     }
-   
-    getOrbitalOutlineLength(): OrbitLength{
-        const [firstBody] = this.bodySystem.bodyObjects3D.values();
-        return firstBody.orbitOutline.orbitLength;
 
+    getOrbitalOutlineLength(): OrbitLength{
+        const firstOrbit = this.bodySystem.bodyObjects3DList
+            .map(b => b.trajectoryOutline)
+            .find((o): o is OrbitTrajectoryOutline => o instanceof OrbitTrajectoryOutline)!;
+        return firstOrbit.orbitLength;
     }
 
 

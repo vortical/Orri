@@ -9,7 +9,7 @@ import { throttle } from "../system/throttle.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
-import { Clock, Mark } from "../system/Clock.ts";
+import { Clock, TimeMark } from "../system/Clock.ts";
 import { Vector } from '../system/Vector.ts';
 import { Picker } from './Picker.ts';
 import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
@@ -27,6 +27,7 @@ import { DistanceFormatter, DistanceUnit, DistanceUnits } from '../system/distan
 import { OrbitLength, OrbitLengthType } from '../mesh/OrbitOutline.ts';
 import { OrbitOutlinesStateHandler } from './OrbitOutlinesStateHandler.ts';
 import { BodyActiveStateHandler } from './ObjectActiveStateHandler.ts';
+import { NBodySystemUpdater } from '../body/NBodySystemUpdater.ts';
 // import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
 // import { timePeriodToMs } from '../system/time.ts';
 // import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
@@ -95,7 +96,8 @@ export class BodySystem {
     scene: Scene;
     renderer: WebGLRenderer;
     controls: OrbitControls;
-    bodyObjects3D: Map<string, BodyObject3D>;
+    bodyObjects3DMap: Map<string, BodyObject3D>;
+    bodyObjects3DList: BodyObject3D[];
     ambiantLight: AmbientLight;
     stats?: Stats;
     target: BodyObject3D;
@@ -111,6 +113,7 @@ export class BodySystem {
     locationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
     orbitOutlinesStateHandler: OrbitOutlinesStateHandler;
+    nbodyUpdater: NBodySystemUpdater;
 
     // workerPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]}, NamedArrayBuffer[]> ;
     
@@ -129,6 +132,7 @@ export class BodySystem {
         this.clock = new Clock(date);
         const timeMs = this.clock.clockTimeMs;
 
+        this.nbodyUpdater = bodySystemUpdater as NBodySystemUpdater;
         this.addUpdater(bodySystemUpdater);
         this.bodies = bodies;
         this.camera = createCamera();
@@ -138,7 +142,8 @@ export class BodySystem {
         parentElement.append(this.renderer.domElement);
         this.labelRenderer = createLabelRender();
         parentElement.append(this.labelRenderer.domElement);
-        this.bodyObjects3D = this.createObjects3D(this.bodies, timeMs);
+        this.bodyObjects3DMap = this.createObjects3D(this.bodies, timeMs);
+        this.bodyObjects3DList = Array.from(this.bodyObjects3DMap.values()); 
         this.controls = createControls(this.camera, this.labelRenderer.domElement);
         this.controls.enabled = false;
 
@@ -149,16 +154,16 @@ export class BodySystem {
         this.ambiantLight = createAmbiantLight(ambientLightLevel);
         this.scene.add(this.ambiantLight);
         this.controls.update();
-        this.addToScene(Array.from(this.bodyObjects3D.values()));
+        this.addToScene(this.bodyObjects3DList);
         
         
         this.orbitOutlinesStateHandler = new OrbitOutlinesStateHandler(this);
         new BodyActiveStateHandler(this);
         this.orbitOutlinesStateHandler.setPlanetaryMoonOrbitalOutlinesColorHues();
-        this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
+        this.orbitOutlinesStateHandler.setOrbitalOutlineLength(orbitalOutlinesLength);
         this.orbitOutlinesStateHandler.setSelectedOrbitalOutlinesOpacity(selectedOrbitalOutlinesOpacity);
         this.orbitOutlinesStateHandler.setUnselectedOrbitalOutlinesOpacity(unselectedOrbitalOutlinesOpacity);
-
+        
         this.setAxesHelper(showAxes);
         this.setScale(sizeScale);
         this.setTimeScale(timeScale)
@@ -171,7 +176,7 @@ export class BodySystem {
         this.setLayerEnabled(showNames, CameraLayer.NameLabel);
         this.setLayerEnabled(showDistance, CameraLayer.DistanceLabel);
         this.setLayerEnabled(showAltitudeAzimuth, CameraLayer.ElevationAzimuthLabel);
-        this.orbitOutlinesStateHandler.setOrbitalOutlineLength(orbitalOutlinesLength);
+        // this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
         this.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(orbitalOutlinesEnabled);
 
         if (location) {
@@ -198,7 +203,7 @@ export class BodySystem {
     }
 
 
-    setBodyActive(body: Body, isActive: boolean){
+    handleBodyActivationState(body: Body, isActive: boolean){
       // add remote objects from scene (or set object3D visibility?)
       // probably better to add/remove from scene as most of the time these objects would not be visible.
 
@@ -233,13 +238,14 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();        
     }
 
-    setSystemTime(datetime: string | Date) {
+    setSystemTime(datetime:  Date) {
         return new Promise(async (resolve) => {
             try {
                 const time = new Date(datetime);
-                const bodies = Array.from(this.bodyObjects3D.values()).map(o => o.body);
+                const bodies = this.bodyObjects3DList.map(o => o.body);
                 const kinematics = await this.dataService.loadKinematics(bodies, time);
-                this.addUpdater(new BodiesAtTimeUpdater(kinematics, time));
+                this.clock.setTime(datetime.getTime());
+                this.addUpdater(new BodiesAtTimeUpdater(kinematics));
             } catch (e) {
                 console.log(e)
             }
@@ -274,6 +280,9 @@ export class BodySystem {
         this.bodies
             .filter(b => b.type === 'spacecraft')
             .forEach(b => { b.useTrajectory = useTrajectory; });
+        if(mode == SpacecraftModes.NBody){
+          this.nbodyUpdater.invalidate();
+        }
     }
 
     setCameraTargetingMode(cameraMode: CameraMode) {
@@ -365,22 +374,22 @@ export class BodySystem {
     }
 
     getBodyObject3D(name: string): BodyObject3D {
-        return this.bodyObjects3D.get(name.toLowerCase())!
+        return this.bodyObjects3DMap.get(name.toLowerCase())!
     }
 
     getBody(name: string): Body {
-        return this.bodyObjects3D.get(name.toLowerCase())!.body;
+        return this.bodyObjects3DMap.get(name.toLowerCase())!.body;
     }
 
     setShadowsEnabled(value: boolean) {
-        const starBodies = [...this.bodyObjects3D.values()]
+        const starBodies = this.bodyObjects3DList
             .filter((bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
 
         starBodies.forEach(it => it.setShadowsEnabled(value));
     }
 
     getShadowsEnabled(): boolean {
-        const starBodies: StarBodyObject3D[] = [...this.bodyObjects3D.values()]
+        const starBodies: StarBodyObject3D[] = this.bodyObjects3DList
             .filter((bodyObject: BodyObject3D) => bodyObject.body.type == "star") as StarBodyObject3D[]; // instanceof StarBodyObject3D) as StarBodyObject3D[];
         return starBodies.reduce((prev: boolean, current) => (current.getShadowsEnabled() && prev), true);
     }
@@ -451,7 +460,7 @@ export class BodySystem {
     setScale(scale: number) {
         this.scale = scale;
 
-        this.bodyObjects3D.forEach((body) => {
+        this.bodyObjects3DMap.forEach((body) => {
             body.scale(scale);
         });
     }
@@ -549,15 +558,27 @@ export class BodySystem {
 
 
     start() {
+
+      function reportTimeDiscrepancy(starttime: number, timeMs: number, updaterTotalStepsMs: number ){
+        const discrepancy = Math.abs((timeMs - starttimeMs) - updaterTotalStepsMs);
+
+        if(discrepancy > 100){
+          console.log(`time: ${(timeMs - starttimeMs)}, updater: ${updaterTotalStepsMs}`);
+
+        }
+      }
+
         this.clock.enableTimePublisher(true);
         this.render();
-        const timer = this.clock.startTimer("AnimationTimer");
+        this.clock.mark();
         this.controls.enabled = true;
+        const starttimeMs = this.clock.getMark().timeMs;
 
-        this.renderer.setAnimationLoop(async () => {
-            this.clock.mark();
-            //const delta = timer.getDelta()!;
-            await this.tick(this.clock.getMark());
+        this.renderer.setAnimationLoop( () => {
+            const mark = this.clock.mark();
+            
+            this.tick(mark);
+            reportTimeDiscrepancy(starttimeMs, mark.timeMs, this.nbodyUpdater.totalstepMs);
             
             if (this.controls.enabled) {
                 this.followTarget(this.target);
@@ -606,12 +627,49 @@ export class BodySystem {
      * @param deltaTime 
      * @returns 
      */
-    tick(mark: Mark) {
-        return new Promise((resolve) => {
-            this.bodySystemUpdater.update(this.bodyObjects3D, mark.deltaMs, mark.timeMs, this.clock);
-            resolve(null);
-        });
+    tick(mark: TimeMark) {
+        // return new Promise((resolve) => {
+        
+   
+        
+
+          const stateChanged = this.updateBodyActivityState(mark);
+          // updaters 
+          this.bodySystemUpdater.update(this.bodyObjects3DList, mark, stateChanged);
+          // resolve(null);
+        // });
     }
+
+    /**
+     * 
+     * @param timeMs 
+     * @returns true if an active state was changed
+     */
+    updateBodyActivityState(mark: TimeMark): boolean{
+
+      return this.bodyObjects3DList.reduce((didStateChange, body) => {
+        const  activityStateChanged = body.ensureIsActiveAt(mark);
+        return didStateChange || activityStateChanged;
+      }, false);
+      
+
+    }
+
+      //  const allBodyData: Body[] = Array.from(bodyObject3Ds.values())
+      // .map((o:BodyObject3D) => o.body)
+      // .filter(b => !b.useTrajectory);
+
+
+      // if(handleActivityTransitions(allBodyData, stepTimeMs, timestep)){
+      //   // if there are state transitions, our existing accelerations need to be invalidated.
+      //   this.gravAccelerations = undefined;
+      // }      
+
+    // }
+
+
+  
+
 
 
     stop() {

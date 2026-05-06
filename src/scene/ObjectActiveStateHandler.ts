@@ -16,7 +16,7 @@ export class BodyActiveStateHandler {
     createSubscription(){
       PubSub.subscribe(BODY_ACTIVE_TOPIC, (msg, event: BodyActiveEventMessageType) => {            
               const selectedBody = event.body;
-              this.bodySystem.setBodyActive(selectedBody, event.isActive)
+              this.bodySystem.handleBodyActivationState(selectedBody, event.isActive)
       });
     }
 }

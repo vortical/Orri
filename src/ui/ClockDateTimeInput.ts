@@ -19,7 +19,7 @@ export class ClockDateTimeInput {
     bodySystem: BodySystem;
     currentTime?: Date;
     changedTime?: Date;
-    onFinishChangeHandler?: (v: Date | string) => void;
+    onFinishChangeHandler?: (v: Date ) => void;
 
     constructor(inputElementId: string, bodySystem: BodySystem) {
         this.bodySystem = bodySystem;
@@ -74,7 +74,7 @@ export class ClockDateTimeInput {
         PubSub.unsubscribe(this.subscribtion);
     }
 
-    onFinishChange(c: (v: string | Date) => void) {
+    onFinishChange(c: (v:  Date) => void) {
         this.onFinishChangeHandler = c;
         return this;
 

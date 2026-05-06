@@ -10,7 +10,12 @@ import { Vector } from '../system/Vector.ts';
 import { CelestialBodyPart } from './CelestialBodyPart.ts';
 import { LatLon } from '../system/LatLon.ts';
 import { BodySurface } from './BodySurface.ts';
-import { OrbitalOutline } from './OrbitOutline.ts';
+import { OrbitTrajectoryOutline } from './OrbitOutline.ts';
+import { TrajectoryOutline } from './TrajectoryOutline.ts';
+// import { }
+import { SpacecraftTrajectoryUpdater } from '../body/SpacecraftTrajectoryUpdater.ts';
+import { BODY_ACTIVE_TOPIC } from '../system/event-types.ts';
+import { TimeMark } from '../system/Clock.ts';
 
 
 /**
@@ -30,7 +35,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     readonly object3D: Object3D;
     readonly body: Body;
     readonly bodySystem: BodySystem;
-    readonly orbitOutline: OrbitalOutline;
+    readonly trajectoryOutline: TrajectoryOutline;
     
     readonly labels: ObjectLabels;
     pins: LocationPin[] = [];
@@ -42,13 +47,17 @@ export abstract class BodyObject3D extends CelestialBodyPart {
         this.body = body;
         this.bodySystem = bodySystem;
         this.labels = new ObjectLabels(this);
-        this.orbitOutline = new OrbitalOutline(this);
-        
+        this.trajectoryOutline = this.createTrajectoryOutline();
+
         this.object3D.add(...this.labels.getCSS2DObjects());
         if(body.type !== "star"){
-          this.bodySystem.scene.add(this.orbitOutline.getObject3D())
+          this.bodySystem.scene.add(this.trajectoryOutline.getObject3D())
         }
     
+    }
+
+    protected createTrajectoryOutline(): TrajectoryOutline {
+      return new OrbitTrajectoryOutline(this);
     }
 
     abstract  getSurface(): Object3D;
@@ -56,14 +65,14 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     // abstract setOrbitOutlineEnabled(value: boolean): void;
 
     getOrbitOutlineEnabled(): boolean {
-        return this.orbitOutline.enabled;
+        return this.trajectoryOutline.enabled;
     }
 
     setOrbitOutlineEnabled(value: boolean): void {
         if(this.getOrbitOutlineEnabled() == value){
             return;
-        }        
-        this.orbitOutline.enabled = value;        
+        }
+        this.trajectoryOutline.enabled = value;
     }
 
     
@@ -89,6 +98,11 @@ export abstract class BodyObject3D extends CelestialBodyPart {
 
     moveToTarget() {
         this.bodySystem.moveToTarget(this);
+    }
+
+
+    isTarget(): boolean {
+        return this.bodySystem.getTarget() == this;
     }
 
     setAsTarget() {
@@ -167,14 +181,14 @@ export abstract class BodyObject3D extends CelestialBodyPart {
 
       // // does not belong here, this should be completely seperate from the body?
 
-      if(this.orbitOutline.enabled){
+      if(this.trajectoryOutline.enabled){
           if(this.isPlanetarySystemSelected()){
-              this.orbitOutline.addPosition(this.body.position, true);
-              this.updateOrbitsInvoker();        
+              this.trajectoryOutline.addPosition(this.body.position, true);
+              this.updateOrbitsInvoker();
           }else{
               if(this.body.type == "planet"){
-                  this.orbitOutline.addPosition(this.body.position, true);
-                  this.updateOrbitsInvoker();        
+                  this.trajectoryOutline.addPosition(this.body.position, true);
+                  this.updateOrbitsInvoker();
               }
           }
       }
@@ -187,7 +201,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     updateLabelsInvoker = throttle(1000/20, this, () => {
         this.updateLabels();
     });
-    updateOrbitsInvoker = throttle(1000/20, this, () => this.orbitOutline.needsUpdate());
+    updateOrbitsInvoker = throttle(1000/20, this, () => this.trajectoryOutline.needsUpdate());
 
 
     updateLabels(): void {
@@ -211,9 +225,48 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     isActiveAt(timeMs: number): boolean {
       return this.body.isActiveAt(timeMs);
     }
+
+    /**
+     * 
+     * @param timeMs 
+     * @returns true if active state was changed
+     */
+    ensureIsActiveAt(timeMark: TimeMark): boolean {
+
+      const timeMs = timeMark.timeMs - timeMark.deltaMs;
+      const shouldBeActive = this.isActiveAt(timeMs);
+
+      if(this.isActive() == shouldBeActive) return false;
+
+      if(shouldBeActive){
+        const missionWindow = this.body.missionWindow;
+        this.setIsActive(true);
+      
+        if(missionWindow){
+          console.log("set is active at: "+timeMark.timeMs);
+
+          console.log("updating...")
+          const ephemeris = this.body.hermiteSample(timeMs);
+          if (ephemeris){
+            this.body.position = Vector.fromVectorComponents(ephemeris.position);
+            this.body.velocity = Vector.fromVectorComponents(ephemeris.velocity);
+          }
+
+          console.log("done updating...")
+
+        }
+      } else {
+        this.setIsActive(false);
+      }      
+      return true;
+    }
+
+
     setIsActive(value: boolean){
+      if(this.isActive() == value) return;
       this.labels.setVisible(value)
       this.body.setIsActive(value);
+      PubSub.publish(BODY_ACTIVE_TOPIC, {body: this.body, isActive: value});
     }
 
     setVisible(isVisible: boolean){

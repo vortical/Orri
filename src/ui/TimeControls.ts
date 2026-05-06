@@ -44,7 +44,7 @@ export class TimeControls {
 
         this.updateLabels();
         this.clockDateTimeInput = new ClockDateTimeInput("#datetimePicker", bodySystem)
-            .onFinishChange((datetime: string | Date) => bodySystem.setSystemTime(datetime));
+            .onFinishChange((datetime: Date) => bodySystem.setSystemTime(datetime));
 
     }
 
