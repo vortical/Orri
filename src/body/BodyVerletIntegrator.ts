@@ -64,30 +64,19 @@ export class BodyVerletIntegrator extends BaseBodyIntegrator {
       const accs: VectorComponents[] = [];
 
       for (let i = 0; i < bodies.length; i++) {
-        for (let j = 0; j < bodies.length; j++) {
-          if (i < j) {
+        for (let j = i+1; j < bodies.length; j++) {
+          
             const aij_ji = Body.twoBodyAccelerations(bodies[i], bodies[j]);
             if (!accContributions[i]) accContributions[i] = [];
             if (!accContributions[j]) accContributions[j] = [];
             accContributions[i][j] = aij_ji.get("ij")!;
             accContributions[j][i] = aij_ji.get("ji")!;
-          }
+          
         }
         accs[i] = (accContributions[i] || []).reduce(
           (sum, a) => ({ x: sum.x + a.x, y: sum.y + a.y, z: sum.z + a.z }),
           { x: 0, y: 0, z: 0 }
         );
-
-        // faster?
-        // let ax = 0, ay = 0, az = 0;
-        // const contributions = accContributions[i] || [];
-        // for (let j = 0; j < contributions.length; j++) {
-        //   ax += contributions[j].x;
-        //   ay += contributions[j].y;
-        //   az += contributions[j].z;
-        // }
-        // accs[i] = { x: ax, y: ay, z: az };
-
       }
       return accs;
 
