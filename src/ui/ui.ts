@@ -15,10 +15,10 @@ import { LatLon } from "../system/LatLon.ts";
 import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
 import { DistanceUnit, DistanceUnits } from '../system/distance.ts';
-import { TimeControls } from './TimeControls.ts';
 import { OrbitLengthType } from '../mesh/OrbitOutline.ts';
 import { throttle } from '../system/throttle.ts';
 import { TimeUnit, unitsToMs } from '../system/time.ts';
+import type { TimeDisplay } from '../system/time.ts';
 
 
 export const userNotify: INotifyService = new NotifyService();
@@ -32,7 +32,6 @@ export class SimpleUI {
     constructor(bodySystem: BodySystem, dataService: DataService) {
 
         buildLilGui(bodySystem, dataService);
-        new TimeControls(bodySystem, dataService);
 
         // // Handle the history back button
         window.addEventListener('popstate', function (event) {
@@ -84,6 +83,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         projectShadows: bodySystem.getShadowsEnabled(),
         shadowType: bodySystem.getShadowType(),
         distanceUnits: bodySystem.getDistanceUnit().abbrev,
+        timeDisplay: bodySystem.getTimeDisplay(),
         showStats: bodySystem.hasStats(),
         location: bodySystem.getLocation()?.toString() || "",
         targetingCameraMode: bodySystem.getCameraTargetingMode(),
@@ -174,6 +174,9 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
 
     labelsSettingsfolder.add(options, 'distanceUnits', DistanceUnits)
         .onChange((v: DistanceUnit) => bodySystem.setDistanceUnit(v));
+
+    labelsSettingsfolder.add(options, 'timeDisplay', { Local: 'local', UTC: 'utc' }).name('Clock')
+        .onChange((v: TimeDisplay) => bodySystem.setTimeDisplay(v));
 
     const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
         .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));

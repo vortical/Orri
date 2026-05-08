@@ -1,0 +1,222 @@
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import PubSub from 'pubsub-js';
+  import { TIME_SCALE_TOPIC } from '../../system/event-types';
+  import type { BodySystem } from '../../scene/BodySystem';
+  import { TimeUnit, formatPeriod, unitsToTimePeriod, timePeriodToUnits, timeEquals } from '../../system/time';
+  import DateTimeInput from './DateTimeInput.svelte';
+
+  type Props = { bodySystem: BodySystem };
+  let { bodySystem }: Props = $props();
+
+  // Discrete signed scale ladder (simulated seconds per real second).
+  const ladder = [
+    0,
+    timePeriodToUnits({ seconds: 1 }, TimeUnit.Seconds),
+    timePeriodToUnits({ seconds: 5 }, TimeUnit.Seconds),
+    timePeriodToUnits({ seconds: 10 }, TimeUnit.Seconds),
+    timePeriodToUnits({ seconds: 30 }, TimeUnit.Seconds),
+    timePeriodToUnits({ minutes: 1 }, TimeUnit.Seconds),
+    timePeriodToUnits({ minutes: 5 }, TimeUnit.Seconds),
+    timePeriodToUnits({ minutes: 10 }, TimeUnit.Seconds),
+    timePeriodToUnits({ minutes: 30 }, TimeUnit.Seconds),
+    timePeriodToUnits({ hours: 1 }, TimeUnit.Seconds),
+    timePeriodToUnits({ hours: 3 }, TimeUnit.Seconds),
+    timePeriodToUnits({ hours: 6 }, TimeUnit.Seconds),
+    timePeriodToUnits({ hours: 12 }, TimeUnit.Seconds),
+    timePeriodToUnits({ days: 1 }, TimeUnit.Seconds),
+    timePeriodToUnits({ days: 2 }, TimeUnit.Seconds),
+    timePeriodToUnits({ days: 7 }, TimeUnit.Seconds),
+    timePeriodToUnits({ days: 14 }, TimeUnit.Seconds),
+    timePeriodToUnits({ days: 28 }, TimeUnit.Seconds),
+  ];
+  const N = ladder.length - 1;
+
+  function scaleToIndex(s: number): number {
+    if (s === 0) return 0;
+    const sign = Math.sign(s);
+    const abs = Math.abs(s);
+    let bestIdx = 0;
+    let bestDiff = Infinity;
+    for (let i = 0; i < ladder.length; i++) {
+      const diff = Math.abs(ladder[i] - abs);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIdx = i;
+      }
+    }
+    return sign * bestIdx;
+  }
+
+  function indexToScale(i: number): number {
+    return Math.sign(i) * ladder[Math.abs(i)];
+  }
+
+  let paused = $state(false);
+  let scale = $state(1);
+  let sliderIndex = $state(0);
+  let showDatePicker = $state(false);
+
+  let scaleSub: any;
+
+  onMount(() => {
+    paused = bodySystem.isPaused();
+    scale = bodySystem.getTimeScale();
+    sliderIndex = scaleToIndex(scale);
+    scaleSub = PubSub.subscribe(TIME_SCALE_TOPIC, (_msg: any, s: number) => {
+      scale = s;
+      sliderIndex = scaleToIndex(s);
+      paused = bodySystem.isPaused();
+    });
+  });
+
+  onDestroy(() => {
+    PubSub.unsubscribe(scaleSub);
+  });
+
+  function onSliderInput(e: Event) {
+    const idx = parseInt((e.target as HTMLInputElement).value, 10);
+    sliderIndex = idx;
+    bodySystem.setTimeScale(indexToScale(idx));
+  }
+
+  function togglePause() {
+    bodySystem.setPaused(!bodySystem.isPaused());
+    paused = bodySystem.isPaused();
+  }
+
+  function now() {
+    const wallNow = new Date();
+    const sysNow = new Date(bodySystem.clock.getTime());
+    if (timeEquals(wallNow, sysNow, TimeUnit.Seconds)) return;
+    const s = bodySystem.getTimeScale();
+    bodySystem.setTimeScale(1);
+    bodySystem.setSystemTime(wallNow);
+    bodySystem.setTimeScale(s);
+  }
+
+  function onDateSet(d: Date) {
+    bodySystem.setSystemTime(d);
+    showDatePicker = false;
+  }
+
+  let scaleLabel = $derived.by(() => {
+    if (paused) return 'Paused';
+    if (scale === 0) return '0×';
+    const period = formatPeriod(unitsToTimePeriod(scale, TimeUnit.Seconds));
+    return period ? `${period}/s` : `${scale.toLocaleString()}×`;
+  });
+</script>
+
+<div class="fixed bottom-0 left-0 right-0 px-2 pb-2 sm:px-4 sm:pb-4 pointer-events-none z-40">
+  <div
+    class="mx-auto max-w-3xl flex flex-wrap items-center gap-2 bg-black/30 text-white rounded-xl p-2 pointer-events-auto ring-1 ring-white/10"
+  >
+    <button
+      type="button"
+      onclick={togglePause}
+      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition flex items-center justify-center"
+      aria-label={paused ? 'Play' : 'Pause'}
+    >
+      {#if paused}
+        <span class="text-base">▶</span>
+      {:else}
+        <span class="text-sm tracking-tighter">❚❚</span>
+      {/if}
+    </button>
+
+    <div class="flex-1 min-w-[160px] flex flex-col items-stretch px-1">
+      <input
+        type="range"
+        min={-N}
+        max={N}
+        step="1"
+        value={sliderIndex}
+        oninput={onSliderInput}
+        class="apollo-slider w-full touch-pan-x"
+        aria-label="Time scale"
+      />
+      <div class="text-[11px] sm:text-xs text-white/70 text-center font-mono mt-0.5 truncate">
+        {scaleLabel}
+      </div>
+    </div>
+
+    <button
+      type="button"
+      onclick={now}
+      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition text-sm"
+    >Now</button>
+
+    <button
+      type="button"
+      onclick={() => (showDatePicker = !showDatePicker)}
+      aria-expanded={showDatePicker}
+      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition text-sm"
+    >Date</button>
+
+    {#if showDatePicker}
+      <div class="basis-full sm:basis-auto flex justify-end">
+        <DateTimeInput value={new Date(bodySystem.clock.getTime())} onset={onDateSet} />
+      </div>
+    {/if}
+  </div>
+</div>
+
+<style>
+  /* Apollo-inspired monochrome slider: recessed dark channel + brushed-metal thumb */
+  .apollo-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 24px;
+    cursor: pointer;
+  }
+  .apollo-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: linear-gradient(#1a1a1a, #2a2a2a);
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  .apollo-slider::-moz-range-track {
+    height: 4px;
+    background: linear-gradient(#1a1a1a, #2a2a2a);
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  .apollo-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 22px;
+    margin-top: -10px;
+    border-radius: 2px;
+    background: linear-gradient(#e8e8e8 0%, #b8b8b8 50%, #888 100%);
+    border: 1px solid #2a2a2a;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  }
+  .apollo-slider::-moz-range-thumb {
+    width: 14px;
+    height: 22px;
+    border-radius: 2px;
+    background: linear-gradient(#e8e8e8 0%, #b8b8b8 50%, #888 100%);
+    border: 1px solid #2a2a2a;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  }
+  .apollo-slider:focus {
+    outline: none;
+  }
+  .apollo-slider:focus::-webkit-slider-thumb {
+    border-color: #d4a04a;
+  }
+  .apollo-slider:focus::-moz-range-thumb {
+    border-color: #d4a04a;
+  }
+</style>

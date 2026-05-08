@@ -71,6 +71,7 @@ export class PointerInteraction {
      */
     handleHover(event: MouseEvent) {
         if (!this.picker.isEnabled) return;
+        if (!(event.target instanceof HTMLCanvasElement)) return;
 
         PubSub.publish(MOUSE_HOVER_OVER_BODY_TOPIC, {
             body: this.picker.pick({
@@ -95,8 +96,8 @@ export class PointerInteraction {
     }
     
     handlePointerUp(event: MouseEvent){
-        
-        if (!this.hasMoved && this.picker.isEnabled) {
+
+        if (!this.hasMoved && this.picker.isEnabled && event.target instanceof HTMLCanvasElement) {
             PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, {
                 body: this.picker.pick({
                     x: (event.clientX / window.innerWidth) * 2 - 1,

@@ -8,7 +8,8 @@ import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { throttle } from "../system/throttle.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
-import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
+import { BODY_SELECT_TOPIC, BodySelectEventMessageType, TIME_DISPLAY_TOPIC } from '../system/event-types.ts';
+import type { TimeDisplay } from '../system/time.ts';
 import { Clock, TimeMark } from "../system/Clock.ts";
 import { Vector } from '../system/Vector.ts';
 import { Picker } from './Picker.ts';
@@ -59,6 +60,7 @@ export type BodySystemOptionsState = {
     castShadows?: boolean;
     shadowType?: ShadowType;
     distanceUnit?: DistanceUnit;
+    timeDisplay?: TimeDisplay;
     location?: LatLon;
     showNames?: boolean;
     showDistance?: boolean;
@@ -110,6 +112,7 @@ export class BodySystem {
     size!: Dim;
     labelRenderer: CSS2DRenderer;
     distanceformatter: DistanceFormatter
+    private timeDisplay: TimeDisplay = 'local';
     locationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
     orbitOutlinesStateHandler: OrbitOutlinesStateHandler;
@@ -121,6 +124,7 @@ export class BodySystem {
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
         cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
         ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType = ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
+        timeDisplay = 'local' as TimeDisplay,
         showNames = true, showDistance = true, showAltitudeAzimuth = true,
         location, targettingCameraMode = CameraModes.FollowTarget, orbitalOutlinesEnabled=false, unselectedOrbitalOutlinesOpacity=0.2, selectedOrbitalOutlinesOpacity=0.5, orbitalOutlinesLength={value:355, lengthType:OrbitLengthType.AngleDegrees} }: BodySystemOptionsState) {
 
@@ -129,6 +133,7 @@ export class BodySystem {
         this.dataService = dataService;
         this.parentElement = parentElement;
         this.distanceformatter = new DistanceFormatter(distanceUnit);
+        this.timeDisplay = timeDisplay;
         this.clock = new Clock(date);
         const timeMs = this.clock.clockTimeMs;
 
@@ -329,6 +334,16 @@ export class BodySystem {
 
     getDistanceUnit(): DistanceUnit {
         return this.distanceformatter.distanceUnit;
+    }
+
+    setTimeDisplay(v: TimeDisplay) {
+        if (this.timeDisplay === v) return;
+        this.timeDisplay = v;
+        PubSub.publish(TIME_DISPLAY_TOPIC, v);
+    }
+
+    getTimeDisplay(): TimeDisplay {
+        return this.timeDisplay;
     }
 
     getState(): BodySystemOptionsState {

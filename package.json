@@ -6,13 +6,19 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --debug --cors true",
     "prod": "vite --host 0.0.0.0 --port 5171 --cors true",
-    "build": "tsc && vite build",
+    "build": "tsc && svelte-check && vite build",
+    "check": "svelte-check",
     "preview": "vite preview",
     "test": "vitest"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "@tailwindcss/vite": "^4.2.4",
     "@types/pubsub-js": "^1.8.6",
     "@types/three": "^0.160.0",
+    "svelte": "^5.55.5",
+    "svelte-check": "^4.4.8",
+    "tailwindcss": "^4.2.4",
     "typescript": "^5.5.3",
     "vite": "^5.3.4",
     "vitest": "^1.6.0"
@@ -20,7 +26,6 @@
   "dependencies": {
     "@supercharge/promise-pool": "^3.2.0",
     "@tweenjs/tween.js": "^23.1.2",
-    "flatpickr": "^4.6.13",
     "geo-coordinates-parser": "^1.7.3",
     "lil-gui": "^0.19.2",
     "lz-string": "^1.5.0",
