@@ -161,3 +161,5 @@
 //   const iterations = Math.ceil(Math.abs(timestepMs) / (desiredTimestepMs * desiredStepFactor));
 //   return { iterations: iterations, timestep: timestepMs / iterations };
 // }
+
+export type NBodySystemUpdater = any;
