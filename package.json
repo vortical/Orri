@@ -28,6 +28,7 @@
     "@tweenjs/tween.js": "^23.1.2",
     "geo-coordinates-parser": "^1.7.3",
     "lil-gui": "^0.19.2",
+    "lucide-svelte": "^1.0.1",
     "lz-string": "^1.5.0",
     "pubsub-js": "^1.9.4",
     "stats.js": "^0.17.0",

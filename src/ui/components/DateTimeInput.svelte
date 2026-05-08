@@ -35,9 +35,9 @@
   input {
     color-scheme: dark;
   }
-  /* Replace Chromium's calendar-picker indicator with a visible white calendar SVG. */
+  /* Replace Chromium's calendar-picker indicator with the Lucide "calendar" icon (white). */
   input::-webkit-calendar-picker-indicator {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2'/><line x1='3' y1='10' x2='21' y2='10'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='16' y1='2' x2='16' y2='6'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/></svg>");
     background-repeat: no-repeat;
     background-position: center;
     background-size: 16px 16px;

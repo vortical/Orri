@@ -5,6 +5,10 @@
   import type { BodySystem } from '../../scene/BodySystem';
   import { TimeUnit, formatPeriod, unitsToTimePeriod, timePeriodToUnits, timeEquals } from '../../system/time';
   import DateTimeInput from './DateTimeInput.svelte';
+  import Play from 'lucide-svelte/icons/play';
+  import Pause from 'lucide-svelte/icons/pause';
+  import Calendar from 'lucide-svelte/icons/calendar';
+  import Clock from 'lucide-svelte/icons/clock';
 
   type Props = { bodySystem: BodySystem };
   let { bodySystem }: Props = $props();
@@ -119,9 +123,9 @@
       aria-label={paused ? 'Play' : 'Pause'}
     >
       {#if paused}
-        <span class="text-base">▶</span>
+        <Play size={18} strokeWidth={2} />
       {:else}
-        <span class="text-sm tracking-tighter">❚❚</span>
+        <Pause size={18} strokeWidth={2} />
       {/if}
     </button>
 
@@ -144,15 +148,24 @@
     <button
       type="button"
       onclick={now}
-      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition text-sm"
-    >Now</button>
+      aria-label="Now"
+      title="Jump to current time"
+      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition flex items-center justify-center gap-1 text-sm"
+    >
+      <Clock size={16} strokeWidth={2} />
+      <span class="hidden sm:inline">Now</span>
+    </button>
 
     <button
       type="button"
       onclick={() => (showDatePicker = !showDatePicker)}
       aria-expanded={showDatePicker}
-      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition text-sm"
-    >Date</button>
+      aria-label="Set date"
+      title="Set scene date/time"
+      class="min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition flex items-center justify-center"
+    >
+      <Calendar size={18} strokeWidth={2} />
+    </button>
 
     {#if showDatePicker}
       <div class="basis-full sm:basis-auto flex justify-end">
