@@ -1,4 +1,4 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { Body } from "../body/Body"
 export const SYSTEM_TIME_TOPIC = Symbol('Topic for time messages from a clock');
 export const MOUSE_HOVER_OVER_BODY_TOPIC = Symbol('Topic for mouse hovered over a body');
@@ -10,7 +10,7 @@ export const TIME_SCALE_TOPIC = Symbol('Topic from BodySystem when time scale ch
 
 
 export type BodySelectEventMessageType = {
-    body: BodyObject3D
+    body: RenderableBody
 }
 
 

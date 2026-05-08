@@ -1,14 +1,14 @@
 import { Mesh, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../body/Body.ts';
-import { BodyObject3D } from "./BodyObject3D.ts";
+import { RenderableBody } from "./RenderableBody.ts";
 import { Vector } from "../system/Vector.ts";
 import { BodyAxes } from "../system/geometry.ts";
 
 
 export class LocationPin {
     mesh: Mesh;
-    bodyObject3D: BodyObject3D;
+    bodyObject3D: RenderableBody;
     color: string;
     latlon: LatLon;
     isVisible: boolean;
@@ -16,7 +16,7 @@ export class LocationPin {
     north: Vector;
 
 
-    constructor(latlon: LatLon, bodyObject3D: BodyObject3D, color: string, name: string, isVisible: boolean = true, elevation: number = 100) {
+    constructor(latlon: LatLon, bodyObject3D: RenderableBody, color: string, name: string, isVisible: boolean = true, elevation: number = 100) {
         function createBodyPinMesh() {
             const pinRadius = 20;
             const geometry = new SphereGeometry(pinRadius, 5, 5);

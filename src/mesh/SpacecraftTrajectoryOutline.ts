@@ -1,11 +1,11 @@
-import { BodyObject3D } from "./BodyObject3D";
+import { RenderableBody } from "./RenderableBody";
 import { Vector } from "../system/Vector";
 import { Body } from '../body/Body.ts';
 import { BodySystem } from "../scene/BodySystem.ts";
 import { BodyProperties, MissionWindow } from "../domain/models.ts";
 import { ExecutorPool } from "../system/ExecutorPool.ts";
 import { TrajectoryOutline } from "./TrajectoryOutline";
-import { SpacecraftBodyObject3D } from "./SpaceCraftBodyObject3D.ts";
+import { RenderableSpacecraft } from "./RenderableSpacecraft.ts";
 import { Vector3 } from "three";
 
 const MAX_VERTICES = 360 * 50 * 4;
@@ -16,7 +16,7 @@ export class SpacecraftTrajectoryOutline extends TrajectoryOutline {
 
    
 
-    constructor(spacecraft: SpacecraftBodyObject3D, maxVertices = MAX_VERTICES, enabled = false, colorHue = 0.5, thrustColorHue = 0.7, opacity = 0.7) {
+    constructor(spacecraft: RenderableSpacecraft, maxVertices = MAX_VERTICES, enabled = false, colorHue = 0.5, thrustColorHue = 0.7, opacity = 0.7) {
         super(spacecraft, maxVertices, enabled, colorHue, opacity);
         this.missionWindow = spacecraft.body.missionWindow!;
         

@@ -1,12 +1,12 @@
 import { Raycaster, Vector2 } from "three";
 import { VectorComponents } from "../domain/models.ts";
-import { BodyObject3D } from "../mesh/BodyObject3D.ts";
+import { RenderableBody } from "../mesh/RenderableBody.ts";
 import { MOUSE_CLICK_ON_BODY_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
 import { throttle } from "../system/throttle.ts";
 import { BodySystem } from "./BodySystem.ts";
 
 export type PickerEvent = {
-    body: BodyObject3D | null;
+    body: RenderableBody | null;
 }
 
 /**
@@ -28,12 +28,12 @@ export class Picker {
      * @param v  pointer position between [-1, 1] for x and y 
      * @returns picked body or null
      */
-    pick(v: VectorComponents): BodyObject3D | null {
+    pick(v: VectorComponents): RenderableBody | null {
         this.raycaster.setFromCamera(new Vector2(v.x, v.y), this.bodySystem.camera);
         const intersects = this.raycaster.intersectObjects(this.bodySystem.scene.children);
 
         const names = intersects.map((intersected) => intersected.object.name).filter(name => name.length > 0);
-        return names.length > 0 ? this.bodySystem.getBodyObject3D(names[0]) : null;
+        return names.length > 0 ? this.bodySystem.getRenderableBody(names[0]) : null;
     }
 
     setEnabled(isEnabled: boolean) {

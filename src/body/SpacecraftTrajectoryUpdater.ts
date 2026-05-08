@@ -1,6 +1,6 @@
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { Clock, TimeMark } from '../system/Clock.ts';
-import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { Vector } from '../system/Vector.ts';
 import { KinematicObject, TrajectoryPoint } from '../domain/models.ts';
 
@@ -29,10 +29,10 @@ export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
 
   }
 
-  update(bodyObjects3D: BodyObject3D[], timemark: TimeMark):BodyObject3D[] {
+  update(renderableBodies: RenderableBody[], timemark: TimeMark):RenderableBody[] {
     const timeMs = timemark.timeMs;
 
-    for (const o of bodyObjects3D) {
+    for (const o of renderableBodies) {
       const b = o.body;
       if (b.type !== 'spacecraft' || !b.useTrajectory || !b.isActive()) continue;
 
@@ -57,7 +57,7 @@ export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
 
     }
 
-    return bodyObjects3D;
+    return renderableBodies;
   }
 }
 

@@ -1,5 +1,5 @@
 import { TimeMark } from "../system/Clock.ts";
-import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { VectorComponents } from "../domain/models.ts";
 import { Body } from "./Body";
 
@@ -56,7 +56,7 @@ export abstract class BaseBodyIntegrator implements BodyIntegrator {
  * is to set the properties of each body based on the time.  
  */
 export interface BodySystemUpdater {
-    update(bodies: BodyObject3D[], timeMark: TimeMark, doInvalidate: boolean): void;
+    update(bodies: RenderableBody[], timeMark: TimeMark, doInvalidate: boolean): void;
     isOneTimeUpdate: boolean;
     isEnabled: boolean;
 }export type IntegratorLoopParam = {

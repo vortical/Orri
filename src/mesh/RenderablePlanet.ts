@@ -1,14 +1,14 @@
 import { Body } from '../body/Body.ts';
 import { Mesh, Object3D, Quaternion, Vector3 } from "three";
-import { BodyObject3D } from './BodyObject3D.ts';
+import { RenderableBody } from './RenderableBody.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { Rings } from './Rings.ts';
 import { Atmosphere } from './Atmosphere.ts';
 import { BodySurface } from './BodySurface.ts';
 import { BodySurfaceBuilder } from './BodySurfaceBuilder.ts';
-import { MoonBodyObject3D } from './MoonBodyObject3D.ts';
+import { RenderableMoon } from './RenderableMoon.ts';
 
-export class PlanetaryBodyObject3D extends BodyObject3D {
+export class RenderablePlanet extends RenderableBody {
     readonly surface: BodySurface;
 
     constructor(body: Body, bodySystem: BodySystem) {
@@ -27,9 +27,9 @@ export class PlanetaryBodyObject3D extends BodyObject3D {
     //     return this.bodySystem.getTarget() == this;
     // }
 
-    getMoons(): MoonBodyObject3D[]{
-        return [...this.bodySystem.bodyObjects3DMap.values()]
-        .filter(b => b.body.parent == this.body) as MoonBodyObject3D[];
+    getMoons(): RenderableMoon[]{
+        return [...this.bodySystem.renderableBodyByName.values()]
+        .filter(b => b.body.parent == this.body) as RenderableMoon[];
     } 
 
     getSurface(): Object3D {

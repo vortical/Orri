@@ -7,7 +7,7 @@ import { throttle } from "../system/throttle.ts";
 import { ObjectLabels } from './ObjectLabels.ts';
 import { LocationPin } from './LocationPin.ts';
 import { Vector } from '../system/Vector.ts';
-import { CelestialBodyPart } from './CelestialBodyPart.ts';
+import { Renderable } from './Renderable.ts';
 import { LatLon } from '../system/LatLon.ts';
 import { BodySurface } from './BodySurface.ts';
 import { OrbitTrajectoryOutline } from './OrbitOutline.ts';
@@ -19,16 +19,16 @@ import { TimeMark } from '../system/Clock.ts';
 
 
 /**
- * A BodyObject3D is composed of: Object3D, Body and Labels
+ * A RenderableBody is composed of: Object3D, Body and Labels
  * 
  * The Body represents the kinematics characteristics, these characteristics
  * are updated/controller via BodySystemUpdaters.
  * 
  * The Object3D is the visual representation in our 3D scene.
  * 
- * The main role of the BodyObject3D is to keep the Object3D in sync with the Body.
+ * The main role of the RenderableBody is to keep the Object3D in sync with the Body.
  */
-export abstract class BodyObject3D extends CelestialBodyPart {
+export abstract class RenderableBody extends Renderable {
     /**
      * This is the object3d representing this object. It's a Group instance.
      */
@@ -213,7 +213,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
     }
 
     isPlanetarySystemSelected() {
-        const currentTarget = this.bodySystem.getBodyObject3DTarget();
+        const currentTarget = this.bodySystem.getRenderableBodyTarget();
         return this.planetarySystem() == currentTarget.planetarySystem();
     }
 

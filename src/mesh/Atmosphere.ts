@@ -1,5 +1,5 @@
 import { Mesh, MeshPhongMaterial, SphereGeometry } from "three";
-import { CelestialBodyPart } from "./CelestialBodyPart";
+import { Renderable } from "./Renderable";
 import { Clock } from "../system/Clock.ts";
 import { Body } from '../body/Body.ts';
 import { textureLoader } from "../services/textureLoader.ts";
@@ -9,7 +9,7 @@ import { toRad } from "../system/geometry.ts";
 const WIDTH_SEGMENTS = 64;
 const HEIGHT_SEGMENTS = 64;
 
-export class Atmosphere extends CelestialBodyPart {
+export class Atmosphere extends Renderable {
 
     readonly mesh: Mesh;
     readonly clock: Clock;

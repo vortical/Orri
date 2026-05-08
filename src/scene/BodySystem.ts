@@ -4,7 +4,7 @@ import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../body/Body.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodySystemUpdater } from '../body/BodySystemUpdater.ts';
-import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { throttle } from "../system/throttle.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
@@ -12,10 +12,10 @@ import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-t
 import { Clock, TimeMark } from "../system/Clock.ts";
 import { Vector } from '../system/Vector.ts';
 import { Picker } from './Picker.ts';
-import { BodyObject3DFactory } from '../mesh/Object3DBuilder.ts';
+import { RenderableBodyFactory } from '../mesh/RenderableBodyFactory.ts';
 import { CompositeUpdater } from '../body/CompositeUpdater.ts';
 import { VectorComponents, ShadowType, BodyProperties } from '../domain/models.ts';
-import { StarBodyObject3D } from '../mesh/StarBodyObject3D.ts';
+import { RenderableStar } from '../mesh/RenderableStar.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { LocationPin } from '../mesh/LocationPin.ts';
@@ -96,11 +96,11 @@ export class BodySystem {
     scene: Scene;
     renderer: WebGLRenderer;
     controls: OrbitControls;
-    bodyObjects3DMap: Map<string, BodyObject3D>;
-    bodyObjects3DList: BodyObject3D[];
+    renderableBodyByName: Map<string, RenderableBody>;
+    renderableBodies: RenderableBody[];
     ambiantLight: AmbientLight;
     stats?: Stats;
-    target: BodyObject3D;
+    target: RenderableBody;
     scale: number = 1.0;
     clock: Clock;
     picker: Picker;
@@ -142,19 +142,19 @@ export class BodySystem {
         parentElement.append(this.renderer.domElement);
         this.labelRenderer = createLabelRender();
         parentElement.append(this.labelRenderer.domElement);
-        this.bodyObjects3DMap = this.createObjects3D(this.bodies, timeMs);
-        this.bodyObjects3DList = Array.from(this.bodyObjects3DMap.values()); 
+        this.renderableBodyByName = this.createObjects3D(this.bodies, timeMs);
+        this.renderableBodies = Array.from(this.renderableBodyByName.values()); 
         this.controls = createControls(this.camera, this.labelRenderer.domElement);
         this.controls.enabled = false;
 
-        this.target = this.getBodyObject3D(targetName);
+        this.target = this.getRenderableBody(targetName);
         targetPosition = targetPosition || new Vector(this.getBody(targetName).position.x / 1000, 0, 0);
         cameraPosition = cameraPosition || new Vector(this.getBody(targetName).position.x / 1000, 0, this.getBody(target).radius / 100);
         this.setViewPosition(cameraPosition, targetPosition);
         this.ambiantLight = createAmbiantLight(ambientLightLevel);
         this.scene.add(this.ambiantLight);
         this.controls.update();
-        this.addToScene(this.bodyObjects3DList);
+        this.addToScene(this.renderableBodies);
         
         
         this.orbitOutlinesStateHandler = new OrbitOutlinesStateHandler(this);
@@ -194,7 +194,7 @@ export class BodySystem {
     }
 
 
-    addToScene(bodies: BodyObject3D[]){
+    addToScene(bodies: RenderableBody[]){
       
       this.scene.add(...bodies
                       .filter(o => o.isActive())
@@ -207,7 +207,7 @@ export class BodySystem {
       // add remote objects from scene (or set object3D visibility?)
       // probably better to add/remove from scene as most of the time these objects would not be visible.
 
-      const bodyObject = this.getBodyObject3D(body.name);
+      const bodyObject = this.getRenderableBody(body.name);
 
       if(isActive){
         // todo: check that scene does not add existing objects
@@ -242,7 +242,7 @@ export class BodySystem {
         return new Promise(async (resolve) => {
             try {
                 const time = new Date(datetime);
-                const bodies = this.bodyObjects3DList.map(o => o.body);
+                const bodies = this.renderableBodies.map(o => o.body);
                 const kinematics = await this.dataService.loadKinematics(bodies, time);
                 this.clock.setTime(datetime.getTime());
                 this.addUpdater(new BodiesAtTimeUpdater(kinematics));
@@ -294,13 +294,13 @@ export class BodySystem {
             if (this.getLocationPin() == undefined) {
                 throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a surface location set.");
             }
-            if (this.target == this.getBodyObject3D("earth")) {
+            if (this.target == this.getRenderableBody("earth")) {
                 throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a target other than Earth.");
             }
         }
 
         this.cameraTargetingState = cameraMode.stateBuilder(this);
-        this.cameraTargetingState.moveToTarget(this.getBodyObject3DTarget(), true);
+        this.cameraTargetingState.moveToTarget(this.getRenderableBodyTarget(), true);
     }
 
     getLocation(): LatLon | undefined {
@@ -311,7 +311,7 @@ export class BodySystem {
         if (this.locationPin?.latlon == latlon) {
             return;
         }
-        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getBodyObject3D("earth"),  "#00FF00", "ViewerPosition") : undefined);
+        this.setLocationPin(latlon !== undefined ? new LocationPin(latlon, this.getRenderableBody("earth"),  "#00FF00", "ViewerPosition") : undefined);
     }
 
     getLocationPin(): LocationPin | undefined {
@@ -373,24 +373,24 @@ export class BodySystem {
         return this.distanceformatter;
     }
 
-    getBodyObject3D(name: string): BodyObject3D {
-        return this.bodyObjects3DMap.get(name.toLowerCase())!
+    getRenderableBody(name: string): RenderableBody {
+        return this.renderableBodyByName.get(name.toLowerCase())!
     }
 
     getBody(name: string): Body {
-        return this.bodyObjects3DMap.get(name.toLowerCase())!.body;
+        return this.renderableBodyByName.get(name.toLowerCase())!.body;
     }
 
     setShadowsEnabled(value: boolean) {
-        const starBodies = this.bodyObjects3DList
-            .filter((bodyObject: BodyObject3D) => bodyObject instanceof StarBodyObject3D) as StarBodyObject3D[];
+        const starBodies = this.renderableBodies
+            .filter((bodyObject: RenderableBody) => bodyObject instanceof RenderableStar) as RenderableStar[];
 
         starBodies.forEach(it => it.setShadowsEnabled(value));
     }
 
     getShadowsEnabled(): boolean {
-        const starBodies: StarBodyObject3D[] = this.bodyObjects3DList
-            .filter((bodyObject: BodyObject3D) => bodyObject.body.type == "star") as StarBodyObject3D[]; // instanceof StarBodyObject3D) as StarBodyObject3D[];
+        const starBodies: RenderableStar[] = this.renderableBodies
+            .filter((bodyObject: RenderableBody) => bodyObject.body.type == "star") as RenderableStar[]; // instanceof RenderableStar) as RenderableStar[];
         return starBodies.reduce((prev: boolean, current) => (current.getShadowsEnabled() && prev), true);
     }
 
@@ -460,7 +460,7 @@ export class BodySystem {
     setScale(scale: number) {
         this.scale = scale;
 
-        this.bodyObjects3DMap.forEach((body) => {
+        this.renderableBodyByName.forEach((body) => {
             body.scale(scale);
         });
     }
@@ -482,20 +482,20 @@ export class BodySystem {
         this.camera.updateProjectionMatrix();
     }
 
-    getTarget(): BodyObject3D{
+    getTarget(): RenderableBody{
         return this.target;
     }
 
-    getBodyObject3DTarget(): BodyObject3D {
+    getRenderableBodyTarget(): RenderableBody {
         return this.target;
     }
 
-    moveToTarget(bodyObject3D: BodyObject3D, forceMoveCloser = false) {
-        if (this.getBodyObject3DTarget() == bodyObject3D && !forceMoveCloser) {
+    moveToTarget(bodyObject3D: RenderableBody, forceMoveCloser = false) {
+        if (this.getRenderableBodyTarget() == bodyObject3D && !forceMoveCloser) {
             return;
         }
 
-        if (bodyObject3D == this.getBodyObject3D("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
+        if (bodyObject3D == this.getRenderableBody("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
             throw new Error("Can't select Earth as target while viewing from Earth's surface.");
         }
 
@@ -509,17 +509,17 @@ export class BodySystem {
      * @param body
      * @param moveToTarget 
      */
-    followTarget(body: BodyObject3D) {
+    followTarget(body: RenderableBody) {
         this.cameraTargetingState.followTarget(body);
     }
 
 
 
-    setTarget(bodyObject3D: BodyObject3D | string | undefined) {
+    setTarget(bodyObject3D: RenderableBody | string | undefined) {
         if (bodyObject3D == undefined) return;
 
         if (typeof bodyObject3D === "string") {
-            bodyObject3D = this.getBodyObject3D(bodyObject3D);
+            bodyObject3D = this.getRenderableBody(bodyObject3D);
         }
 
         if (this.target != bodyObject3D) {
@@ -538,18 +538,18 @@ export class BodySystem {
      */
     scaleMoonForShadowType() {
         const shadowType = this.shadowType;
-        const moon = this.getBodyObject3D("moon");
+        const moon = this.getRenderableBody("moon");
 
-        if (shadowType == ShadowType.Umbra && this.getBodyObject3DTarget().getName().toLocaleLowerCase() == "earth"
-            && this.getBodyObject3DTarget().cameraDistance() < 384400 && moon.cameraDistance() < 384400) {
-            const moon = this.getBodyObject3D("moon");
+        if (shadowType == ShadowType.Umbra && this.getRenderableBodyTarget().getName().toLocaleLowerCase() == "earth"
+            && this.getRenderableBodyTarget().cameraDistance() < 384400 && moon.cameraDistance() < 384400) {
+            const moon = this.getRenderableBody("moon");
             const radius = moon.body.radius;
             const umbraRadius = 100e3;
             const scale = umbraRadius / radius;
 
             moon.scale(scale);
         } else {
-            const moon = this.getBodyObject3D("moon");
+            const moon = this.getRenderableBody("moon");
             moon.scale(this.scale);
 
         }
@@ -636,7 +636,7 @@ export class BodySystem {
 
           const stateChanged = this.updateBodyActivityState(mark);
           // updaters 
-          this.bodySystemUpdater.update(this.bodyObjects3DList, mark, stateChanged);
+          this.bodySystemUpdater.update(this.renderableBodies, mark, stateChanged);
           // resolve(null);
         // });
     }
@@ -648,7 +648,7 @@ export class BodySystem {
      */
     updateBodyActivityState(mark: TimeMark): boolean{
 
-      return this.bodyObjects3DList.reduce((didStateChange, body) => {
+      return this.renderableBodies.reduce((didStateChange, body) => {
         const  activityStateChanged = body.ensureIsActiveAt(mark);
         return didStateChange || activityStateChanged;
       }, false);
@@ -657,7 +657,7 @@ export class BodySystem {
     }
 
       //  const allBodyData: Body[] = Array.from(bodyObject3Ds.values())
-      // .map((o:BodyObject3D) => o.body)
+      // .map((o:RenderableBody) => o.body)
       // .filter(b => !b.useTrajectory);
 
 
@@ -685,20 +685,20 @@ export class BodySystem {
 
     /** 
      * @param bodies 
-     * @returns Map<string, BodyObject3D> 
+     * @returns Map<string, RenderableBody> 
      */
-    createObjects3D(bodies: Body[], timeMs: number): Map<string, BodyObject3D> {
+    createObjects3D(bodies: Body[], timeMs: number): Map<string, RenderableBody> {
 
       const bodySystem = this;
 
       function createObject3D(body: Body){
-        const body3D = BodyObject3DFactory.create(body, bodySystem);
+        const body3D = RenderableBodyFactory.create(body, bodySystem);
         body3D.setIsActive(body3D.isActiveAt(timeMs));
         return body3D;
       }
 
-      const map = bodies.reduce((m: Map<string, BodyObject3D>, body: Body) =>
-            m.set(body.name.toLowerCase(), createObject3D(body)), new Map<string, BodyObject3D>()
+      const map = bodies.reduce((m: Map<string, RenderableBody>, body: Body) =>
+            m.set(body.name.toLowerCase(), createObject3D(body)), new Map<string, RenderableBody>()
       );
       
     

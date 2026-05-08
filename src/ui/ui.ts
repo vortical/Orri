@@ -42,7 +42,7 @@ export class SimpleUI {
         });
 
         PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
-            if (pickEvent.body && pickEvent.body != bodySystem.getBodyObject3DTarget()) {
+            if (pickEvent.body && pickEvent.body != bodySystem.getRenderableBodyTarget()) {
                 bodySystem.moveToTarget(pickEvent.body);
             }
         });
@@ -73,7 +73,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     const bodyNames = bodySystem.bodies.map((b) => b.name);
 
     const options = {
-        target: bodySystem.getBodyObject3DTarget().getName() || "",
+        target: bodySystem.getRenderableBodyTarget().getName() || "",
         sizeScale: 1.0,
         fov: bodySystem.getFov(),
         backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
@@ -125,7 +125,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     const targetController = gui.add(options, 'target', bodyNames).name("Target")
         .onFinishChange(withRollback((targetName) => {
             try {
-                bodySystem.moveToTarget(bodySystem.getBodyObject3D(targetName));
+                bodySystem.moveToTarget(bodySystem.getRenderableBody(targetName));
             } catch (e) {
                 userNotify.showWarning("You tried something weird...", (e as Error).message);
                 throw (e);

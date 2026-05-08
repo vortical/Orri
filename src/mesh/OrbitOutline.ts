@@ -1,4 +1,4 @@
-import { BodyObject3D } from "./BodyObject3D";
+import { RenderableBody } from "./RenderableBody";
 import { Vector } from "../system/Vector";
 import { Body } from '../body/Body.ts';
 import { BodySystem } from "../scene/BodySystem.ts";
@@ -64,7 +64,7 @@ export function getworkerExecutorPool(): ExecutorPool<OrbitOutlineWorkerParams,N
 export class OrbitTrajectoryOutline extends TrajectoryOutline {
     _orbitLength: OrbitLength;
 
-    constructor(bodyObject?: BodyObject3D, maxVertices = MAX_VERTICES, enabled = false, colorHue = 0.5, opacity = 0.7, orbitLength: OrbitLength = {value: 350, lengthType: OrbitLengthType.AngleDegrees}) {
+    constructor(bodyObject?: RenderableBody, maxVertices = MAX_VERTICES, enabled = false, colorHue = 0.5, opacity = 0.7, orbitLength: OrbitLength = {value: 350, lengthType: OrbitLengthType.AngleDegrees}) {
         super(bodyObject, maxVertices, enabled, colorHue, opacity);
         this._orbitLength = orbitLength;
     }
@@ -101,7 +101,7 @@ export class OrbitTrajectoryOutline extends TrajectoryOutline {
                 namedOrbitArrayBuffers
                     .filter(o => o.buffer != undefined)
                     .forEach(o => {
-                        const bodyObject3D: BodyObject3D = bodySystem.getBodyObject3D(o.name);
+                        const bodyObject3D: RenderableBody = bodySystem.getRenderableBody(o.name);
                         bodyObject3D.trajectoryOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
                         bodyObject3D.trajectoryOutline.nbVertices = o.index;
                         bodyObject3D.trajectoryOutline.needsUpdate();

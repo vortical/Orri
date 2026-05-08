@@ -1,4 +1,4 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { BodySystem } from "./BodySystem";
 import * as TWEEN from '@tweenjs/tween.js';
 import { Vector3 } from "three";
@@ -8,8 +8,8 @@ export interface CameraTargetingState {
 
     cameraMode: CameraMode;
 
-    moveToTarget(bodyObject3D: BodyObject3D, force: boolean): void;
-    followTarget(bodyObject3D: BodyObject3D): void;
+    moveToTarget(bodyObject3D: RenderableBody, force: boolean): void;
+    followTarget(bodyObject3D: RenderableBody): void;
 
     /**
      * Called after a new target is set. 
@@ -18,7 +18,7 @@ export interface CameraTargetingState {
      * 
      * @param bodyObject3D 
      */
-    postTargetSet(bodyObject3D: BodyObject3D): void;
+    postTargetSet(bodyObject3D: RenderableBody): void;
     computeDesiredCameraUp(): Vector3;
 }
 
@@ -51,7 +51,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         return this.bodySystem.getBody("earth").get_orbital_plane_normal()!;
     }
 
-    postTargetSet(bodyObject3D: BodyObject3D) {
+    postTargetSet(bodyObject3D: RenderableBody) {
         
         this.bodySystem.controls.minDistance = this.minCameraDistance(bodyObject3D);
         this.bodySystem.setCameraNear(bodyObject3D.body.radius / 1000);
@@ -65,7 +65,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
      * @param bodyObject3D 
      * @returns 
      */
-    minCameraDistance(bodyObject3D: BodyObject3D) {
+    minCameraDistance(bodyObject3D: RenderableBody) {
         const bodyRadius = bodyObject3D.body.radius / 1000
         return bodyRadius + (1.5 * bodyRadius);
     }
@@ -80,15 +80,15 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
      * @returns 
      */
 
-    moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
+    moveToTarget(bodyObject3D: RenderableBody, force = false): void {
 
         const bodySystem = this.bodySystem;
 
-        if (bodySystem.getBodyObject3DTarget() == bodyObject3D && !force) return;
+        if (bodySystem.getRenderableBodyTarget() == bodyObject3D && !force) return;
 
         bodySystem.controls.enabled = false;
 
-        const currentBodyObject3d = bodySystem.getBodyObject3DTarget();
+        const currentBodyObject3d = bodySystem.getRenderableBodyTarget();
         const currentTargetPosition = this.bodySystem.controls.target.clone();
         const newTargetPosition = bodyObject3D.object3D.position;
         const currentCameraPosition = this.bodySystem.camera.position;
@@ -135,7 +135,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
             });
     }
 
-    abstract followTarget(bodyObject3D: BodyObject3D): void;
+    abstract followTarget(bodyObject3D: RenderableBody): void;
 
 }
 
@@ -146,7 +146,7 @@ export class FollowTargetCameraMode extends OrbitingCameraMode {
         super(bodySystem)
     }
 
-    followTarget(bodyObject3D: BodyObject3D): void {
+    followTarget(bodyObject3D: RenderableBody): void {
         const bodySystem = this.bodySystem;
 
         // keep same distance...
@@ -165,7 +165,7 @@ export class LookAtTargetCameraMode extends OrbitingCameraMode {
         super(bodySystem)
     }
 
-    followTarget(bodyObject3D: BodyObject3D): void {
+    followTarget(bodyObject3D: RenderableBody): void {
         this.bodySystem.controls.target.set(bodyObject3D.body.position.x / 1000, bodyObject3D.body.position.y / 1000, bodyObject3D.body.position.z / 1000);
     }
 }
@@ -188,9 +188,9 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
         return this.bodySystem.locationPin!.getLocationPinNormal();
     }
 
-    postTargetSet(bodyObject3D: BodyObject3D) { }
+    postTargetSet(bodyObject3D: RenderableBody) { }
 
-    moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
+    moveToTarget(bodyObject3D: RenderableBody, force = false): void {
 
         const bodySystem = this.bodySystem;
 
@@ -222,7 +222,7 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
             });
     }
 
-    followTarget(bodyObject3D: BodyObject3D): void {
+    followTarget(bodyObject3D: RenderableBody): void {
         const bodySystem = this.bodySystem;
 
         // body rotates, so need to adjust the up

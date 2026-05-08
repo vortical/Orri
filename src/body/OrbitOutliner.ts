@@ -4,7 +4,7 @@
 // import { zipCombine } from '../system/functions.ts';
 // import { TimeUnit, timeMsToUnits } from '../system/time.ts';
 // import { Clock } from "../system/Clock.ts";
-// import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+// import { RenderableBody } from '../mesh/RenderableBody.ts';
 // import { BodyProperties, BodyType, VectorComponents } from '../domain/models.ts';
 // import { Vector } from '../system/Vector.ts';
 
@@ -38,8 +38,8 @@
 //     value: number
 // }
 
-// function createOrbitingBodies(sourceBodyObjects: BodyObject3D[]): OrbitingBody[] {
-//     function createOrbitingBody(sourceBodyObject: BodyObject3D): OrbitingBody {    
+// function createOrbitingBodies(sourceBodyObjects: RenderableBody[]): OrbitingBody[] {
+//     function createOrbitingBody(sourceBodyObject: RenderableBody): OrbitingBody {    
 //         const body = sourceBodyObject.body;
 //         return {
 //             type: body.type,
@@ -77,7 +77,7 @@
 //      * 
 //      * @param angleDegrees the degrees to render
 //      */
-//     renderOrbitForAngle(angleDegrees: number, bodyObjects: BodyObject3D[] ){
+//     renderOrbitForAngle(angleDegrees: number, bodyObjects: RenderableBody[] ){
 //         this.drawOrbits({type: OrbitLengthType.Angle, value: angleDegrees }, bodyObjects);
 
 //     }
@@ -87,13 +87,13 @@
 //      * day Orbit would represent the orbit distance covered in a day.
 //      * @param timeMs 
 //      */
-//     renderOrbitsForTime(timeMs: number, bodyObjects: BodyObject3D[] ){
+//     renderOrbitsForTime(timeMs: number, bodyObjects: RenderableBody[] ){
 //         this.drawOrbits({type: OrbitLengthType.Time, value: timeMs }, bodyObjects);
 
 //     }
 
 
-//     drawOrbits(orbitLength: OrbitLength, bodyObjects: BodyObject3D[]){
+//     drawOrbits(orbitLength: OrbitLength, bodyObjects: RenderableBody[]){
 
 //         bodyObjects = bodyObjects.filter(o => o.body.type == "planet"|| o.body.type  == "star")
 //         // we determine the orbits using a stationary sun, substract its velocity.
@@ -109,7 +109,7 @@
 //                     namedOrbitArrayBuffers
 //                         .filter( o => o.buffer != undefined)
 //                         .forEach( o => {
-//                             const bodyObject3D: BodyObject3D = this.bodySystem.getBodyObject3D(o.name);
+//                             const bodyObject3D: RenderableBody = this.bodySystem.getRenderableBody(o.name);
 //                             bodyObject3D.orbitOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
 //                             bodyObject3D.orbitOutline.needsUpdate();
 //                         });

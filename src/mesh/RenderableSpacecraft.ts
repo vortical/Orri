@@ -1,13 +1,13 @@
 import { Body } from '../body/Body.ts';
 import { Mesh, Object3D, Quaternion, Vector3 } from "three";
-import { BodyObject3D } from './BodyObject3D.ts';
+import { RenderableBody } from './RenderableBody.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { BodySurface } from './BodySurface.ts';
 import { BodySurfaceBuilder } from './BodySurfaceBuilder.ts';
 import { TrajectoryOutline } from './TrajectoryOutline.ts';
 import { SpacecraftTrajectoryOutline } from './SpacecraftTrajectoryOutline.ts';
 
-export class SpacecraftBodyObject3D extends BodyObject3D {
+export class RenderableSpacecraft extends RenderableBody {
     readonly surface: BodySurface;
 
     constructor(body: Body, bodySystem: BodySystem) {

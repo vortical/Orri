@@ -1,4 +1,4 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { Clock, TimeMark } from "../system/Clock";
 import { BodySystemUpdater } from "./BodySystemUpdater";
 
@@ -18,11 +18,11 @@ export class CompositeUpdater implements BodySystemUpdater {
         this.bodySystemUpdaters = Array.from(bodySystemUpdaters);
     }
 
-    update(bodyObjects3D: BodyObject3D[], timeMark: TimeMark, doInvalidate: boolean): void{
+    update(renderableBodies: RenderableBody[], timeMark: TimeMark, doInvalidate: boolean): void{
 
         this.bodySystemUpdaters.forEach(updater => {
             if (updater.isEnabled) {
-                updater.update(bodyObjects3D, timeMark, doInvalidate);
+                updater.update(renderableBodies, timeMark, doInvalidate);
             }
         });
 

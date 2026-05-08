@@ -1,7 +1,7 @@
 import { Body } from '../body/Body.ts';
 import { LightProperties } from '../domain/models.ts';
 import { Mesh, SphereGeometry, PointLight, Object3D, MeshBasicMaterial, Quaternion, Vector3, DirectionalLight, Group, MeshBasicMaterialParameters, MeshPhongMaterial } from "three";
-import { BodyObject3D } from './BodyObject3D.ts';
+import { RenderableBody } from './RenderableBody.ts';
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from '../system/event-types.ts';
 import { BodySystem } from '../scene/BodySystem.ts';
 import { FlareEffect } from './FlareEffect.ts';
@@ -18,7 +18,7 @@ import PubSub from 'pubsub-js';
  * This is the ratio when shadow light is enabled. Areas in shadow will 
  * have light with an intensity based on this ratio.
  * 
- * @see StarBodyObject3D.updateLightIntensities
+ * @see RenderableStar.updateLightIntensities
  * 
  */
 const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
@@ -30,9 +30,9 @@ const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
  * in the direction of the camera to the target. 
  */
 class DirectionLightTargetListener {
-    star: StarBodyObject3D;
+    star: RenderableStar;
 
-    constructor(star: StarBodyObject3D) {
+    constructor(star: RenderableStar) {
         this.star = star;
         this.createSubscribtion();
     }
@@ -71,7 +71,7 @@ const defaultLightProperties: Required<LightProperties> = {
  * Flares are not 3D objects and can't be scaled like normal Object3D; when the camera moves
  * around the scene, a flare scale is determined and the associated flare is activated.
  */
-export class StarBodyObject3D extends BodyObject3D {
+export class RenderableStar extends RenderableBody {
     pointLight!: PointLight;
     shadowingLight?: DirectionalLight;
     shadowingLightTargetListener: DirectionLightTargetListener;
@@ -163,13 +163,13 @@ export class StarBodyObject3D extends BodyObject3D {
         if (this.getShadowsEnabled()) return this;
 
         const light = this.createShadowLight();
-        const target = this.bodySystem.getBodyObject3DTarget().object3D;
+        const target = this.bodySystem.getRenderableBodyTarget().object3D;
         light.target = target;
         this.shadowingLight = light;
         this.#updateLightIntensities();
     }
 
-    setShadowsEnabled(value: boolean): StarBodyObject3D {
+    setShadowsEnabled(value: boolean): RenderableStar {
         if (value) {
             this.#enableShadowLight();
         } else {

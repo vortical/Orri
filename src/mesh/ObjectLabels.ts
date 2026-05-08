@@ -1,5 +1,5 @@
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { BodyObject3D } from './BodyObject3D';
+import { RenderableBody } from './RenderableBody';
 import { BodySystem } from '../scene/BodySystem';
 import { CameraLayer } from '../scene/CameraLayer';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth";
@@ -11,10 +11,10 @@ export class ObjectLabels {
     nameLabel: NameLabel;
     distanceLabel: DistanceLabel;
     altitudeAzimuthLabel: AltitudeAzimuthLabel;
-    bodyObject3D: BodyObject3D;
+    bodyObject3D: RenderableBody;
     isHighlighted?: boolean;
 
-    constructor(bodyObject3D: BodyObject3D) {
+    constructor(bodyObject3D: RenderableBody) {
         this.nameLabel = new NameLabel(createCSS2DObject(1, bodyObject3D.getName(), CameraLayer.NameLabel), CameraLayer.NameLabel, bodyObject3D);
         this.distanceLabel = new DistanceLabel(createCSS2DObject(0, "0", CameraLayer.DistanceLabel), CameraLayer.DistanceLabel, bodyObject3D);
         this.altitudeAzimuthLabel = new AltitudeAzimuthLabel(createCSS2DObject(-1, "23,23", CameraLayer.ElevationAzimuthLabel), CameraLayer.ElevationAzimuthLabel, bodyObject3D);
@@ -76,7 +76,7 @@ export class ObjectLabels {
     }
 
     isPlanetarySystemSelected() {
-        const currentTarget = this.bodyObject3D.bodySystem.getBodyObject3DTarget();
+        const currentTarget = this.bodyObject3D.bodySystem.getRenderableBodyTarget();
         return this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem()
     }
 
@@ -116,7 +116,7 @@ export class ObjectLabels {
         const isSystemSelected = this.isPlanetarySystemSelected();
         const cameraDistance = this.bodyObject3D.cameraDistance();
 
-        if ((isSystemSelected && cameraDistance < 35e6) || cameraDistance < 1e6 || this.bodyObject3D.bodySystem.getBodyObject3DTarget() == this.bodyObject3D) {
+        if ((isSystemSelected && cameraDistance < 35e6) || cameraDistance < 1e6 || this.bodyObject3D.bodySystem.getRenderableBodyTarget() == this.bodyObject3D) {
             this.updateBodyLabels();
         } else {
             this.clearBodyLabels();
@@ -140,10 +140,10 @@ abstract class Label {
     cssObject: CSS2DObject;
     cameraLayer: CameraLayer;
     bodySystem: BodySystem;
-    bodyObject3D: BodyObject3D;
+    bodyObject3D: RenderableBody;
     abstract isHeader: boolean;
 
-    constructor(cssObject: CSS2DObject, cameraLayer: CameraLayer, bodyObject3D: BodyObject3D) {
+    constructor(cssObject: CSS2DObject, cameraLayer: CameraLayer, bodyObject3D: RenderableBody) {
         this.cssObject = cssObject;
         this.cameraLayer = cameraLayer;
         this.bodySystem = bodyObject3D.bodySystem;

@@ -1,6 +1,6 @@
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
 import { Clock, TimeMark } from "../system/Clock.ts";
-import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { KinematicObject } from '../domain/models.ts';
 import { hermiteSample } from './SpacecraftTrajectoryUpdater.ts';
 
@@ -26,7 +26,7 @@ export class BodiesAtTimeUpdater implements BodySystemUpdater {
   /**
    * Update all: positions, velocities, rotations and the clock time!
    */
-  update(bodyObject3Ds: BodyObject3D[], timeMark: TimeMark,  doInvalidate: boolean): void {
+  update(bodyObject3Ds: RenderableBody[], timeMark: TimeMark,  doInvalidate: boolean): void {
     // this updater is a 'OneTimeUpdate'. It disables itself once it starts to run.
     this.isEnabled = false;
 

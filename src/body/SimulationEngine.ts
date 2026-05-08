@@ -1,4 +1,4 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { TimeMark } from "../system/Clock";
 import { BodySystemUpdater } from "./BodySystemUpdater";
 import { BodyVerletIntegrator } from "./BodyVerletIntegrator";
@@ -31,7 +31,7 @@ export class SimulationEngine implements BodySystemUpdater {
   }
 
 
-  update(bodyObject3Ds: BodyObject3D[], timeMark: TimeMark,  doInvalidate: boolean=false): void {
+  update(bodyObject3Ds: RenderableBody[], timeMark: TimeMark,  doInvalidate: boolean=false): void {
     const { timestep, iterations } = this.bodyIntegrator.getIntegratorLoopParams(timeMark.deltaMs);
     // console.log(timestep, iterations);
     // timeMark.timeMs is the time after the update.

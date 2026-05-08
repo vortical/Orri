@@ -1,4 +1,4 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { BODY_ACTIVE_TOPIC, BodyActiveEventMessageType } from "../system/event-types";
 import { BodySystem } from "./BodySystem";
 import { Body } from "../body/Body";

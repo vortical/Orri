@@ -1,4 +1,4 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { OrbitLength, OrbitLengthType, OrbitTrajectoryOutline } from "../mesh/OrbitOutline";
 import { BODY_SELECT_TOPIC, BodySelectEventMessageType } from "../system/event-types";
 import { BodySystem } from "./BodySystem";
@@ -10,7 +10,7 @@ export class OrbitOutlinesStateHandler {
     bodySystem: BodySystem;
 
     selectedSystem?: Body;
-    selectedBody?: BodyObject3D;
+    selectedBody?: RenderableBody;
 
     orbitsEnabled: boolean =  false;
     unselectedSystemOpacity: number = 0.2;
@@ -41,7 +41,7 @@ export class OrbitOutlinesStateHandler {
     }
 
 
-    setTargetBody(targetBody: BodyObject3D) {
+    setTargetBody(targetBody: RenderableBody) {
       if(this.selectedBody != targetBody){
         this.setTargetSystem(targetBody.planetarySystem())
         this.selectedBody = targetBody;
@@ -65,14 +65,14 @@ export class OrbitOutlinesStateHandler {
 
 
     setPlanetaryMoonOrbitalOutlinesColorHues(){
-        this.bodySystem.bodyObjects3DList
+        this.bodySystem.renderableBodies
         .filter(b => b.body.type == "moon")
         .forEach(b => b.trajectoryOutline.colorHue = (hashCode(b.getName()) % 100)/100);
 
     }
 
     setMoonOrbitalOutlinesEnabled(system: Body, value: boolean) {
-        this.bodySystem.bodyObjects3DList
+        this.bodySystem.renderableBodies
         .filter(b => b.body.parent == system)
         .forEach(b => b.setOrbitOutlineEnabled(value ))
     }
@@ -82,17 +82,17 @@ export class OrbitOutlinesStateHandler {
       this.orbitsEnabled = value;
 
       // these are managed elswhere
-      this.bodySystem.bodyObjects3DList
+      this.bodySystem.renderableBodies
         .filter(b => b.body.type == "spacecraft")
         .forEach(b => b.setOrbitOutlineEnabled(false));
 
 
-        this.bodySystem.bodyObjects3DList
+        this.bodySystem.renderableBodies
         .filter(b => b.body.type == "planet")
         .forEach(b => b.setOrbitOutlineEnabled(value));
 
         // moon orbits are only shown if their planet is the target
-        this.bodySystem.bodyObjects3DList
+        this.bodySystem.renderableBodies
         .filter(b => b.body.type == "moon")
         .forEach(b => b.setOrbitOutlineEnabled(b.isPlanetarySystemSelected() && value ))
     }
@@ -104,7 +104,7 @@ export class OrbitOutlinesStateHandler {
     setSelectedOrbitalOutlinesOpacity(value: number) {
       this.selectedSystemOpacity = value;
 
-      const objects = this.bodySystem.bodyObjects3DList
+      const objects = this.bodySystem.renderableBodies
         .filter(bodyObject => bodyObject.planetarySystem() == this.selectedSystem)
 
       objects.forEach(bodyObject => bodyObject.trajectoryOutline.opacity = value);
@@ -113,7 +113,7 @@ export class OrbitOutlinesStateHandler {
     setUnselectedOrbitalOutlinesOpacity(value: number) {
       this.unselectedSystemOpacity = value;
 
-      this.bodySystem.bodyObjects3DList
+      this.bodySystem.renderableBodies
         .filter(bodyObject => bodyObject.planetarySystem() != this.selectedSystem)
         .forEach(bodyObject => bodyObject.trajectoryOutline.opacity = value);
     }
@@ -130,7 +130,7 @@ export class OrbitOutlinesStateHandler {
 
     setOrbitalOutlineLength(value: OrbitLength){
         console.log("Line :"+value.lengthType + ", "+value.value)
-        for(const bodyObject3D of this.bodySystem.bodyObjects3DList){
+        for(const bodyObject3D of this.bodySystem.renderableBodies){
             const outline = bodyObject3D.trajectoryOutline;
             if (outline instanceof OrbitTrajectoryOutline) {
                 outline.orbitLength = value;
@@ -139,7 +139,7 @@ export class OrbitOutlinesStateHandler {
     }
 
     getOrbitalOutlineLength(): OrbitLength{
-        const firstOrbit = this.bodySystem.bodyObjects3DList
+        const firstOrbit = this.bodySystem.renderableBodies
             .map(b => b.trajectoryOutline)
             .find((o): o is OrbitTrajectoryOutline => o instanceof OrbitTrajectoryOutline)!;
         return firstOrbit.orbitLength;
@@ -149,7 +149,7 @@ export class OrbitOutlinesStateHandler {
 }
 
    // setOrbitalOutlinesOpacity(value: number) {        
-    //   for(const bodyObject3D of this.bodySystem.bodyObjects3D.values()){
+    //   for(const bodyObject3D of this.bodySystem.renderableBodies.values()){
     //       bodyObject3D.orbitOutline.opacity = value;
     //   }
     // }    

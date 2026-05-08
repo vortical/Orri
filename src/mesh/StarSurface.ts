@@ -1,6 +1,6 @@
 import { Material, Mesh, MeshBasicMaterial, MeshBasicMaterialParameters, Object3D, SphereGeometry } from 'three';
 import { Body } from '../body/Body.ts';
-import { CelestialBodyPart } from './CelestialBodyPart.ts';
+import { Renderable } from './Renderable.ts';
 
 import { MaterialProperties } from '../domain/models.ts';
 import { textureLoader } from '../services/textureLoader.ts';
@@ -9,7 +9,7 @@ import { DistanceUnits, convertDistance } from '../system/distance.ts';
 const WIDTH_SEGMENTS = 64;
 const HEIGHT_SEGMENTS = 64;
 
-export class StarSurface extends CelestialBodyPart {
+export class StarSurface extends Renderable {
 
     readonly surfaceObject3D: Object3D;
     readonly body: Body;

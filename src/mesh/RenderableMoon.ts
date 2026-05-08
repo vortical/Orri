@@ -1,9 +1,9 @@
 import { BodySystem } from "../scene/BodySystem.ts";
-import { PlanetaryBodyObject3D } from "./PlanetBodyObject3D.ts";
+import { RenderablePlanet } from "./RenderablePlanet.ts";
 import { Body } from '../body/Body.ts';
-import { BodyObject3D } from "./BodyObject3D.ts";
+import { RenderableBody } from "./RenderableBody.ts";
 
-export class MoonBodyObject3D extends PlanetaryBodyObject3D {
+export class RenderableMoon extends RenderablePlanet {
 
     constructor(body: Body, bodySystem: BodySystem) {
         super(body, bodySystem);
@@ -21,7 +21,7 @@ export class MoonBodyObject3D extends PlanetaryBodyObject3D {
     //    console.log("Moon update")
     }
 
-    // planetarySystem(): BodyObject3D {
+    // planetarySystem(): RenderableBody {
     //     return this.pa;
     // }
  

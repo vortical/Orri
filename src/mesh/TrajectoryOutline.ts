@@ -1,11 +1,11 @@
 import { BufferAttribute, BufferGeometry, Float32BufferAttribute, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
-import { BodyObject3D } from "./BodyObject3D";
+import { RenderableBody } from "./RenderableBody";
 import { Vector } from "../system/Vector";
 
 const DEFAULT_MAX_VERTICES = 360 * 50 * 4;
 
 /**
- * Base class for any visual path tied to a BodyObject3D — orbital paths,
+ * Base class for any visual path tied to a RenderableBody — orbital paths,
  * spacecraft trajectories, etc. Owns the Three.js Line, the position buffer,
  * and the visibility/opacity/color surface. Subclasses implement
  * `createTrajectory` to produce the path data appropriate to their kind.
@@ -21,9 +21,9 @@ export abstract class TrajectoryOutline {
     totalAngle = 0;
     p0!: Vector3;
     p1!: Vector3;
-    bodyObject?: BodyObject3D;
+    bodyObject?: RenderableBody;
 
-    constructor(bodyObject?: BodyObject3D, maxVertices = DEFAULT_MAX_VERTICES, enabled = false, _colorHue = 0.5, opacity = 0.7) {
+    constructor(bodyObject?: RenderableBody, maxVertices = DEFAULT_MAX_VERTICES, enabled = false, _colorHue = 0.5, opacity = 0.7) {
         this.bodyObject = bodyObject;
 
         const geometry = new BufferGeometry();

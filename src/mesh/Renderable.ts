@@ -12,13 +12,13 @@ import { Object3D } from "three";
  * 
  * It is up to the concrete classes to implement the update mechanism.
  */
-export abstract class CelestialBodyPart {
-    readonly childParts: CelestialBodyPart[] = []
+export abstract class Renderable {
+    readonly childParts: Renderable[] = []
 
     abstract getObject3D(): Object3D;
     abstract updatePart(): void;
 
-    addPart(part: CelestialBodyPart | undefined): CelestialBodyPart {
+    addPart(part: Renderable | undefined): Renderable {
         if (part != undefined) {
             this.getObject3D().add(part.getObject3D());
             this.childParts.push(part);
