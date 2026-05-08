@@ -17,6 +17,12 @@ export class Vector extends Vector3 implements VectorComponents {
         return new Vector(pos2.x + pos1.x, pos2.y + pos1.y, pos2.z + pos1.z);
     }
 
+    static average(vec1: VectorComponents, vec2: VectorComponents): VectorComponents {
+      return { x: (vec1.x + vec2.x) / 2, y: (vec1.y + vec2.y) / 2, z: (vec1.z + vec2.z) / 2 };
+    }
+
+
+
     static fromVectorComponents(v?: VectorComponents|Vector3): Vector {
         return v == undefined? new Vector():new Vector(v.x, v.y, v.z)
     }

@@ -18,7 +18,7 @@ export class CompositeUpdater implements BodySystemUpdater {
         this.bodySystemUpdaters = Array.from(bodySystemUpdaters);
     }
 
-    update(bodyObjects3D: BodyObject3D[], timeMark: TimeMark, doInvalidate: boolean): BodyObject3D[]{
+    update(bodyObjects3D: BodyObject3D[], timeMark: TimeMark, doInvalidate: boolean): void{
 
         this.bodySystemUpdaters.forEach(updater => {
             if (updater.isEnabled) {
@@ -28,7 +28,7 @@ export class CompositeUpdater implements BodySystemUpdater {
 
         // discard injected 'OneTimeUpdate' updaters.
         this.bodySystemUpdaters = this.bodySystemUpdaters.filter(updater => !updater.isOneTimeUpdate);
-        return bodyObjects3D;
+        
 
     }
 

@@ -1,5 +1,5 @@
 import { Body } from './Body.ts';
-import { BodySystemUpdater } from './BodySystemUpdater.ts';
+import { BodyIntegrator, BodySystemUpdater } from './BodySystemUpdater.ts';
 import { TimeUnit, timeMsToUnits } from '../system/time.ts';
 import { Clock, TimeMark } from "../system/Clock.ts";
 import { BodyObject3D } from '../mesh/BodyObject3D.ts';
@@ -18,6 +18,12 @@ export class NBodySystemUpdater implements BodySystemUpdater {
 
   totalstepMs: number = 0;
   invalidateNextUpdate: boolean = false;
+  private integrator: BodyIntegrator;
+
+
+  constructor(integrator: BodyIntegrator) {
+    this.integrator = integrator;
+  }
 
   invalidate(){
     this.invalidateNextUpdate = true;
@@ -25,7 +31,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
   }
 
 
-  update(bodyObject3Ds: BodyObject3D[], timeMark: TimeMark,  doInvalidate: boolean=false): BodyObject3D[] {
+  update(bodyObject3Ds: BodyObject3D[], timeMark: TimeMark,  doInvalidate: boolean=false): void {
     const { timestep, iterations } = defaulUpdaterLoopParamProvider(timeMark.deltaMs);
     const timeMs = timeMark.timeMs; // this is now - we have have to catch up to this time.
     const timestepMs = timeMark.deltaMs;
@@ -55,7 +61,7 @@ export class NBodySystemUpdater implements BodySystemUpdater {
     });
 
     bodyObject3Ds.forEach(b => b.isActive() && !b.body.useTrajectory && b.update());
-    return bodyObject3Ds;
+    
   }
 
   updateBodyProperties(bodies: Body[], timeStepMs: number, timeMs: number): Body[] {

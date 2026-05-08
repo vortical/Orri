@@ -560,9 +560,10 @@ export class BodySystem {
     start() {
 
       function reportTimeDiscrepancy(starttime: number, timeMs: number, updaterTotalStepsMs: number ){
+        // console.log(`${timeMs - starttimeMs} -> ${updaterTotalStepsMs}`);
         const discrepancy = Math.abs((timeMs - starttimeMs) - updaterTotalStepsMs);
 
-        if(discrepancy > 100){
+        if(discrepancy > 1){
           console.log(`time: ${(timeMs - starttimeMs)}, updater: ${updaterTotalStepsMs}`);
 
         }

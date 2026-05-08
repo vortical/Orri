@@ -49,6 +49,13 @@ interface RotationCalculator {
  * Represents the non 3D characteristics of a body: position, speed, mass, axis tilt, rotation period etc...
  * 
  */
+
+
+interface GravitationalMass {
+  position: VectorComponents;
+  mass: number;
+}
+
 export class Body {
     type: BodyType
     name: string;
@@ -292,12 +299,12 @@ export class Body {
      * @param body1 
      * @param body2 
      */
-    static twoBodyForce(body1: Body, body2: Body): Vector {
-        const vec = body1.distanceTo(body2);
+    static twoBodyForce(body1: GravitationalMass, body2: GravitationalMass): Vector {
+        const vec = Vector.substract(body1.position, body2.position);
         const mag = vec.magnitude();
 
         const numerator = G * body1.mass * body2.mass;
-        const denominator = Math.pow(mag, 3);
+        const denominator = mag * mag * mag;
 
         return new Vector(
             (numerator * vec.x) / denominator,
@@ -310,7 +317,7 @@ export class Body {
      * 
      *  @returns acceleration on body1
      */
-    static twoBodyAcceleration(body1: Body, body2: Body):Vector {
+    static twoBodyAcceleration(body1: GravitationalMass, body2: GravitationalMass):Vector {
         const f = Body.twoBodyForce(body1, body2);
         return new Vector(f.x / body1.mass, f.y / body1.mass, f.z / body1.mass);
     }
@@ -323,7 +330,7 @@ export class Body {
      * @param body2 
      * @returns 2 Accelerations: [acceleration on body1, acceleration on body2]
      */
-    static twoBodyAccelerations(body1: Body, body2: Body): Map<string, Vector> {
+    static twoBodyAccelerations(body1: GravitationalMass, body2: GravitationalMass): Map<string, Vector> {
         const f = Body.twoBodyForce(body1, body2);
         return new Map(
             [
