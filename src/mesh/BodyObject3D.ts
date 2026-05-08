@@ -246,7 +246,7 @@ export abstract class BodyObject3D extends CelestialBodyPart {
           console.log("set is active at: "+timeMark.timeMs);
 
           console.log("updating...")
-          const ephemeris = this.body.hermiteSample(timeMs);
+          const ephemeris = this.body.hermiteInterpolate(timeMs);
           if (ephemeris){
             this.body.position = Vector.fromVectorComponents(ephemeris.position);
             this.body.velocity = Vector.fromVectorComponents(ephemeris.velocity);

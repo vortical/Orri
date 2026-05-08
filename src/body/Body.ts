@@ -378,7 +378,7 @@ export class Body {
    * Returns interpolated [position, velocity] at time `t`, or undefined if `t` falls
    * outside the trajectory's covered range.
    */
-  hermiteSample(timeMs: number): Ephemeris| undefined {
+  hermiteInterpolate(timeMs: number): Ephemeris| undefined {
     const trajectory = this.missionWindow?.trajectory;
     if(trajectory == undefined) return undefined;
 
