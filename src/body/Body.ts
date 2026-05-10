@@ -372,6 +372,14 @@ export class Body {
     }
 
 
+    nextPositionEuler(vel: VectorComponents, dt: number): Vector {
+      return new Vector(
+        this.position.x + vel.x * dt,
+        this.position.y + vel.y * dt,
+        this.position.z + vel.z * dt
+      );
+    }
+    
   /**
    * Hermite cubic interpolation between two trajectory points.
    *

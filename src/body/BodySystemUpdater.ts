@@ -30,7 +30,8 @@ export abstract class BaseBodyIntegrator implements BodyIntegrator {
     this.isInvalidated = true;
   }
 
- 
+  abstract getIntegratorLoopParams(timestepMs: number): IntegratorLoopParam;
+   
   abstract computeFrame(bodies: Body[], timestepMs: number, stepTimeMs: number): BodyFrame;
 }
 
@@ -59,7 +60,9 @@ export interface BodySystemUpdater {
     update(bodies: RenderableBody[], timeMark: TimeMark, doInvalidate: boolean): void;
     isOneTimeUpdate: boolean;
     isEnabled: boolean;
-}export type IntegratorLoopParam = {
+};
+
+export type IntegratorLoopParam = {
   iterations: number;
   timestep: number;
 };

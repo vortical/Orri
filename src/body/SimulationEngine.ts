@@ -1,7 +1,9 @@
 import { RenderableBody } from "../mesh/RenderableBody";
 import { TimeMark } from "../system/Clock";
-import { BodySystemUpdater } from "./BodySystemUpdater";
+import { BaseBodyIntegrator, BodySystemUpdater } from "./BodySystemUpdater";
 import { BodyVerletIntegrator } from "./BodyVerletIntegrator";
+import { BodyYoshidaIntegrator } from "./BodyYoshidaIntegrator"
+
 import { SpacecraftVerletIntegrator } from "./SpacecraftVerletIntegrator";
 
 
@@ -13,13 +15,14 @@ export class SimulationEngine implements BodySystemUpdater {
   isEnabled = true;
   totalstepMs: number = 0;// += timeStepMs;
 
-  private bodyIntegrator: BodyVerletIntegrator;
+  private bodyIntegrator: BaseBodyIntegrator;
   private spacecraftIntegrator: SpacecraftVerletIntegrator;
 
 
   constructor() {
   
     this.bodyIntegrator = new BodyVerletIntegrator();
+    // this.bodyIntegrator = new BodyYoshidaIntegrator();
     this.spacecraftIntegrator = new SpacecraftVerletIntegrator();
   }
 
@@ -55,7 +58,7 @@ export class SimulationEngine implements BodySystemUpdater {
 
     for (let i = 0; i < iterations; i++) {
       const stepTimeMs = startTimeMs + i * timestep;
-      const frame = this.bodyIntegrator.computeFrame(celestialBodies, timestep);
+      const frame = this.bodyIntegrator.computeFrame(celestialBodies, timestep, stepTimeMs);
       this.spacecraftIntegrator.computeFrame(spacecrafts, frame, timestep, stepTimeMs);
       this.totalstepMs += timestep;
       
