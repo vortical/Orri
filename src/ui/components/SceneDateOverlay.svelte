@@ -33,12 +33,17 @@
     return n.toString().padStart(2, '0');
   }
 
+  function localZoneAbbrev(d: Date): string {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
+    return parts.find(p => p.type === 'timeZoneName')?.value ?? 'LOCAL';
+  }
+
   function format(ms: number, mode: TimeDisplay): string {
     const d = new Date(ms);
     if (mode === 'utc') {
       return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
     }
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} LOCAL`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${localZoneAbbrev(d)}`;
   }
 </script>
 

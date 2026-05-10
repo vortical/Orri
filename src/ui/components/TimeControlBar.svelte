@@ -36,6 +36,10 @@
   ];
   const N = ladder.length - 1;
 
+  // Track positions of the ±1× anchors (percent from slider's left edge).
+  const realtimeBackPct = ((-1 + N) / (2 * N)) * 100;
+  const realtimeFwdPct = ((1 + N) / (2 * N)) * 100;
+
   function scaleToIndex(s: number): number {
     if (s === 0) return 0;
     const sign = Math.sign(s);
@@ -130,16 +134,20 @@
     </button>
 
     <div class="flex-1 min-w-[160px] flex flex-col items-stretch px-1">
-      <input
-        type="range"
-        min={-N}
-        max={N}
-        step="1"
-        value={sliderIndex}
-        oninput={onSliderInput}
-        class="apollo-slider w-full touch-pan-x"
-        aria-label="Time scale"
-      />
+      <div class="slider-wrap">
+        <span class="tick" style="left: {realtimeBackPct}%" aria-hidden="true"></span>
+        <span class="tick" style="left: {realtimeFwdPct}%" aria-hidden="true"></span>
+        <input
+          type="range"
+          min={-N}
+          max={N}
+          step="1"
+          value={sliderIndex}
+          oninput={onSliderInput}
+          class="apollo-slider w-full touch-pan-x"
+          aria-label="Time scale"
+        />
+      </div>
       <div class="text-[11px] sm:text-xs text-white/70 text-center font-mono mt-0.5 truncate">
         {scaleLabel}
       </div>
@@ -231,5 +239,28 @@
   }
   .apollo-slider:focus::-moz-range-thumb {
     border-color: #d4a04a;
+  }
+
+  /* ±1× realtime anchors — engraved indicator lights along the track. */
+  .slider-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .tick {
+    position: absolute;
+    top: 50%;
+    width: 2px;
+    height: 10px;
+    border-radius: 1px;
+    background: #d4a04a;
+    opacity: 0.55;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.18);
+    transition: opacity 0.15s ease;
+  }
+  .slider-wrap:hover .tick,
+  .slider-wrap:focus-within .tick {
+    opacity: 0.9;
   }
 </style>
