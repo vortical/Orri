@@ -106,10 +106,11 @@ export class Body {
     gltf?: GLTFModelProperties;
     missionWindow?: MissionWindow;
     useTrajectory: boolean = false;
+    summary?: string;
 
     _isActive: boolean = true;
 
-    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf, missionWindow }: BodyProperties) {
+    constructor({ type, name, parentName, mass, radius, castShadow = false, receiveShadow = false, position, velocity, color = "lightgrey", obliquityToOrbit = 0, sideralRotationPeriod = { seconds: Number.MAX_VALUE }, orbitPeriod, lightProperties, rings, textures, gltf, missionWindow, summary }: BodyProperties) {
         this.type = type;
         this.name = name;
         this.parentName = parentName;
@@ -128,6 +129,7 @@ export class Body {
         this.textures = textures;
         this.gltf = gltf;
         this.missionWindow = missionWindow;
+        this.summary = summary;
 
     }
 
@@ -154,6 +156,8 @@ export class Body {
       const burn = burns.find(b => b.startMs <= timeMs && b.endMs > timeMs);
       if (!burn) return undefined;
       const elapsedTimeMs = timeMs - burn.startMs;
+      
+      // FIXME: assumes burns at 60s intervals
       const idx = Math.floor(elapsedTimeMs / 60000);
       
       if (idx >= burn.accelerations.length - 1) {
@@ -372,11 +376,11 @@ export class Body {
     }
 
 
-    nextPositionEuler(vel: VectorComponents, dt: number): Vector {
+    nextPositionEuler(vel: VectorComponents, time: number): Vector {
       return new Vector(
-        this.position.x + vel.x * dt,
-        this.position.y + vel.y * dt,
-        this.position.z + vel.z * dt
+        this.position.x + vel.x * time,
+        this.position.y + vel.y * time,
+        this.position.z + vel.z * time
       );
     }
     
