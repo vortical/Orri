@@ -7,67 +7,82 @@
   type Props = { bodySystem: BodySystem };
   let { bodySystem }: Props = $props();
 
-  // Exponential mapping: slider t in [0,1] → fov = 0.0001 * 900000^t.
-  // t=0 → 0.0001°, t=0.5 → ~0.0949°, t=1 → 90°. Lets the user pick tiny
-  // telephoto FOVs that the linear slider made unreachable.
-  const FOV_MIN = 0.0001;
+  // Exponential mapping. FOV_MIN of 0.05° gives ~1000× zoom (apparent FOV ~50°).
+  const FOV_MIN = 0.05;
   const FOV_MAX = 90;
-  const RATIO = FOV_MAX / FOV_MIN; // 900_000
+  const RATIO = FOV_MAX / FOV_MIN;
+  const FOV_DEFAULT = 30;
 
-  function fovFromT(t: number): number {
-    return FOV_MIN * Math.pow(RATIO, t);
+  // Native range thumb width (matches the ::-webkit-slider-thumb rule below).
+  // The thumb's center traverses [thumbRadius, trackWidth - thumbRadius], so a
+  // tick placed by raw percent drifts away from the thumb near the edges.
+  const THUMB_WIDTH = 14;
+  const THUMB_RADIUS = THUMB_WIDTH / 2;
+
+  function fovFromPosition(position: number): number {
+    return FOV_MIN * Math.pow(RATIO, position);
   }
-  function tFromFov(fov: number): number {
+  function positionFromFov(fov: number): number {
     const clamped = Math.min(FOV_MAX, Math.max(FOV_MIN, fov));
     return Math.log(clamped / FOV_MIN) / Math.log(RATIO);
   }
 
-  let fov = $state(35);
-  let sliderT = $state(0.5);
-  let sub: any;
+  const defaultTickPosition = positionFromFov(FOV_DEFAULT);
+
+  let fov = $state(FOV_DEFAULT);
+  let sliderPosition = $state(positionFromFov(FOV_DEFAULT));
+  let subscription: any;
 
   onMount(() => {
     fov = bodySystem.getFov();
-    sliderT = tFromFov(fov);
-    sub = PubSub.subscribe(FOV_TOPIC, (_msg: any, v: number) => {
-      fov = v;
-      sliderT = tFromFov(v);
+    sliderPosition = positionFromFov(fov);
+    subscription = PubSub.subscribe(FOV_TOPIC, (_msg: any, value: number) => {
+      fov = value;
+      sliderPosition = positionFromFov(value);
     });
   });
 
   onDestroy(() => {
-    PubSub.unsubscribe(sub);
+    PubSub.unsubscribe(subscription);
   });
 
-  function onSlider(e: Event) {
-    const t = parseFloat((e.target as HTMLInputElement).value);
-    sliderT = t;
-    bodySystem.setFOV(fovFromT(t));
+  function onSlider(event: Event) {
+    const position = parseFloat((event.target as HTMLInputElement).value);
+    sliderPosition = position;
+    bodySystem.setFOV(fovFromPosition(position));
   }
 
-  function fmtFov(v: number): string {
-    if (v >= 10) return v.toFixed(1) + '°';
-    if (v >= 1) return v.toFixed(2) + '°';
-    if (v >= 0.01) return v.toFixed(3) + '°';
-    return v.toExponential(1) + '°';
+  function formatFov(value: number): string {
+    if (value >= 10) return value.toFixed(1) + '°';
+    if (value >= 1) return value.toFixed(2) + '°';
+    if (value >= 0.01) return value.toFixed(3) + '°';
+    return value.toExponential(1) + '°';
   }
 </script>
 
 <div class="flex flex-col gap-1">
   <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
     <span class="text-[#d4a04a]">FOV</span>
-    <span class="text-white/85">{fmtFov(fov)}</span>
+    <span class="text-white/85">{formatFov(fov)}</span>
   </div>
-  <input
-    type="range"
-    min="0"
-    max="1"
-    step="0.001"
-    value={sliderT}
-    oninput={onSlider}
-    aria-label="Field of view"
-    class="apollo-slider w-full touch-pan-x"
-  />
+  <div class="slider-wrap">
+    <span
+      class="tick"
+      style="left: calc({THUMB_RADIUS}px + {defaultTickPosition} * (100% - {THUMB_WIDTH}px));"
+      title="Default FOV ({FOV_DEFAULT}°)"
+      aria-hidden="true"
+    ></span>
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.001"
+      value={sliderPosition}
+      oninput={onSlider}
+      aria-label="Field of view"
+      class="apollo-slider w-full touch-pan-x"
+    />
+  </div>
 </div>
 
 <style>
@@ -120,4 +135,26 @@
   .apollo-slider:focus { outline: none; }
   .apollo-slider:focus::-webkit-slider-thumb { border-color: #d4a04a; }
   .apollo-slider:focus::-moz-range-thumb { border-color: #d4a04a; }
+
+  .slider-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .tick {
+    position: absolute;
+    top: 50%;
+    width: 2px;
+    height: 10px;
+    border-radius: 1px;
+    background: #d4a04a;
+    opacity: 0.55;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.18);
+    transition: opacity 0.15s ease;
+  }
+  .slider-wrap:hover .tick,
+  .slider-wrap:focus-within .tick {
+    opacity: 0.9;
+  }
 </style>

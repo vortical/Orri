@@ -116,13 +116,13 @@ export class BodySystem {
     locationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
     orbitOutlinesStateHandler: OrbitOutlinesStateHandler;
-    nbodyUpdater: NBodySystemUpdater;
+    nbodyUpdater: BodySystemUpdater;
 
     // workerPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]}, NamedArrayBuffer[]> ;
     
 
     constructor(parentElement: HTMLElement, bodies: Body[], dataService: DataService, bodySystemUpdater: BodySystemUpdater, {
-        cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 35,
+        cameraPosition, targetPosition, target = "Earth", sizeScale = 1.0, timeScale = 1.0, fov = 30,
         ambientLightLevel = 0.025, showAxes = false, date = Date.now(), castShadows = true, shadowType = ShadowType.Penumbra, distanceUnit = DistanceUnits.km,
         timeDisplay = 'local' as TimeDisplay,
         showNames = true, showDistance = true, showAltitudeAzimuth = true,

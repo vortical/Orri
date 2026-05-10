@@ -129,7 +129,7 @@
       "atmosphereUri": "/assets/textures/planets/earth_clouds.png",
       "bumpMapScale": 1.2
     },
-    "summary": "Third planet — host to the simulation observer"
+    "summary": "Our planet"
   },
   {
     "type": "moon",
