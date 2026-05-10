@@ -7,6 +7,7 @@ export const BODY_SELECT_TOPIC = Symbol('Topic from BodySystem when target chang
 export const BODY_ACTIVE_TOPIC = Symbol('Topic from when an object becomes active/inactive (e.g. spacecraft) changes');
 export const TIME_SCALE_TOPIC = Symbol('Topic from BodySystem when time scale changes');
 export const TIME_DISPLAY_TOPIC = Symbol('Topic from BodySystem when time display (local/utc) changes');
+export const FOV_TOPIC = Symbol('Topic from BodySystem when FOV changes');
 
 
 

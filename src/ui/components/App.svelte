@@ -10,9 +10,14 @@
   import config from '../../configuration';
   import TimeControlBar from './TimeControlBar.svelte';
   import SceneDateOverlay from './SceneDateOverlay.svelte';
+  import TargetIndicator from './TargetIndicator.svelte';
+  import SpacecraftBrowser from './SpacecraftBrowser.svelte';
+  import SettingsPanel from './SettingsPanel.svelte';
+  import type GUI from 'lil-gui';
 
   let sceneRoot: HTMLDivElement;
   let bodySystem: BodySystem | undefined = $state(undefined);
+  let gui: GUI | undefined = $state(undefined);
   let loading = $state(true);
   let error: string | undefined = $state(undefined);
 
@@ -27,7 +32,8 @@
       const bs = new BodySystem(sceneRoot, bodies, dataService, simulationEngine, options);
       bs.addUpdater(new SpacecraftTrajectoryUpdater());
       bs.setCameraUp(bs.getBody('earth').get_orbital_plane_normal());
-      new SimpleUI(bs, dataService);
+      const ui = new SimpleUI(bs, dataService);
+      gui = ui.gui;
       bs.start();
       bodySystem = bs;
       loading = false;
@@ -71,7 +77,16 @@
   {/if}
 
   {#if bodySystem}
-    <SceneDateOverlay {bodySystem} />
+    <!-- Top control-panel strip: each overlay is its own "instrument" panel. -->
+    <div class="absolute top-3 left-3 right-3 flex flex-wrap items-start gap-2 z-30 pointer-events-none">
+      <SceneDateOverlay {bodySystem} />
+      <TargetIndicator {bodySystem} />
+      <div class="ml-auto flex gap-2">
+        <SpacecraftBrowser {bodySystem} />
+        <SettingsPanel {bodySystem} {gui} />
+      </div>
+    </div>
+
     <TimeControlBar {bodySystem} />
   {/if}
 </div>

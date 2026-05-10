@@ -2,7 +2,7 @@ import { BodySystem, SpacecraftMode, SpacecraftModes } from '../scene/BodySystem
 import { CameraLayer } from '../scene/CameraLayer.ts';
 import GUI from 'lil-gui';
 import PubSub from 'pubsub-js';
-import { MOUSE_CLICK_ON_BODY_TOPIC, BODY_SELECT_TOPIC } from '../system/event-types.ts';
+import { MOUSE_CLICK_ON_BODY_TOPIC } from '../system/event-types.ts';
 import LocationBar from './LocationBar.ts';
 import { PickerEvent } from '../scene/Picker.ts';
 
@@ -28,10 +28,11 @@ export const userNotify: INotifyService = new NotifyService();
  * A terse UI...
  */
 export class SimpleUI {
+    readonly gui: GUI;
 
     constructor(bodySystem: BodySystem, dataService: DataService) {
 
-        buildLilGui(bodySystem, dataService);
+        this.gui = buildLilGui(bodySystem, dataService);
 
         // // Handle the history back button
         window.addEventListener('popstate', function (event) {
@@ -69,7 +70,6 @@ function withRollback(f: (v: any) => void) {
 
 function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     const gui = new GUI().title("Settings");
-    const bodyNames = bodySystem.bodies.map((b) => b.name);
 
     const options = {
         target: bodySystem.getRenderableBodyTarget().getName() || "",
@@ -122,15 +122,8 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         },
     };
 
-    const targetController = gui.add(options, 'target', bodyNames).name("Target")
-        .onFinishChange(withRollback((targetName) => {
-            try {
-                bodySystem.moveToTarget(bodySystem.getRenderableBody(targetName));
-            } catch (e) {
-                userNotify.showWarning("You tried something weird...", (e as Error).message);
-                throw (e);
-            }
-        }));
+    // Target selection lives in the top-row TargetIndicator now; the lil-gui dropdown
+    // has been retired. Initial target still set below from the options snapshot.
 
     const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraModes).name("Camera Mode")
         .onChange(withRollback((v: CameraMode) => {
@@ -160,8 +153,7 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
         }));
     gui.add(options, "getLocation").name('Use Browser Location');
 
-    const fovController = gui.add(options, "fov", 0.0001, 90, 0.0001).name('Field Of Vue')
-        .onChange((v: number) => bodySystem.setFOV(v));
+    // FOV moved to the SettingsPanel (top-row gear icon) with an exponential slider.
 
     const labelsSettingsfolder = gui.addFolder('Labels Settings');
     labelsSettingsfolder.close();
@@ -264,13 +256,9 @@ function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
     gui.add(options, "reloadState").name('Reload Pushed State');
 
 
-    PubSub.subscribe(BODY_SELECT_TOPIC, (msg, event) => {
-        if (event.body && options.target != event.body.name) {
-            targetController.setValue(event.body.getName()).updateDisplay();
-        }
-    });
-
-    bodySystem.setTarget(targetController.getValue())
-    gui.close()
+    bodySystem.setTarget(options.target);
+    // Hide by default — entry point is now the SettingsPanel gear icon, which calls
+    // gui.show() on demand for advanced/legacy controls.
+    gui.hide();
     return gui;
 }

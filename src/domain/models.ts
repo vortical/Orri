@@ -104,6 +104,11 @@ export type BodyProperties = {
     castShadow?: boolean;
     receiveShadow?: boolean;
     missionWindow?: MissionWindow;
+    /**
+     * Short descriptive text for UI lists (search results, browsers).
+     * Will be populated by the spacefield API in the future; seeded in datasmall.json today.
+     */
+    summary?: string;
 
     /**
      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body

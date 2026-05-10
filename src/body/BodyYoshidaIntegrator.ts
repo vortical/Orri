@@ -43,17 +43,17 @@ export class BodyYoshidaIntegrator extends BaseBodyIntegrator {
 
         const positions_i1 = bodies.map(b => b.position);
 
-        // Stage 1
+        // Stage 1 - c1 * dt
         bodies.forEach(b => b.position = b.nextPositionEuler(b.velocity, c1 * dt));
         const acc1 = this.bodyAccelerations(bodies);
         bodies.forEach((b, i) => b.velocity = b.nextSpeed(acc1[i], d1 * dt));
 
-        // Stage 2
+        // Stage 2 - c2 * dt
         bodies.forEach(b => b.position = b.nextPositionEuler(b.velocity, c2 * dt));
         const acc2 = this.bodyAccelerations(bodies);
         bodies.forEach((b, i) => b.velocity = b.nextSpeed(acc2[i], d2 * dt));
 
-        // Stage 3
+        // Stage 3 - c3 * dt
         bodies.forEach(b => b.position = b.nextPositionEuler(b.velocity, c3 * dt));
         const acc3 = this.bodyAccelerations(bodies);
         bodies.forEach((b, i) => b.velocity = b.nextSpeed(acc3[i], d3 * dt));

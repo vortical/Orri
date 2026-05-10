@@ -48,7 +48,7 @@
 </script>
 
 <div
-  class="absolute top-3 left-3 px-3 py-1.5 rounded-md bg-black/40 backdrop-blur-sm text-white/85 font-mono text-xs sm:text-sm tracking-wide pointer-events-none select-none"
+  class="px-3 py-1.5 rounded-md bg-black/40 backdrop-blur-sm text-white/85 font-mono text-xs sm:text-sm tracking-wide pointer-events-none select-none"
 >
   {format(timeMs, display)}
 </div>

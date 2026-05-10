@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
+
   type Props = {
     value: Date;
     onset?: (d: Date) => void;
@@ -11,8 +13,14 @@
   }
 
   function dateToInput(d: Date): string {
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
+
+  // Snapshot once at mount; ignore subsequent prop updates so an externally-changing
+  // simulation clock (or any parent re-render) doesn't wipe the user's in-progress edit.
+  // The component re-mounts when the parent toggles its visibility, picking up a fresh
+  // snapshot on the next open.
+  const initialValue = untrack(() => dateToInput(value));
 
   function handleChange(e: Event) {
     const v = (e.target as HTMLInputElement).value;
@@ -25,7 +33,8 @@
 
 <input
   type="datetime-local"
-  value={dateToInput(value)}
+  step="1"
+  value={initialValue}
   onchange={handleChange}
   class="bg-black/40 text-white px-2 py-2 rounded-md border border-white/30 focus:outline-none focus:ring-1 focus:ring-amber-300/70 text-sm font-mono min-h-[44px]"
 />

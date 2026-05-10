@@ -8,7 +8,7 @@ import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { throttle } from "../system/throttle.ts";
 import Stats from 'three/addons/libs/stats.module.js';
 import PubSub from 'pubsub-js';
-import { BODY_SELECT_TOPIC, BodySelectEventMessageType, TIME_DISPLAY_TOPIC } from '../system/event-types.ts';
+import { BODY_SELECT_TOPIC, BodySelectEventMessageType, TIME_DISPLAY_TOPIC, FOV_TOPIC } from '../system/event-types.ts';
 import type { TimeDisplay } from '../system/time.ts';
 import { Clock, TimeMark } from "../system/Clock.ts";
 import { Vector } from '../system/Vector.ts';
@@ -495,6 +495,7 @@ export class BodySystem {
     setFOV(fov: number) {
         this.camera.fov = fov;
         this.camera.updateProjectionMatrix();
+        PubSub.publish(FOV_TOPIC, fov);
     }
 
     getTarget(): RenderableBody{

@@ -105,11 +105,12 @@
 
   function onDateSet(d: Date) {
     bodySystem.setSystemTime(d);
-    showDatePicker = false;
+    // Don't auto-close the editor here. Chromium fires `change` per field-commit, so
+    // closing on first commit kicks the user out mid-edit. The user closes via the
+    // Date button toggle.
   }
 
-  let scaleLabel = $derived.by(() => {
-    if (paused) return 'Paused';
+  let scaleText = $derived.by(() => {
     if (scale === 0) return '0×';
     const period = formatPeriod(unitsToTimePeriod(scale, TimeUnit.Seconds));
     return period ? `${period}/s` : `${scale.toLocaleString()}×`;
@@ -148,8 +149,12 @@
           aria-label="Time scale"
         />
       </div>
-      <div class="text-[11px] sm:text-xs text-white/70 text-center font-mono mt-0.5 truncate">
-        {scaleLabel}
+      <div class="text-[11px] sm:text-xs text-center font-mono mt-0.5 truncate">
+        {#if paused}
+          <span class="paused-indicator text-[#d4a04a]">PAUSED</span>
+          <!-- <span class="text-white/40">·</span> -->
+        {/if}
+        <span class="text-white/70">{scaleText}</span>
       </div>
     </div>
 
@@ -262,5 +267,14 @@
   .slider-wrap:hover .tick,
   .slider-wrap:focus-within .tick {
     opacity: 0.9;
+  }
+
+  /* Steady-state warning light for the PAUSED indicator. */
+  .paused-indicator {
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
   }
 </style>
