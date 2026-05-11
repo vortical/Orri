@@ -61,9 +61,9 @@
 </script>
 
 <div class="flex flex-col gap-1">
-  <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-    <span class="text-[#d4a04a]">FOV</span>
-    <span class="text-white/85">{formatFov(fov)}</span>
+  <div class="flex items-baseline justify-between">
+    <span class="apollo-label">FOV</span>
+    <span class="apollo-readout">{formatFov(fov)}</span>
   </div>
   <div class="slider-wrap">
     <span

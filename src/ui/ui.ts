@@ -9,7 +9,7 @@ export const userNotify: INotifyService = new NotifyService();
 
 /**
  * App-level UI wiring: browser-history navigation and click-to-target.
- * Settings UI lives in `src/ui/components/SettingsPanel.svelte`.
+ * Settings UI lives in `src/ui/components/Sidebar.svelte`.
  */
 export class SimpleUI {
     constructor(bodySystem: BodySystem) {

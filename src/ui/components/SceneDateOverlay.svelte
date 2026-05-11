@@ -47,8 +47,27 @@
   }
 </script>
 
-<div
-  class="px-3 py-1.5 rounded-md bg-black/40 backdrop-blur-sm text-white/85 font-mono text-xs sm:text-sm tracking-wide pointer-events-none select-none"
->
+<div class="scene-date">
   {format(timeMs, display)}
 </div>
+
+<style>
+  .scene-date {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 112px;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-shadow:
+      1px 1px 3px rgba(0, 0, 0, 0.95),
+      0 0 1em rgba(0, 0, 0, 0.95),
+      0 0 0.2em rgba(0, 0, 0, 0.95);
+    z-index: 30;
+  }
+</style>

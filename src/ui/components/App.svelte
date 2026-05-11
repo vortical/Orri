@@ -13,7 +13,7 @@
   import TargetIndicator from './TargetIndicator.svelte';
   import SpacecraftBrowser from './SpacecraftBrowser.svelte';
   import ShareButton from './ShareButton.svelte';
-  import SettingsPanel from './SettingsPanel.svelte';
+  import Sidebar from './Sidebar.svelte';
   import './apollo-controls.css';
 
   let sceneRoot: HTMLDivElement;
@@ -76,17 +76,19 @@
   {/if}
 
   {#if bodySystem}
-    <!-- Top control-panel strip: each overlay is its own "instrument" panel. -->
-    <div class="absolute top-3 left-3 right-3 flex flex-wrap items-start gap-2 z-30 pointer-events-none">
-      <SceneDateOverlay {bodySystem} />
+    <!-- Top control-panel strip: each overlay is its own "instrument" panel.
+         No explicit z-index here — Tailwind's z-30 would create a stacking
+         context that traps the Sidebar's z-60 below the TimeControlBar (z-40). -->
+    <div class="absolute top-3 left-3 right-3 flex flex-wrap items-start gap-2 pointer-events-none">
+      <Sidebar {bodySystem} />
       <TargetIndicator {bodySystem} />
       <div class="ml-auto flex gap-2">
         <SpacecraftBrowser {bodySystem} />
         <ShareButton {bodySystem} />
-        <SettingsPanel {bodySystem} />
       </div>
     </div>
 
+    <SceneDateOverlay {bodySystem} />
     <TimeControlBar {bodySystem} />
   {/if}
 </div>

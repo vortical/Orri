@@ -88,8 +88,8 @@
   </label>
 
   <div class="flex flex-col gap-1">
-    <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-      <span class="apollo-accent">SELECTED OPACITY</span>
+    <div class="flex items-baseline justify-between">
+      <span class="apollo-label">Selected opacity</span>
       <span class="apollo-readout">{selectedOpacity.toFixed(1)}</span>
     </div>
     <input
@@ -105,8 +105,8 @@
   </div>
 
   <div class="flex flex-col gap-1">
-    <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-      <span class="apollo-accent">UNSELECTED OPACITY</span>
+    <div class="flex items-baseline justify-between">
+      <span class="apollo-label">Unselected opacity</span>
       <span class="apollo-readout">{unselectedOpacity.toFixed(1)}</span>
     </div>
     <input
@@ -131,8 +131,8 @@
 
   {#if lengthType === OrbitLengthType.AngleDegrees}
     <div class="flex flex-col gap-1">
-      <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-        <span class="apollo-accent">ANGLE</span>
+      <div class="flex items-baseline justify-between">
+        <span class="apollo-label">Angle</span>
         <span class="apollo-readout">{angleValue.toFixed(1)}°</span>
       </div>
       <input
@@ -148,8 +148,8 @@
     </div>
   {:else}
     <div class="flex flex-col gap-1">
-      <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-        <span class="apollo-accent">DAYS</span>
+      <div class="flex items-baseline justify-between">
+        <span class="apollo-label">Days</span>
         <span class="apollo-readout">{timeDaysValue.toFixed(1)}</span>
       </div>
       <input

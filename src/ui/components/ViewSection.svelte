@@ -31,8 +31,8 @@
   <FOVControl {bodySystem} />
 
   <div class="flex flex-col gap-1">
-    <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-      <span class="apollo-accent">SIZE SCALE</span>
+    <div class="flex items-baseline justify-between">
+      <span class="apollo-label">Size scale</span>
       <span class="apollo-readout">{sizeScale.toFixed(1)}×</span>
     </div>
     <input
@@ -48,8 +48,8 @@
   </div>
 
   <div class="flex flex-col gap-1">
-    <div class="flex items-baseline justify-between font-mono text-[11px] tracking-widest">
-      <span class="apollo-accent">AMBIENT</span>
+    <div class="flex items-baseline justify-between">
+      <span class="apollo-label">Ambient light</span>
       <span class="apollo-readout">{ambientLight.toFixed(2)}</span>
     </div>
     <input

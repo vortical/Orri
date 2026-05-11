@@ -1,5 +1,5 @@
 /*
- * Shared Apollo-aesthetic control chrome. Reused by SettingsPanel sections
+ * Shared Apollo-aesthetic control chrome. Reused by Sidebar sections
  * and any other place that needs a styled native form input with the
  * recessed-dark + amber accent look.
  */
@@ -199,46 +199,20 @@
   border-color: #d4a04a;
 }
 
-/* -------- Section accordion ------------------------------------------- */
-.apollo-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-.apollo-section:first-child {
-  border-top: none;
-}
+/* -------- Section header (non-interactive heading) -------------------- */
 .apollo-section-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: transparent;
-  border: 0;
-  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  padding: 14px 12px 4px;
+  color: rgba(212, 160, 74, 0.9);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  cursor: pointer;
-  min-height: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-.apollo-section-header:hover {
-  color: rgba(255, 255, 255, 0.85);
-}
-.apollo-section-header[aria-expanded='true'] {
-  color: rgba(212, 160, 74, 0.9);
-}
-.apollo-section-chevron {
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 0.15s ease;
-  margin-left: 8px;
-}
-.apollo-section-header[aria-expanded='true'] .apollo-section-chevron {
-  transform: rotate(45deg);
+.apollo-section-header:first-child {
+  border-top: none;
 }
 .apollo-section-body {
   padding: 4px 12px 12px;
@@ -267,6 +241,64 @@
   font-size: 11px;
   letter-spacing: 0.05em;
 }
-.apollo-accent {
+
+/* -------- Top-row icon button (stateful via aria-pressed) ------------- */
+.apollo-icon-button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.apollo-icon-button:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+.apollo-icon-button[aria-pressed='true'] {
+  background: rgba(0, 0, 0, 0.6);
   color: #d4a04a;
+  border-color: rgba(212, 160, 74, 0.55);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.apollo-icon-button:focus-visible {
+  outline: none;
+  border-color: #d4a04a;
+}
+
+/* Target indicator widens the icon button for icon + name + chevron. */
+.apollo-target-button {
+  padding: 0 10px;
+  gap: 8px;
+}
+
+/* -------- Sidebar (left-edge slide-in rail) --------------------------- */
+.sidebar {
+  position: fixed;
+  /* Start below the top-row strip (top-3 + 40px button + breathing) so the
+     date/target/spacecraft/share controls remain visible and interactive while
+     the sidebar is open. */
+  top: 64px;
+  bottom: 0;
+  left: 0;
+  width: min(92vw, 320px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.4);
+  z-index: 60;
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+}
+.sidebar-open {
+  transform: translateX(0);
 }
