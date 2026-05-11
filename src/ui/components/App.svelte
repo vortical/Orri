@@ -12,12 +12,12 @@
   import SceneDateOverlay from './SceneDateOverlay.svelte';
   import TargetIndicator from './TargetIndicator.svelte';
   import SpacecraftBrowser from './SpacecraftBrowser.svelte';
+  import ShareButton from './ShareButton.svelte';
   import SettingsPanel from './SettingsPanel.svelte';
-  import type GUI from 'lil-gui';
+  import './apollo-controls.css';
 
   let sceneRoot: HTMLDivElement;
   let bodySystem: BodySystem | undefined = $state(undefined);
-  let gui: GUI | undefined = $state(undefined);
   let loading = $state(true);
   let error: string | undefined = $state(undefined);
 
@@ -32,8 +32,7 @@
       const bs = new BodySystem(sceneRoot, bodies, dataService, simulationEngine, options);
       bs.addUpdater(new SpacecraftTrajectoryUpdater());
       bs.setCameraUp(bs.getBody('earth').get_orbital_plane_normal());
-      const ui = new SimpleUI(bs, dataService);
-      gui = ui.gui;
+      new SimpleUI(bs);
       bs.start();
       bodySystem = bs;
       loading = false;
@@ -83,7 +82,8 @@
       <TargetIndicator {bodySystem} />
       <div class="ml-auto flex gap-2">
         <SpacecraftBrowser {bodySystem} />
-        <SettingsPanel {bodySystem} {gui} />
+        <ShareButton {bodySystem} />
+        <SettingsPanel {bodySystem} />
       </div>
     </div>
 

@@ -116,7 +116,7 @@ export class BodySystem {
     locationPin?: LocationPin;
     cameraTargetingState: CameraTargetingState;
     orbitOutlinesStateHandler: OrbitOutlinesStateHandler;
-    nbodyUpdater: BodySystemUpdater;
+    nbodyUpdater: NBodySystemUpdater;
 
     // workerPool: ExecutorPool<{orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]}, NamedArrayBuffer[]> ;
     

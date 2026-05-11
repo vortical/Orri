@@ -1,264 +1,28 @@
-import { BodySystem, SpacecraftMode, SpacecraftModes } from '../scene/BodySystem.ts'
-import { CameraLayer } from '../scene/CameraLayer.ts';
-import GUI from 'lil-gui';
+import { BodySystem } from '../scene/BodySystem.ts';
 import PubSub from 'pubsub-js';
 import { MOUSE_CLICK_ON_BODY_TOPIC } from '../system/event-types.ts';
-import LocationBar from './LocationBar.ts';
 import { PickerEvent } from '../scene/Picker.ts';
 
-
-import { DataService } from '../services/dataservice.ts';
-import { ShadowType } from '../domain/models.ts';
-
-
-import { LatLon } from "../system/LatLon.ts";
-import { CameraMode, CameraModes } from '../scene/CameraTargetingState.ts';
 import { INotifyService, NotifyService } from './notify.ts';
-import { DistanceUnit, DistanceUnits } from '../system/distance.ts';
-import { OrbitLengthType } from '../mesh/OrbitOutline.ts';
-import { throttle } from '../system/throttle.ts';
-import { TimeUnit, unitsToMs } from '../system/time.ts';
-import type { TimeDisplay } from '../system/time.ts';
-
 
 export const userNotify: INotifyService = new NotifyService();
 
-
 /**
- * A terse UI...
+ * App-level UI wiring: browser-history navigation and click-to-target.
+ * Settings UI lives in `src/ui/components/SettingsPanel.svelte`.
  */
 export class SimpleUI {
-    readonly gui: GUI;
-
-    constructor(bodySystem: BodySystem, dataService: DataService) {
-
-        this.gui = buildLilGui(bodySystem, dataService);
-
-        // // Handle the history back button
-        window.addEventListener('popstate', function (event) {
+    constructor(bodySystem: BodySystem) {
+        window.addEventListener('popstate', (event) => {
             if (event.state) {
                 location.href = location.href;
             }
         });
 
-        PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (msg, pickEvent: PickerEvent) => {
+        PubSub.subscribe(MOUSE_CLICK_ON_BODY_TOPIC, (_msg: string, pickEvent: PickerEvent) => {
             if (pickEvent.body && pickEvent.body != bodySystem.getRenderableBodyTarget()) {
                 bodySystem.moveToTarget(pickEvent.body);
             }
         });
     }
-}
-
-
-/**
- * Manage the initialValue of lil-gui controllers, if an exception arises then
- * call reset on the lil-gui component: reset rolls back the value to initialValue.
- * 
- * @param f 
- * @returns 
- */
-function withRollback(f: (v: any) => void) {
-    return function (v: any) {
-        try {
-            f.call(this, v);
-            this.initialValue = v;
-        } catch (e) {
-            this.reset();
-        }
-    };
-}
-
-function buildLilGui(bodySystem: BodySystem, dataService: DataService) {
-    const gui = new GUI().title("Settings");
-
-    const options = {
-        target: bodySystem.getRenderableBodyTarget().getName() || "",
-        sizeScale: 1.0,
-        fov: bodySystem.getFov(),
-        backgroudLightLevel: bodySystem.getAmbiantLightLevel(),
-        showAxes: bodySystem.hasAxesHelper(),
-        showNameLabels: bodySystem.isLayerEnabled(CameraLayer.NameLabel),
-        showDistanceLabels: bodySystem.isLayerEnabled(CameraLayer.DistanceLabel),
-        showAltitudeAzimuthLabels: bodySystem.isLayerEnabled(CameraLayer.ElevationAzimuthLabel),
-        projectShadows: bodySystem.getShadowsEnabled(),
-        shadowType: bodySystem.getShadowType(),
-        distanceUnits: bodySystem.getDistanceUnit().abbrev,
-        timeDisplay: bodySystem.getTimeDisplay(),
-        showStats: bodySystem.hasStats(),
-        location: bodySystem.getLocation()?.toString() || "",
-        targetingCameraMode: bodySystem.getCameraTargetingMode(),
-        spacecraftMode: bodySystem.getSpacecraftMode(),
-        orbitalOutlinesEnabled: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled(),
-        selectedOrbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getSelectedOrbitalOutlinesOpacity(),
-        unselectedOrbitalOutlinesOpacity: bodySystem.orbitOutlinesStateHandler.getUnselectedOrbitalOutlinesOpacity(),
-        orbitalOutlinesLengthType: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType,
-        orbitalOutlinesAngleValue: (bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
-        orbitalOutlinesTimeValue:(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees? 355: bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().value),
-
-
-        pushState() {
-            const state = bodySystem.getState();
-            LocationBar.pushState(state);
-        },
-        reloadState() {
-            LocationBar.reload();
-        },
-        getLocation() {
-            LatLon.fromBrowser().then(
-                (l) => {
-                    const v = `${l.lat}, ${l.lon}`;
-                    locationController.setValue(v);
-                    // not sure we need these calls
-                    locationController.updateDisplay();
-                    locationController._onFinishChange(v);
-                },
-                (e) => {
-                    userNotify.showWarning("Could not get your location!", e.toString().concat(", You will need to add you coordinates manually in the settings."))
-                    gui.open();
-
-                    locationController.setValue('');
-                }
-            );
-        },
-    };
-
-    // Target selection lives in the top-row TargetIndicator now; the lil-gui dropdown
-    // has been retired. Initial target still set below from the options snapshot.
-
-    const targetCameraModeController = gui.add(options, 'targetingCameraMode', CameraModes).name("Camera Mode")
-        .onChange(withRollback((v: CameraMode) => {
-            try {
-                bodySystem.setCameraTargetingMode(v);
-            } catch (e) {
-                userNotify.showWarning("You tried something weird...", (e as Error).message);
-                throw (e);
-            }
-        }));
-
-    gui.add(options, 'spacecraftMode', SpacecraftModes).name("Spacecraft Mode")
-        .onChange((v: SpacecraftMode) => bodySystem.setSpacecraftMode(v));
-
-
-
-    const locationController = gui.add(options, "location").name("Coordinates (lat, lon)").listen()
-        .onFinishChange(withRollback((v: string) => {
-            try {
-                const latlon = LatLon.fromString(v);
-                bodySystem.setLocation(latlon);
-                options.location = bodySystem.getLocation()?.toString() || "";
-            } catch (e) {
-                userNotify.showWarning("Can't process your location!", (e as Error).message);
-                throw (e);
-            }
-        }));
-    gui.add(options, "getLocation").name('Use Browser Location');
-
-    // FOV moved to the SettingsPanel (top-row gear icon) with an exponential slider.
-
-    const labelsSettingsfolder = gui.addFolder('Labels Settings');
-    labelsSettingsfolder.close();
-
-    const showNameLabelsController = labelsSettingsfolder.add(options, "showNameLabels").name('Show Names')
-        .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.NameLabel));
-
-    const showDistanceLabelsController = labelsSettingsfolder.add(options, "showDistanceLabels").name('Show Distances')
-        .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.DistanceLabel));
-
-    labelsSettingsfolder.add(options, 'distanceUnits', DistanceUnits)
-        .onChange((v: DistanceUnit) => bodySystem.setDistanceUnit(v));
-
-    labelsSettingsfolder.add(options, 'timeDisplay', { Local: 'local', UTC: 'utc' }).name('Clock')
-        .onChange((v: TimeDisplay) => bodySystem.setTimeDisplay(v));
-
-    const showAltitudeAzimuthController = labelsSettingsfolder.add(options, "showAltitudeAzimuthLabels").name('Show Alt/Az')
-        .onChange((v: boolean) => bodySystem.setLayerEnabled(v, CameraLayer.ElevationAzimuthLabel));
-
-    const orbitalOutlinesfolder = gui.addFolder('Orbital Outlines');
-
-    const orbitalOutlinesEnabledController = orbitalOutlinesfolder.add(options, "orbitalOutlinesEnabled").name('Show Orbital Outlines')
-        .onChange((v: boolean) => bodySystem.orbitOutlinesStateHandler.setOrbitalOutlinesEnabled(v));
-
-
-    const selectedOrbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "selectedOrbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbit Opacity (selected)')
-        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setSelectedOrbitalOutlinesOpacity(v));
-    
-    const unselectedOrbitalOutlinesOpacityController = orbitalOutlinesfolder.add(options, "unselectedOrbitalOutlinesOpacity", 0.0, 1.0, 0.1).name('Orbit Opacity (unselected)')
-        .onChange((v: number) => bodySystem.orbitOutlinesStateHandler.setUnselectedOrbitalOutlinesOpacity(v));
-            
-    const updateOrbitsAngleInvoker = throttle(100, this, (v) => {
-        bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:v, lengthType:OrbitLengthType.AngleDegrees});
-    });
-
-
-    const updateOrbitsTimeInvoker = throttle(100, this, (v) => {
-            bodySystem.orbitOutlinesStateHandler.setOrbitalOutlineLength({value:unitsToMs(v, TimeUnit.Days), lengthType:OrbitLengthType.Time});
-    });
-
-
-    const orbitalOutlinesAngleValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesAngleValue", 0.001, 355, 0.01).name('Orbital Angle (degrees)')
-        .onChange(updateOrbitsAngleInvoker)
-        .enable(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees)
-        .show(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.AngleDegrees);
-
-    const orbitalOutlineTimeValueController = orbitalOutlinesfolder.add(options, "orbitalOutlinesTimeValue", 0.01, 365*248 , 0.01).name('Orbital Time (day)')
-        .onChange(updateOrbitsTimeInvoker)
-        .enable(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time)
-        .show(bodySystem.orbitOutlinesStateHandler.getOrbitalOutlineLength().lengthType == OrbitLengthType.Time);
-
-    const orbitalOutlinesLengthTypeController = orbitalOutlinesfolder.add(options, "orbitalOutlinesLengthType", OrbitLengthType).name('Orbital Outlines Type')
-        .onChange((v: OrbitLengthType) => {
-            if(v == OrbitLengthType.AngleDegrees){
-                orbitalOutlinesAngleValueController.enable();
-                orbitalOutlinesAngleValueController.show();
-                orbitalOutlineTimeValueController.disable();
-                orbitalOutlineTimeValueController.hide();
-                const value = orbitalOutlinesAngleValueController.getValue();
-                updateOrbitsAngleInvoker(value);
-
-
-            }else{
-                orbitalOutlinesAngleValueController.disable();
-                orbitalOutlineTimeValueController.enable();
-                orbitalOutlineTimeValueController.show()
-                orbitalOutlinesAngleValueController.hide();
-                const value = orbitalOutlineTimeValueController.getValue();
-                updateOrbitsTimeInvoker(value);
-            }
-
-        });
-
-
-    const shadowsSettingsfolder = gui.addFolder('Eclipse/shadow Settings');
-
-    const projectShadowsController = shadowsSettingsfolder.add(options, "projectShadows").name('Cast Shadows')
-        .onChange((v: boolean) => bodySystem.setShadowsEnabled(v));
-
-    const shadowTypeController = shadowsSettingsfolder.add(options, "shadowType", ShadowType).name('Shadow Type')
-        .onChange((v: ShadowType) => bodySystem.setShadowType(v));
-
-    const viewSettingsfolder = gui.addFolder('View Settings');
-
-    const scaleController = viewSettingsfolder.add(options, "sizeScale", 1.0, 200.0, 0.1).name('Size Scale')
-        .onChange((v: number) => bodySystem.setScale(v));
-
-    const backgroundLightLevelController = viewSettingsfolder.add(options, "backgroudLightLevel", 0, 0.4, 0.01).name('Ambiant Light')
-        .onChange((v: number) => bodySystem.setAmbiantLightLevel(v));
-
-    const toolsFolder = gui.addFolder('Tools').close();
-
-    const showAxesController = toolsFolder.add(options, "showAxes").name('ICRS Axes')
-        .onChange((v: boolean) => bodySystem.setAxesHelper(v));
-
-    const showStatsController = toolsFolder.add(options, "showStats").name('Perf Stats')
-        .onChange((v: boolean) => bodySystem.showStats(v));
-
-    gui.add(options, "pushState").name('Push State to Location Bar and History');
-    gui.add(options, "reloadState").name('Reload Pushed State');
-
-
-    bodySystem.setTarget(options.target);
-    // Hide by default — entry point is now the SettingsPanel gear icon, which calls
-    // gui.show() on demand for advanced/legacy controls.
-    gui.hide();
-    return gui;
 }

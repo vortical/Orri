@@ -31,35 +31,6 @@ html, body {
   font-size: smaller;
 }
 
-.lil-gui {
-  --name-width: 35%;
-}
-
-/* Tailwind Preflight resets <select>, <input>, <button> — restore lil-gui's dark theme. */
-.lil-gui select,
-.lil-gui input,
-.lil-gui button {
-  background-color: var(--widget-color);
-  color: var(--text-color);
-  border: 1px solid transparent;
-  font: inherit;
-}
-.lil-gui select:hover,
-.lil-gui input:hover,
-.lil-gui button:hover {
-  background-color: var(--hover-color);
-}
-.lil-gui select:focus,
-.lil-gui input:focus,
-.lil-gui button:focus {
-  background-color: var(--focus-color);
-  outline: none;
-}
-.lil-gui select option {
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
 /* userNotify toasts */
 .notice {
   cursor: pointer;

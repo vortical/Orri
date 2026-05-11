@@ -1,24 +1,26 @@
 <script lang="ts">
   import Settings from 'lucide-svelte/icons/settings';
   import type { BodySystem } from '../../scene/BodySystem';
-  import type GUI from 'lil-gui';
-  import FOVControl from './FOVControl.svelte';
+  import ViewSection from './ViewSection.svelte';
+  import LabelsSection from './LabelsSection.svelte';
+  import ShadowsSection from './ShadowsSection.svelte';
+  import CameraSection from './CameraSection.svelte';
+  import OrbitsSection from './OrbitsSection.svelte';
+  import ToolsSection from './ToolsSection.svelte';
 
   type Props = {
     bodySystem: BodySystem;
-    gui?: GUI;
   };
 
-  let { bodySystem, gui }: Props = $props();
+  let { bodySystem }: Props = $props();
 
   let open = $state(false);
-  let advancedOpen = $state(false);
 
-  function toggleAdvanced() {
-    advancedOpen = !advancedOpen;
-    if (!gui) return;
-    if (advancedOpen) gui.show();
-    else gui.hide();
+  // Track which section is expanded. VIEW open by default.
+  let sectionsOpen = $state<Record<string, boolean>>({ view: true });
+
+  function toggleSection(key: string) {
+    sectionsOpen[key] = !sectionsOpen[key];
   }
 
   function closePanel() {
@@ -47,25 +49,110 @@
     ></button>
 
     <div
-      class="absolute right-0 top-full mt-1 w-[min(92vw,300px)] rounded-md bg-black/70 backdrop-blur-sm ring-1 ring-white/15 shadow-lg flex flex-col z-50 overflow-hidden"
+      class="absolute right-0 top-full mt-1 w-[min(92vw,320px)] max-h-[80vh] overflow-y-auto rounded-md bg-black/70 backdrop-blur-sm ring-1 ring-white/15 shadow-lg flex flex-col z-50"
     >
-      <div class="px-3 py-2 border-b border-white/10 text-[10px] uppercase text-white/40 font-mono tracking-widest">
-        View
-      </div>
-      <div class="px-3 py-2">
-        <FOVControl {bodySystem} />
-      </div>
-
-      <div class="px-3 py-2 border-t border-white/10 flex items-center justify-between">
-        <span class="text-[10px] uppercase text-white/40 font-mono tracking-widest">Advanced</span>
+      <div class="apollo-section">
         <button
           type="button"
-          onclick={toggleAdvanced}
-          class="px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition text-[11px] font-mono text-white/85 uppercase tracking-wide"
+          class="apollo-section-header"
+          aria-expanded={sectionsOpen.view}
+          onclick={() => toggleSection('view')}
         >
-          {advancedOpen ? 'Hide' : 'Show'}
+          <span>View</span>
+          <span class="apollo-section-chevron" aria-hidden="true"></span>
         </button>
+        {#if sectionsOpen.view}
+          <div class="apollo-section-body">
+            <ViewSection {bodySystem} />
+          </div>
+        {/if}
       </div>
+
+      <div class="apollo-section">
+        <button
+          type="button"
+          class="apollo-section-header"
+          aria-expanded={sectionsOpen.camera}
+          onclick={() => toggleSection('camera')}
+        >
+          <span>Camera</span>
+          <span class="apollo-section-chevron" aria-hidden="true"></span>
+        </button>
+        {#if sectionsOpen.camera}
+          <div class="apollo-section-body">
+            <CameraSection {bodySystem} />
+          </div>
+        {/if}
+      </div>
+
+      <div class="apollo-section">
+        <button
+          type="button"
+          class="apollo-section-header"
+          aria-expanded={sectionsOpen.labels}
+          onclick={() => toggleSection('labels')}
+        >
+          <span>Labels</span>
+          <span class="apollo-section-chevron" aria-hidden="true"></span>
+        </button>
+        {#if sectionsOpen.labels}
+          <div class="apollo-section-body">
+            <LabelsSection {bodySystem} />
+          </div>
+        {/if}
+      </div>
+
+      <div class="apollo-section">
+        <button
+          type="button"
+          class="apollo-section-header"
+          aria-expanded={sectionsOpen.orbits}
+          onclick={() => toggleSection('orbits')}
+        >
+          <span>Orbits</span>
+          <span class="apollo-section-chevron" aria-hidden="true"></span>
+        </button>
+        {#if sectionsOpen.orbits}
+          <div class="apollo-section-body">
+            <OrbitsSection {bodySystem} />
+          </div>
+        {/if}
+      </div>
+
+      <div class="apollo-section">
+        <button
+          type="button"
+          class="apollo-section-header"
+          aria-expanded={sectionsOpen.shadows}
+          onclick={() => toggleSection('shadows')}
+        >
+          <span>Shadows</span>
+          <span class="apollo-section-chevron" aria-hidden="true"></span>
+        </button>
+        {#if sectionsOpen.shadows}
+          <div class="apollo-section-body">
+            <ShadowsSection {bodySystem} />
+          </div>
+        {/if}
+      </div>
+
+      <div class="apollo-section">
+        <button
+          type="button"
+          class="apollo-section-header"
+          aria-expanded={sectionsOpen.tools}
+          onclick={() => toggleSection('tools')}
+        >
+          <span>Tools</span>
+          <span class="apollo-section-chevron" aria-hidden="true"></span>
+        </button>
+        {#if sectionsOpen.tools}
+          <div class="apollo-section-body">
+            <ToolsSection {bodySystem} />
+          </div>
+        {/if}
+      </div>
+
     </div>
   {/if}
 </div>
