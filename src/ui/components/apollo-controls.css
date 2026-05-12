@@ -214,11 +214,108 @@
 .apollo-section-header:first-child {
   border-top: none;
 }
+
+/* Master-toggle variant: section header IS the master row. */
+.apollo-section-header-with-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 8px;
+}
+.apollo-section-header-with-controls .apollo-section-title {
+  color: rgba(212, 160, 74, 0.9);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.apollo-section-header-with-controls .apollo-toggle {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.apollo-section-header-with-controls .apollo-options-toggle {
+  flex-shrink: 0;
+}
+
 .apollo-section-body {
   padding: 4px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+.apollo-section-body.apollo-options-body {
+  /* When the options body sits directly under a master-toggle header (no
+     surrounding section-body wrapper), bump left padding so the sub-tree
+     border-line aligns under the title text. */
+  padding-left: 24px;
+}
+
+/* -------- Options disclosure (master toggle's sub-tree) --------------
+   Chevron-only icon button. Down (▾) when collapsed, up (▴) when expanded
+   — the standard accordion pattern. */
+.apollo-options-toggle {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.apollo-options-toggle:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+}
+.apollo-options-toggle:focus-visible {
+  outline: none;
+  color: #d4a04a;
+}
+.apollo-options-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+.apollo-options-toggle[aria-expanded='true'] .apollo-options-chevron {
+  transform: rotate(-135deg);
+}
+.apollo-options-body {
+  padding-left: 12px;
+  margin-left: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.apollo-options-body.is-disabled {
+  opacity: 0.45;
+}
+
+/* -------- Bottom "show debug tools" link ------------------------------ */
+.apollo-debug-toggle {
+  margin: 16px 12px;
+  align-self: flex-start;
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.apollo-debug-toggle:hover {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* -------- Row + label layout helpers ---------------------------------- */

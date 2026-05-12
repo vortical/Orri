@@ -1,23 +1,33 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { BodySystem } from '../../scene/BodySystem';
+  import { CameraModes, type CameraMode } from '../../scene/CameraTargetingState';
+  import { userNotify } from '../ui';
   import FOVControl from './FOVControl.svelte';
 
   type Props = { bodySystem: BodySystem };
   let { bodySystem }: Props = $props();
 
-  let sizeScale = $state(1.0);
+  type CameraModeKey = keyof typeof CameraModes;
+
+  // Only Look-At and Follow are exposed; ViewTargetFromSurface is hidden
+  // until the multi-pin "view from pin" UX lands.
+  const exposedCameraModeKeys: CameraModeKey[] = ['LookAtTarget', 'FollowTarget'];
+
   let ambientLight = $state(0.025);
+  let cameraModeKey = $state<CameraModeKey>('FollowTarget');
 
   onMount(() => {
-    sizeScale = bodySystem.getScale();
     ambientLight = bodySystem.getAmbiantLightLevel();
+    cameraModeKey = currentCameraModeKey();
   });
 
-  function onSizeScaleInput(event: Event) {
-    const value = parseFloat((event.target as HTMLInputElement).value);
-    sizeScale = value;
-    bodySystem.setScale(value);
+  function currentCameraModeKey(): CameraModeKey {
+    const current = bodySystem.getCameraTargetingMode();
+    for (const key of exposedCameraModeKeys) {
+      if (CameraModes[key] === current) return key;
+    }
+    return 'FollowTarget';
   }
 
   function onAmbientLightInput(event: Event) {
@@ -25,27 +35,23 @@
     ambientLight = value;
     bodySystem.setAmbiantLightLevel(value);
   }
+
+  function onCameraMode(event: Event) {
+    const key = (event.target as HTMLSelectElement).value as CameraModeKey;
+    const previous = cameraModeKey;
+    const mode: CameraMode = CameraModes[key];
+    try {
+      bodySystem.setCameraTargetingMode(mode);
+      cameraModeKey = key;
+    } catch (e) {
+      userNotify.showWarning('You tried something weird...', (e as Error).message);
+      cameraModeKey = previous;
+    }
+  }
 </script>
 
 <div class="flex flex-col gap-3">
   <FOVControl {bodySystem} />
-
-  <div class="flex flex-col gap-1">
-    <div class="flex items-baseline justify-between">
-      <span class="apollo-label">Size scale</span>
-      <span class="apollo-readout">{sizeScale.toFixed(1)}×</span>
-    </div>
-    <input
-      type="range"
-      min="1"
-      max="200"
-      step="0.1"
-      value={sizeScale}
-      oninput={onSizeScaleInput}
-      aria-label="Body size scale"
-      class="apollo-slider w-full touch-pan-x"
-    />
-  </div>
 
   <div class="flex flex-col gap-1">
     <div class="flex items-baseline justify-between">
@@ -63,4 +69,13 @@
       class="apollo-slider w-full touch-pan-x"
     />
   </div>
+
+  <label class="apollo-row">
+    <span class="apollo-label">Camera mode</span>
+    <select class="apollo-select" value={cameraModeKey} onchange={onCameraMode}>
+      {#each exposedCameraModeKeys as key}
+        <option value={key}>{CameraModes[key].name}</option>
+      {/each}
+    </select>
+  </label>
 </div>

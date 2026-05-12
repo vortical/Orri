@@ -193,9 +193,14 @@ export class BodySystem {
         }
         
         this.cameraTargetingState = targettingCameraMode.stateBuilder(this);
-        this.cameraTargetingState.postTargetSet(this.target);        
+        this.cameraTargetingState.postTargetSet(this.target);
         this.orbitOutlinesStateHandler.setTargetBody(this.target);
-        // this.initializeOrbitOutlines();
+
+        // Default new scenes to Trajectory mode for spacecraft.
+        // URL-state with explicit per-body `useTrajectory` will override this
+        // since BodySystemOptionsState doesn't carry a top-level spacecraftMode
+        // toggle today.
+        this.setSpacecraftMode(SpacecraftModes.Trajectory);
     }
 
 

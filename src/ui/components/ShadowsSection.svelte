@@ -8,6 +8,7 @@
 
   let castShadows = $state(true);
   let shadowType = $state<ShadowType>(ShadowType.Penumbra);
+  let optionsOpen = $state(false);
 
   onMount(() => {
     castShadows = bodySystem.getShadowsEnabled();
@@ -26,22 +27,34 @@
   }
 </script>
 
-<div class="flex flex-col gap-2">
-  <label class="apollo-row">
-    <span class="apollo-label">Cast shadows</span>
-    <input
-      type="checkbox"
-      class="apollo-toggle"
-      checked={castShadows}
-      onchange={onCastShadows}
-    />
-  </label>
+<header class="apollo-section-header apollo-section-header-with-controls">
+  <span class="apollo-section-title">Eclipses</span>
+  <input
+    type="checkbox"
+    class="apollo-toggle"
+    checked={castShadows}
+    onchange={onCastShadows}
+    aria-label="Eclipses"
+  />
+  <button
+    type="button"
+    class="apollo-options-toggle"
+    aria-expanded={optionsOpen}
+    aria-label={optionsOpen ? 'Hide options' : 'Show options'}
+    onclick={() => (optionsOpen = !optionsOpen)}
+  >
+    <span class="apollo-options-chevron" aria-hidden="true"></span>
+  </button>
+</header>
 
-  <label class="apollo-row">
-    <span class="apollo-label">Shadow type</span>
-    <select class="apollo-select" value={shadowType} onchange={onShadowType}>
-      <option value={ShadowType.Umbra}>Umbra</option>
-      <option value={ShadowType.Penumbra}>Penumbra</option>
-    </select>
-  </label>
-</div>
+{#if optionsOpen}
+  <div class="apollo-section-body apollo-options-body" class:is-disabled={!castShadows}>
+    <label class="apollo-row">
+      <span class="apollo-label">Shadow type</span>
+      <select class="apollo-select" value={shadowType} onchange={onShadowType}>
+        <option value={ShadowType.Umbra}>Umbra</option>
+        <option value={ShadowType.Penumbra}>Penumbra</option>
+      </select>
+    </label>
+  </div>
+{/if}
