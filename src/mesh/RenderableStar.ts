@@ -132,6 +132,15 @@ export class RenderableStar extends RenderableBody {
         return this.shadowingLight !== undefined;
     }
 
+    getIntensity(): number {
+        return this.lightProperties.intensity;
+    }
+
+    setIntensity(value: number) {
+        this.lightProperties.intensity = value;
+        this.#updateLightIntensities();
+    }
+
     /**
      * The 'shadowing'Light and pointlight's intensities have a total value of this.lightProperties.intensity.
      * When shadowingLight is active, it will have SHADOW_LIGHT_TO_POINT_LIGHT_RATIO; hence if its total intensity is 3 and the ratio is 2,

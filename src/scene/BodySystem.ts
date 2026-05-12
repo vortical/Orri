@@ -493,6 +493,16 @@ export class BodySystem {
         this.ambiantLight.intensity = level;
     }
 
+    getSunLightIntensity(): number {
+        const sun = this.getRenderableBody('sun') as RenderableStar;
+        return sun.getIntensity();
+    }
+
+    setSunLightIntensity(value: number) {
+        const sun = this.getRenderableBody('sun') as RenderableStar;
+        sun.setIntensity(value);
+    }
+
     getFov(): number {
         return this.camera.getEffectiveFOV();
     }
