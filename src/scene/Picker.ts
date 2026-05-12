@@ -71,7 +71,7 @@ export class PointerInteraction {
      */
     handleHover(event: MouseEvent) {
         if (!this.picker.isEnabled) return;
-        if (!(event.target instanceof HTMLCanvasElement)) return;
+        if (!this.isSceneClick(event)) return;
 
         PubSub.publish(MOUSE_HOVER_OVER_BODY_TOPIC, {
             body: this.picker.pick({
@@ -95,9 +95,28 @@ export class PointerInteraction {
         
     }
     
+    /**
+     * True when the event happened on the scene area (canvas or the
+     * labelRenderer's empty space) and NOT on a body label. Body labels have
+     * their own pointerdown handler in ObjectLabels.setupLabelClickHandler that
+     * publishes the click — running the raycaster as well would race with that
+     * handler and could overwrite the result with a `body: null` miss.
+     */
+    isSceneClick(event: MouseEvent): boolean {
+        const target = event.target as Node | null;
+        if (!target) return false;
+        const sceneRoot = this.picker.bodySystem.parentElement;
+        if (!sceneRoot.contains(target)) return false;
+        const labelContainer = this.picker.bodySystem.labelRenderer.domElement;
+        // Skip if click is on a label (descendant of labelContainer but not
+        // the container itself).
+        if (target !== labelContainer && labelContainer.contains(target)) return false;
+        return true;
+    }
+
     handlePointerUp(event: MouseEvent){
 
-        if (!this.hasMoved && this.picker.isEnabled && event.target instanceof HTMLCanvasElement) {
+        if (!this.hasMoved && this.picker.isEnabled && this.isSceneClick(event)) {
             PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, {
                 body: this.picker.pick({
                     x: (event.clientX / window.innerWidth) * 2 - 1,

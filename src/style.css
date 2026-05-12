@@ -5,29 +5,31 @@ html, body {
   overflow: hidden;
 }
 
+/* Scene body labels rendered by Three.js's CSS2DRenderer. Shared chrome:
+   monospace for digit stability, subtle dark pill for guaranteed contrast over
+   bright body surfaces, text-shadow halo for redundant legibility. Selected
+   body uses the Apollo amber accent (#d4a04a) — same colour as the
+   TargetIndicator's body name, linking "what's targeted" across UI + scene. */
+.label,
 .selectedSystemLabel {
-  text-shadow: 1px 1px 3px black, 0 0 1em black, 0 0 0.2em black;
-  color: #f89406;
-  font-family: sans-serif;
-  padding: 2px;
-  background: rgba(0, 0, 0, .6);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
   text-align: right;
+  user-select: none;
+  cursor: pointer;
+  text-shadow:
+    1px 1px 3px rgba(0, 0, 0, 0.95),
+    0 0 1em rgba(0, 0, 0, 0.95),
+    0 0 0.2em rgba(0, 0, 0, 0.95);
 }
 
+.label               { color: #979797; }
+.selectedSystemLabel { color: #d4a04a; }
+
+.label.info,
 .selectedSystemLabel.info {
-  font-size: smaller;
-}
-
-.label {
-  text-shadow: 1px 1px 3px black, 0 0 1em black, 0 0 0.2em black;
-  color: #979797;
-  font-family: sans-serif;
-  padding: 2px;
-  background: rgba(0, 0, 0, .6);
-  text-align: right;
-}
-
-.label.info {
   font-size: smaller;
 }
 
