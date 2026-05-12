@@ -111,13 +111,13 @@
   {#if open}
     <button
       type="button"
-      class="fixed inset-0 z-40 cursor-default"
+      class="fixed inset-0 z-[65] cursor-default"
       aria-label="Close spacecraft browser"
       onclick={() => (open = false)}
     ></button>
 
     <div
-      class="absolute right-0 top-full mt-1 w-[min(92vw,460px)] max-h-[70vh] overflow-hidden rounded-md bg-black/70 backdrop-blur-sm ring-1 ring-white/15 shadow-lg flex flex-col z-50"
+      class="absolute right-0 top-full mt-1 w-[min(92vw,460px)] max-h-[70vh] overflow-hidden rounded-md bg-black/70 backdrop-blur-sm ring-1 ring-white/15 shadow-lg flex flex-col z-[70]"
     >
       <input
         bind:this={inputEl}

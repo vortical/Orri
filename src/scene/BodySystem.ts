@@ -758,6 +758,13 @@ function createLabelRender(): CSS2DRenderer {
     const labelRenderer = new CSS2DRenderer();
     labelRenderer.domElement.style.position = 'absolute';
     labelRenderer.domElement.style.top = '0px';
+    // Force a stacking context so the per-label z-index values CSS2DRenderer
+    // assigns for depth sorting are confined to this subtree. Using `isolation`
+    // creates the context without giving the container an explicit z-index,
+    // so the labels paint at the renderer's natural DOM position (between the
+    // canvas and the top-row UI) — they sort against each other correctly but
+    // never outrank elements that come after in DOM order.
+    labelRenderer.domElement.style.isolation = 'isolate';
     return labelRenderer;
 }
 

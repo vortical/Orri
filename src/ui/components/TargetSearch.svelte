@@ -109,7 +109,7 @@
 <svelte:window onkeydown={onKeyDown} />
 
 <div
-  class="absolute left-0 top-full mt-1 w-[min(92vw,440px)] max-h-[70vh] overflow-hidden rounded-md bg-black/70 backdrop-blur-sm ring-1 ring-white/15 shadow-lg flex flex-col z-50"
+  class="absolute left-0 top-full mt-1 w-[min(92vw,440px)] max-h-[70vh] overflow-hidden rounded-md bg-black/70 backdrop-blur-sm ring-1 ring-white/15 shadow-lg flex flex-col z-[70]"
 >
   <input
     bind:this={inputEl}

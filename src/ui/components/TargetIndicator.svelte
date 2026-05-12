@@ -71,7 +71,7 @@
          hits the backdrop first, which closes — equivalent to a toggle-off. -->
     <button
       type="button"
-      class="fixed inset-0 z-40 cursor-default"
+      class="fixed inset-0 z-[65] cursor-default"
       aria-label="Close target search"
       onclick={() => (searchOpen = false)}
     ></button>
