@@ -42,7 +42,7 @@
 
   function scaleToIndex(s: number): number {
     if (s === 0) return 0;
-    const sign = Math.sign(s);
+    
     const abs = Math.abs(s);
     let bestIdx = 0;
     let bestDiff = Infinity;
@@ -53,7 +53,7 @@
         bestIdx = i;
       }
     }
-    return sign * bestIdx;
+    return Math.sign(s) * bestIdx;
   }
 
   function indexToScale(i: number): number {

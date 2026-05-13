@@ -22,10 +22,7 @@
   let filtered = $derived.by(() => {
     const q = query.trim().toLowerCase();
     if (!q) return allCraft;
-    return allCraft.filter((b) => {
-      const hay = (b.name + ' ' + (b.summary ?? '')).toLowerCase();
-      return hay.includes(q);
-    });
+    return allCraft.filter((b) => b.name.toLowerCase().includes(q) || (b.summary ?? '').toLowerCase().includes(q));
   });
 
   $effect(() => {
@@ -40,11 +37,19 @@
     el?.scrollIntoView({ block: 'nearest' });
   });
 
-  function pad(n: number): string {
-    return n.toString().padStart(2, '0');
-  }
+
+  $effect(() => {
+    if (open) {
+      tick().then(() => inputEl?.focus());
+    }
+  });
+
 
   function fmtDate(ms: number): string {
+    function pad(n: number): string {
+      return n.toString().padStart(2, '0');
+    }
+
     const d = new Date(ms);
     return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
   }
@@ -59,13 +64,17 @@
     return '<1h';
   }
 
-  function commit(i: number) {
+  function selectSpacecraft(i: number) {
     const c = filtered[i];
     if (!c?.missionWindow) return;
     const start = new Date(c.missionWindow.startMs);
     bodySystem.setSystemTime(start);
-    const rb = bodySystem.getRenderableBody(c.name);
-    if (rb) bodySystem.moveToTarget(rb);
+    const renderableBody = bodySystem.getRenderableBody(c.name);
+    bodySystem.setTarget(renderableBody);
+    bodySystem.moveToTarget(renderableBody, true);
+
+    // if (renderableBody) bodySystem.moveToTarget(renderableBody, true);
+    // if (renderableBody) bodySystem.setTarget(renderableBody);
     open = false;
     query = '';
   }
@@ -83,15 +92,11 @@
       highlightIndex = Math.max(0, highlightIndex - 1);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      commit(highlightIndex);
+      selectSpacecraft(highlightIndex);
     }
   }
 
-  $effect(() => {
-    if (open) {
-      tick().then(() => inputEl?.focus());
-    }
-  });
+
 </script>
 
 <svelte:window onkeydown={onKeyDown} />
@@ -133,7 +138,7 @@
           <button
             type="button"
             data-row-index={i}
-            onclick={() => commit(i)}
+            onclick={() => selectSpacecraft(i)}
             onmouseenter={() => (highlightIndex = i)}
             class="w-full text-left px-3 py-2 flex flex-col gap-0.5 font-mono text-xs sm:text-sm transition border-b border-white/5"
             class:row-active={i === highlightIndex}

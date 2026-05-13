@@ -147,7 +147,7 @@ export class BodySystem {
         parentElement.append(this.renderer.domElement);
         this.labelRenderer = createLabelRender();
         parentElement.append(this.labelRenderer.domElement);
-        this.renderableBodyByName = this.createObjects3D(this.bodies, timeMs);
+        this.renderableBodyByName = this.createRenderableBodies(this.bodies, timeMs);
         this.renderableBodies = Array.from(this.renderableBodyByName.values()); 
         this.controls = createControls(this.camera, this.labelRenderer.domElement);
         this.controls.enabled = false;
@@ -351,31 +351,7 @@ export class BodySystem {
         return this.timeDisplay;
     }
 
-    getState(): BodySystemOptionsState {
-        const options: BodySystemOptionsState = {};
-        options.cameraPosition = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
-        options.targetPosition = { x: this.controls.target.x, y: this.controls.target.y, z: this.controls.target.z };
-        options.target = this.target?.getName() || "";
-        options.sizeScale = this.getScale();
-        options.timeScale = this.getTimeScale();
-        options.fov = this.getFov();
-        options.ambientLightLevel = this.getAmbiantLightLevel();
-        options.showAxes = this.hasAxesHelper();
-        options.castShadows = this.getShadowsEnabled();
-        options.shadowType = this.getShadowType();
-        options.date = this.clock.getTime();
-        options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
-        options.showDistance = this.isLayerEnabled(CameraLayer.DistanceLabel);
-        options.showAltitudeAzimuth = this.isLayerEnabled(CameraLayer.ElevationAzimuthLabel);
-        options.location = this.getLocation();
-        options.targettingCameraMode = this.getCameraTargetingMode();
-        options.orbitalOutlinesEnabled = this.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled();
-        options.selectedOrbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getSelectedOrbitalOutlinesOpacity();
-        options.unselectedOrbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getUnselectedOrbitalOutlinesOpacity();
-        options.orbitalOutlinesLength = this.orbitOutlinesStateHandler.getOrbitalOutlineLength();
 
-        return options;
-    }
 
     isLayerEnabled(layer: CameraLayer): boolean {
         return this.camera.layers.isEnabled(layer);
@@ -521,16 +497,16 @@ export class BodySystem {
         return this.target;
     }
 
-    moveToTarget(bodyObject3D: RenderableBody, forceMoveCloser = false) {
-        if (this.getRenderableBodyTarget() == bodyObject3D && !forceMoveCloser) {
+    moveToTarget(renderableBody: RenderableBody, forceMoveCloser = false) {
+        if (this.getRenderableBodyTarget() == renderableBody && !forceMoveCloser) {
             return;
         }
 
-        if (bodyObject3D == this.getRenderableBody("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
+        if (renderableBody == this.getRenderableBody("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
             throw new Error("Can't select Earth as target while viewing from Earth's surface.");
         }
 
-        this.cameraTargetingState.moveToTarget(bodyObject3D, forceMoveCloser);
+        this.cameraTargetingState.moveToTarget(renderableBody, forceMoveCloser);
     }
 
 
@@ -714,11 +690,37 @@ export class BodySystem {
         this.labelRenderer.render(this.scene, this.camera);
     }
 
+    getState(): BodySystemOptionsState {
+        const options: BodySystemOptionsState = {};
+        options.cameraPosition = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
+        options.targetPosition = { x: this.controls.target.x, y: this.controls.target.y, z: this.controls.target.z };
+        options.target = this.target?.getName() || "";
+        options.sizeScale = this.getScale();
+        options.timeScale = this.getTimeScale();
+        options.fov = this.getFov();
+        options.ambientLightLevel = this.getAmbiantLightLevel();
+        options.showAxes = this.hasAxesHelper();
+        options.castShadows = this.getShadowsEnabled();
+        options.shadowType = this.getShadowType();
+        options.date = this.clock.getTime();
+        options.showNames = this.isLayerEnabled(CameraLayer.NameLabel);
+        options.showDistance = this.isLayerEnabled(CameraLayer.DistanceLabel);
+        options.showAltitudeAzimuth = this.isLayerEnabled(CameraLayer.ElevationAzimuthLabel);
+        options.location = this.getLocation();
+        options.targettingCameraMode = this.getCameraTargetingMode();
+        options.orbitalOutlinesEnabled = this.orbitOutlinesStateHandler.getOrbitalOutlinesEnabled();
+        options.selectedOrbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getSelectedOrbitalOutlinesOpacity();
+        options.unselectedOrbitalOutlinesOpacity = this.orbitOutlinesStateHandler.getUnselectedOrbitalOutlinesOpacity();
+        options.orbitalOutlinesLength = this.orbitOutlinesStateHandler.getOrbitalOutlineLength();
+
+        return options;
+    }    
+
     /** 
      * @param bodies 
      * @returns Map<string, RenderableBody> 
      */
-    createObjects3D(bodies: Body[], timeMs: number): Map<string, RenderableBody> {
+    createRenderableBodies(bodies: Body[], timeMs: number): Map<string, RenderableBody> {
 
       const bodySystem = this;
 
