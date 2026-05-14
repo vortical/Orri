@@ -16,11 +16,11 @@
   onMount(() => {
     timeMs = bodySystem.clock.getTime();
     display = bodySystem.getTimeDisplay();
-    timeSub = PubSub.subscribe(SYSTEM_TIME_TOPIC, (_msg: any, t: number) => {
-      timeMs = t;
+    timeSub = PubSub.subscribe(SYSTEM_TIME_TOPIC, (_msg: any, nextTimeMs: number) => {
+      timeMs = nextTimeMs;
     });
-    displaySub = PubSub.subscribe(TIME_DISPLAY_TOPIC, (_msg: any, v: TimeDisplay) => {
-      display = v;
+    displaySub = PubSub.subscribe(TIME_DISPLAY_TOPIC, (_msg: any, mode: TimeDisplay) => {
+      display = mode;
     });
   });
 
@@ -29,21 +29,21 @@
     PubSub.unsubscribe(displaySub);
   });
 
-  function pad(n: number): string {
-    return n.toString().padStart(2, '0');
+  function pad(value: number): string {
+    return value.toString().padStart(2, '0');
   }
 
-  function localZoneAbbrev(d: Date): string {
-    const parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
-    return parts.find(p => p.type === 'timeZoneName')?.value ?? 'LOCAL';
+  function localZoneAbbrev(date: Date): string {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(date);
+    return parts.find(part => part.type === 'timeZoneName')?.value ?? 'LOCAL';
   }
 
   function format(ms: number, mode: TimeDisplay): string {
-    const d = new Date(ms);
+    const date = new Date(ms);
     if (mode === 'utc') {
-      return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+      return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())} UTC`;
     }
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${localZoneAbbrev(d)}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} ${localZoneAbbrev(date)}`;
   }
 </script>
 

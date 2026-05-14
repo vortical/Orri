@@ -73,37 +73,41 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
 
 
     /**
-     * Pretty Lerp of the camera towards the target.     * 
+     * Pretty Lerp of the camera towards the target and sets it!   * 
      * 
-     * @param bodyObject3D 
+     * @param movetoRenderable 
      * @param force 
      * @returns 
      */
 
-    moveToTarget(bodyObject3D: RenderableBody, force = false): void {
+    moveToTarget(movetoRenderable: RenderableBody, force = false): void {
 
         const bodySystem = this.bodySystem;
 
-        if (bodySystem.getRenderableBodyTarget() == bodyObject3D && !force) return;
+        if (bodySystem.getRenderableBodyTarget() == movetoRenderable && !force) return;
 
         bodySystem.controls.enabled = false;
 
-        const currentBodyObject3d = bodySystem.getRenderableBodyTarget();
+        const currentTargetRenderable = bodySystem.getRenderableBodyTarget();
         const currentTargetPosition = this.bodySystem.controls.target.clone();
-        const newTargetPosition = bodyObject3D.object3D.position;
+        const newTargetPosition = movetoRenderable.object3D.position;
         const currentCameraPosition = this.bodySystem.camera.position;
         const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition);
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition);
         const newTargetVectorNormal = newTargetVector.clone().normalize();
-        const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
-        const totalDistance = Math.max(
+
+        const currentDistanceToSurface = currentTargetRenderable.cameraDistanceFromSurface();
+        const maxDesirableDistance = this.max_distance_ratio * movetoRenderable.body.radius / 1000 ;
+        const minAcceptableDistance = this.minCameraDistance(movetoRenderable);
+        
+        const totalDistanceToSurace = Math.max(
           Math.min(
-            currentDistanceToSurface + bodyObject3D.body.radius / 1000, 
-            this.max_distance_ratio * bodyObject3D.body.radius / 1000
+            currentDistanceToSurface,  // 1000000 + radius
+            maxDesirableDistance  // 50 times the radius 
           ), 
-          this.minCameraDistance(bodyObject3D)
+          minAcceptableDistance
         );
-        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
+        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistanceToSurace + movetoRenderable.body.radius / 1000 ));
 
         // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
         const rotationTime = Math.max(
@@ -113,11 +117,11 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         // Orient the camera towards a different target; does not move the position of the camera.
         const targetOrientation = new TWEEN
             .Tween(this.bodySystem.controls.target)
-            .to(bodyObject3D.object3D.position, rotationTime)
+            .to(movetoRenderable.object3D.position, rotationTime)
             .easing(TWEEN.Easing.Quintic.In)
             .dynamic(true);
 
-        const distanceToNewTarget = currentCameraPosition.distanceTo(bodyObject3D.object3D.position);
+        const distanceToNewTarget = currentCameraPosition.distanceTo(movetoRenderable.object3D.position);
 
         // Reposition camera: travel at 1000 times the speed of light or slower for 2.5 seconds wich ever is the most.
         const positionDisplacementTime = Math.max((distanceToNewTarget / 3300000), 2500);
@@ -131,7 +135,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
             .start()
             .onComplete(() => {
                 this.bodySystem.controls.enabled = true;
-                this.bodySystem.setTarget(bodyObject3D);
+                this.bodySystem.setTarget(movetoRenderable);
             });
     }
 

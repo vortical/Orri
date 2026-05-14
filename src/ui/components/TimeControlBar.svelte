@@ -40,10 +40,10 @@
   const realtimeBackPct = ((-1 + N) / (2 * N)) * 100;
   const realtimeFwdPct = ((1 + N) / (2 * N)) * 100;
 
-  function scaleToIndex(s: number): number {
-    if (s === 0) return 0;
-    
-    const abs = Math.abs(s);
+  function scaleToIndex(scale: number): number {
+    if (scale === 0) return 0;
+
+    const abs = Math.abs(scale);
     let bestIdx = 0;
     let bestDiff = Infinity;
     for (let i = 0; i < ladder.length; i++) {
@@ -53,11 +53,11 @@
         bestIdx = i;
       }
     }
-    return Math.sign(s) * bestIdx;
+    return Math.sign(scale) * bestIdx;
   }
 
-  function indexToScale(i: number): number {
-    return Math.sign(i) * ladder[Math.abs(i)];
+  function indexToScale(index: number): number {
+    return Math.sign(index) * ladder[Math.abs(index)];
   }
 
   let paused = $state(false);
@@ -71,9 +71,9 @@
     paused = bodySystem.isPaused();
     scale = bodySystem.getTimeScale();
     sliderIndex = scaleToIndex(scale);
-    scaleSub = PubSub.subscribe(TIME_SCALE_TOPIC, (_msg: any, s: number) => {
-      scale = s;
-      sliderIndex = scaleToIndex(s);
+    scaleSub = PubSub.subscribe(TIME_SCALE_TOPIC, (_msg: any, scaleValue: number) => {
+      scale = scaleValue;
+      sliderIndex = scaleToIndex(scaleValue);
       paused = bodySystem.isPaused();
     });
   });
@@ -82,8 +82,8 @@
     PubSub.unsubscribe(scaleSub);
   });
 
-  function onSliderInput(e: Event) {
-    const idx = parseInt((e.target as HTMLInputElement).value, 10);
+  function onSliderInput(event: Event) {
+    const idx = parseInt((event.target as HTMLInputElement).value, 10);
     sliderIndex = idx;
     bodySystem.setTimeScale(indexToScale(idx));
   }
@@ -97,14 +97,14 @@
     const wallNow = new Date();
     const sysNow = new Date(bodySystem.clock.getTime());
     if (timeEquals(wallNow, sysNow, TimeUnit.Seconds)) return;
-    const s = bodySystem.getTimeScale();
+    const previousScale = bodySystem.getTimeScale();
     bodySystem.setTimeScale(1);
     bodySystem.setSystemTime(wallNow);
-    bodySystem.setTimeScale(s);
+    bodySystem.setTimeScale(previousScale);
   }
 
-  function onDateSet(d: Date) {
-    bodySystem.setSystemTime(d);
+  function onDateSet(date: Date) {
+    bodySystem.setSystemTime(date);
     // Don't auto-close the editor here. Chromium fires `change` per field-commit, so
     // closing on first commit kicks the user out mid-edit. The user closes via the
     // Date button toggle.

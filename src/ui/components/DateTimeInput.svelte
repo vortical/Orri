@@ -3,17 +3,17 @@
 
   type Props = {
     value: Date;
-    onset?: (d: Date) => void;
+    onset?: (date: Date) => void;
   };
 
   let { value, onset }: Props = $props();
 
-  function pad(n: number): string {
-    return n.toString().padStart(2, '0');
+  function pad(value: number): string {
+    return value.toString().padStart(2, '0');
   }
 
-  function dateToInput(d: Date): string {
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  function dateToInput(date: Date): string {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
   // Snapshot once at mount; ignore subsequent prop updates so an externally-changing
@@ -22,12 +22,12 @@
   // snapshot on the next open.
   const initialValue = untrack(() => dateToInput(value));
 
-  function handleChange(e: Event) {
-    const v = (e.target as HTMLInputElement).value;
-    if (!v) return;
-    const d = new Date(v);
-    if (isNaN(d.getTime())) return;
-    onset?.(d);
+  function handleChange(event: Event) {
+    const inputValue = (event.target as HTMLInputElement).value;
+    if (!inputValue) return;
+    const date = new Date(inputValue);
+    if (isNaN(date.getTime())) return;
+    onset?.(date);
   }
 </script>
 

@@ -207,8 +207,8 @@ export class BodySystem {
     addToScene(bodies: RenderableBody[]){
       
       this.scene.add(...bodies
-                      .filter(o => o.isActive())
-                      .map(o => o.object3D)
+                      .filter(renderableBody => renderableBody.isActive())
+                      .map(renderableBody => renderableBody.object3D)
       );
     }
 
@@ -252,12 +252,12 @@ export class BodySystem {
         return new Promise(async (resolve) => {
             try {
                 const time = new Date(datetime);
-                const bodies = this.renderableBodies.map(o => o.body);
+                const bodies = this.renderableBodies.map(renderableBody => renderableBody.body);
                 const kinematics = await this.dataService.loadKinematics(bodies, time);
                 this.clock.setTime(datetime.getTime());
                 this.addUpdater(new BodiesAtTimeUpdater(kinematics));
-            } catch (e) {
-                console.log(e)
+            } catch (error) {
+                console.log(error)
             }
         });
     }
@@ -280,7 +280,7 @@ export class BodySystem {
     }
 
     getSpacecraftMode(): SpacecraftMode {
-        return this.bodies.some(b => b.type === 'spacecraft' && b.useTrajectory)
+        return this.bodies.some(body => body.type === 'spacecraft' && body.useTrajectory)
             ? SpacecraftModes.Trajectory
             : SpacecraftModes.NBody;
     }
@@ -288,8 +288,8 @@ export class BodySystem {
     setSpacecraftMode(mode: SpacecraftMode) {
         const useTrajectory = mode === SpacecraftModes.Trajectory;
         this.bodies
-            .filter(b => b.type === 'spacecraft')
-            .forEach(b => { b.useTrajectory = useTrajectory; });
+            .filter(body => body.type === 'spacecraft')
+            .forEach(body => { body.useTrajectory = useTrajectory; });
         if(mode == SpacecraftModes.NBody){
           this.nbodyUpdater.invalidate();
         }
@@ -341,10 +341,10 @@ export class BodySystem {
         return this.distanceformatter.distanceUnit;
     }
 
-    setTimeDisplay(v: TimeDisplay) {
-        if (this.timeDisplay === v) return;
-        this.timeDisplay = v;
-        PubSub.publish(TIME_DISPLAY_TOPIC, v);
+    setTimeDisplay(mode: TimeDisplay) {
+        if (this.timeDisplay === mode) return;
+        this.timeDisplay = mode;
+        PubSub.publish(TIME_DISPLAY_TOPIC, mode);
     }
 
     getTimeDisplay(): TimeDisplay {
@@ -361,8 +361,8 @@ export class BodySystem {
         value ? this.camera.layers.enable(layer) : this.camera.layers.disable(layer);
     }
 
-    setCameraUp(v = new Vector3(0, 1, 0)) {
-        this.camera.up.set(v.x, v.y, v.z);
+    setCameraUp(up = new Vector3(0, 1, 0)) {
+        this.camera.up.set(up.x, up.y, up.z);
     }
 
     getDistanceFormatter(): DistanceFormatter {
@@ -730,8 +730,8 @@ export class BodySystem {
         return body3D;
       }
 
-      const map = bodies.reduce((m: Map<string, RenderableBody>, body: Body) =>
-            m.set(body.name.toLowerCase(), createObject3D(body)), new Map<string, RenderableBody>()
+      const map = bodies.reduce((acc: Map<string, RenderableBody>, body: Body) =>
+            acc.set(body.name.toLowerCase(), createObject3D(body)), new Map<string, RenderableBody>()
       );
       
     
@@ -788,5 +788,6 @@ function createLabelRender(): CSS2DRenderer {
 function createControls(camera: Camera, domElement: HTMLElement): OrbitControls {
     const controls = new OrbitControls(camera, domElement);
     controls.enableDamping = true;
+    controls.zoomSpeed = 1;
     return controls;
 }

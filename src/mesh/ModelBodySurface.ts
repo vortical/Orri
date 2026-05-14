@@ -2,6 +2,7 @@ import { BodySystem } from "../scene/BodySystem";
 import { Body } from "../body/Body";
 import { Box3, Group, Object3D, Sphere } from "three";
 import { Model3DLoader } from "../services/Model3DLoader";
+import { applyOrionMaterials } from "../services/applyOrionMaterials";
 import { BodySurface } from "./BodySurface";
 import { DistanceUnits, convertDistance } from "../system/distance";
 
@@ -18,6 +19,9 @@ export class ModelBodySurface extends BodySurface {
         const object3D = new Group();
         const uri = body.gltf?.uri!;
         new Model3DLoader(bodySystem).load(uri).then(m => {
+            if (uri.endsWith("orion.fbx")) {
+                applyOrionMaterials(m, bodySystem.renderer);
+            }
             const naturalRadius = new Box3().setFromObject(m).getBoundingSphere(new Sphere()).radius;
             const targetRadiusKm = convertDistance(body.radius, DistanceUnits.m, DistanceUnits.km);
             const scale = naturalRadius > 0 ? targetRadiusKm / naturalRadius : 1;

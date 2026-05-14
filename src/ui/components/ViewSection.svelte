@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import type { BodySystem } from '../../scene/BodySystem';
   import { CameraModes, type CameraMode } from '../../scene/CameraTargetingState';
-  import { userNotify } from '../ui';
+  import { userNotify } from '../notify';
   import FOVControl from './FOVControl.svelte';
 
   type Props = { bodySystem: BodySystem };
@@ -67,8 +67,8 @@
     try {
       bodySystem.setCameraTargetingMode(mode);
       cameraModeKey = key;
-    } catch (e) {
-      userNotify.showWarning('You tried something weird...', (e as Error).message);
+    } catch (error) {
+      userNotify.showWarning('You tried something weird...', (error as Error).message);
       cameraModeKey = previous;
     }
   }

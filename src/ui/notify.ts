@@ -211,3 +211,6 @@ export enum NotifyMessageType {
 const DefaultNotifyOptions: NotifyOptions = {
     messageType: NotifyMessageType.info,
 };
+
+/** App-wide notification service singleton. */
+export const userNotify: INotifyService = new NotifyService();

@@ -29,7 +29,7 @@ export class ObjectLabels {
     }
 
     getCSS2DObjects(): CSS2DObject[] {
-        return this.getLabels().map((l: Label) => l.cssObject);
+        return this.getLabels().map((label: Label) => label.cssObject);
     }
 
     getLabels(): Label[] {
@@ -51,7 +51,7 @@ export class ObjectLabels {
 
     clearBodyLabels() {
         // Probably better to use css properties...
-        this.getLabels().forEach((l: Label) => l.setValue(""));
+        this.getLabels().forEach((label: Label) => label.setValue(""));
     }
 
     setVisible(visible: boolean) {
@@ -73,7 +73,7 @@ export class ObjectLabels {
 
 
         this.setHighlighted(this.isPlanetarySystemSelected());
-        this.getLabels().forEach((l: Label) => l.update());
+        this.getLabels().forEach((label: Label) => label.update());
     };
 
     updateMoonLabels() {

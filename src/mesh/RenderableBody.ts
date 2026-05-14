@@ -123,7 +123,7 @@ export abstract class RenderableBody extends Renderable {
     /**
      * Alias of cameraDistance(true)
      * 
-     * @returns 
+     * @returns distance in km
      */
     cameraDistanceFromSurface(): number {
         return this.cameraDistance(true);

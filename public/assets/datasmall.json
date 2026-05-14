@@ -27,12 +27,12 @@
     "radius": 10,
     "castShadow": false,
     "receiveShadow": true,
-    "obliquityToOrbit": -90,
+    "obliquityToOrbit": 275,
     "sideralRotationPeriod": {
       "days": 0.05
     },
     "gltf": {
-      "uri": "/assets/gltf/spacecraft/orion.glb",
+      "uri": "/assets/gltf/spacecraft/orion.fbx",
       "credits": "Orion Spacecraft (https://skfb.ly/pIroy) by WISEMANmods is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/)."
     },
     "missionWindow": {
@@ -112,7 +112,7 @@
     "mass": 5.9736e+24,
     "radius": 6378000,
     "castShadow": false,
-    "receiveShadow": false,
+    "receiveShadow": true,
     "obliquityToOrbit": 23.44,
     "sideralRotationPeriod": {
       "hours": 23,

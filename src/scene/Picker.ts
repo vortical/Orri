@@ -1,7 +1,7 @@
 import { Raycaster, Vector2 } from "three";
 import { VectorComponents } from "../domain/models.ts";
 import { RenderableBody } from "../mesh/RenderableBody.ts";
-import { MOUSE_CLICK_ON_BODY_TOPIC, MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
+import { MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
 import { throttle } from "../system/throttle.ts";
 import { BodySystem } from "./BodySystem.ts";
 
@@ -35,8 +35,8 @@ export class Picker {
      * @param v pointer position between [-1, 1] for x and y
      * @returns picked body or null
      */
-    pick(v: VectorComponents): RenderableBody | null {
-        this.raycaster.setFromCamera(new Vector2(v.x, v.y), this.bodySystem.camera);
+    pick(pointer: VectorComponents): RenderableBody | null {
+        this.raycaster.setFromCamera(new Vector2(pointer.x, pointer.y), this.bodySystem.camera);
         const intersects = this.raycaster.intersectObjects(this.bodySystem.scene.children);
 
         const names = intersects.map((intersected) => intersected.object.name).filter(name => name.length > 0);
@@ -129,8 +129,11 @@ export class PointerInteraction {
         if (wasDrag || !this.picker.isEnabled) return;
 
         const body = this.picker.bodyForTarget(downTarget, event.clientX, event.clientY);
-        if (body === undefined) return;
-        PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, { body });
+        // undefined (UI click) or null (empty scene area) → no-op.
+        if (!body) return;
+        // Pass force=true so a second click on the already-targeted body
+        // re-fires the camera tween (moves closer to its standard distance).
+        this.picker.bodySystem.moveToTarget(body, true);
     }
 
 }

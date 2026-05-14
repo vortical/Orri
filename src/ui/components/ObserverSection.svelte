@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import type { BodySystem } from '../../scene/BodySystem';
   import { LatLon } from '../../system/LatLon';
-  import { userNotify } from '../ui';
+  import { userNotify } from '../notify';
   import Crosshair from 'lucide-svelte/icons/crosshair';
 
   type Props = { bodySystem: BodySystem };
@@ -23,8 +23,8 @@
       const latlon = LatLon.fromString(locationText);
       bodySystem.setLocation(latlon);
       locationText = bodySystem.getLocation()?.toString() ?? '';
-    } catch (e) {
-      userNotify.showWarning("Can't process your location!", (e as Error).message);
+    } catch (error) {
+      userNotify.showWarning("Can't process your location!", (error as Error).message);
       locationText = bodySystem.getLocation()?.toString() ?? '';
     }
   }
@@ -40,10 +40,10 @@
       const latlon = await LatLon.fromBrowser();
       locationText = `${latlon.lat}, ${latlon.lon}`;
       bodySystem.setLocation(latlon);
-    } catch (e) {
+    } catch (error) {
       userNotify.showWarning(
         'Could not get your location!',
-        (e as Error).toString().concat(', You will need to add your coordinates manually.')
+        (error as Error).toString().concat(', You will need to add your coordinates manually.')
       );
     }
   }

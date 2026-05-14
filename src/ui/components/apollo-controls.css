@@ -375,7 +375,11 @@
   gap: 8px;
 }
 
-/* -------- Sidebar (left-edge slide-in rail) --------------------------- */
+/* -------- Sidebar (left-edge panel) -----------------------------------
+   Mount-controlled by the parent (App.svelte). When this element exists in
+   the DOM, the sidebar is open; when it doesn't, it's closed. No
+   slide-in animation today — Svelte's transition: directive would handle
+   that if we ever want one. */
 .sidebar {
   position: fixed;
   /* Start below the top-row strip (top-3 + 40px button + breathing) so the
@@ -389,13 +393,8 @@
   backdrop-filter: blur(6px);
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.4);
   z-index: 60;
-  transform: translateX(-100%);
-  transition: transform 0.2s ease;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   pointer-events: auto;
-}
-.sidebar-open {
-  transform: translateX(0);
 }
