@@ -3,12 +3,13 @@ import { BodySystem } from "./BodySystem";
 import * as TWEEN from '@tweenjs/tween.js';
 import { Vector3 } from "three";
 
+export type MoveIntent = 'standard' | 'reapply' | number;
 
 export interface CameraTargetingState {
 
     cameraMode: CameraMode;
 
-    moveToTarget(bodyObject3D: RenderableBody, force: boolean): void;
+    moveToTarget(bodyObject3D: RenderableBody, intent?:MoveIntent): void;
     followTarget(bodyObject3D: RenderableBody): void;
 
     /**
@@ -30,6 +31,8 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     bodySystem: BodySystem;
     abstract cameraMode: CameraMode;
     max_distance_ratio: number;
+    private activeOrientationTween?: TWEEN.Tween<Vector3>;
+    private activePositionTween?: TWEEN.Tween<Vector3>;
 
     constructor(bodySystem: BodySystem, max_distance_ratio: number = 50) {
         this.bodySystem = bodySystem;
@@ -80,11 +83,18 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
      * @returns 
      */
 
-    moveToTarget(movetoRenderable: RenderableBody, force = false): void {
+    moveToTarget(movetoRenderable: RenderableBody, intent:MoveIntent = "standard"): void {
 
         const bodySystem = this.bodySystem;
 
-        if (bodySystem.getRenderableBodyTarget() == movetoRenderable && !force) return;
+        const isSameTarget = bodySystem.getRenderableBodyTarget() == movetoRenderable;
+
+        if (isSameTarget && intent === 'standard'){
+          return;
+        }
+
+        this.activeOrientationTween?.stop();
+        this.activePositionTween?.stop();
 
         bodySystem.controls.enabled = false;
 
@@ -100,43 +110,72 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         const maxDesirableDistance = this.max_distance_ratio * movetoRenderable.body.radius / 1000 ;
         const minAcceptableDistance = this.minCameraDistance(movetoRenderable);
         
-        const totalDistanceToSurace = Math.max(
-          Math.min(
-            currentDistanceToSurface,  // 1000000 + radius
-            maxDesirableDistance  // 50 times the radius 
-          ), 
-          minAcceptableDistance
-        );
-        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistanceToSurace + movetoRenderable.body.radius / 1000 ));
 
+               
+        const totalDistanceToSurface = isSameTarget && typeof intent === 'number'? 
+          Math.max(currentDistanceToSurface * intent, minAcceptableDistance):
+          Math.max(
+            Math.min(
+              currentDistanceToSurface,  // 1000000 + radius
+              maxDesirableDistance  // 50 times the radius 
+            ), 
+            minAcceptableDistance
+          );
+        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistanceToSurface + movetoRenderable.body.radius / 1000 ));
+
+        
         // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
-        const rotationTime = Math.max(
-            Math.max(currentTargetVector.angleTo(newTargetVector) / Math.PI) * 2000,
-            1000);
 
-        // Orient the camera towards a different target; does not move the position of the camera.
-        const targetOrientation = new TWEEN
-            .Tween(this.bodySystem.controls.target)
-            .to(movetoRenderable.object3D.position, rotationTime)
-            .easing(TWEEN.Easing.Quintic.In)
-            .dynamic(true);
 
         const distanceToNewTarget = currentCameraPosition.distanceTo(movetoRenderable.object3D.position);
-
         // Reposition camera: travel at 1000 times the speed of light or slower for 2.5 seconds wich ever is the most.
-        const positionDisplacementTime = Math.max((distanceToNewTarget / 3300000), 2500);
+        // Same-target dolly (zoom closer) uses a shorter minimum — no big traversal to mask.
+        const minDisplacementTime = (isSameTarget && intent !== "reapply") ? 600 : 2500;
+        const positionDisplacementTime = Math.max(distanceToNewTarget / 3300000, minDisplacementTime);
         const cameraPosition = new TWEEN
             .Tween(this.bodySystem.camera.position)
-            .to(newCameraPos, positionDisplacementTime) // this may be moving...
+            .to(newCameraPos, positionDisplacementTime)
             .easing(TWEEN.Easing.Quintic.InOut);
 
-        targetOrientation
-            .chain(cameraPosition)
-            .start()
-            .onComplete(() => {
-                this.bodySystem.controls.enabled = true;
-                this.bodySystem.setTarget(movetoRenderable);
-            });
+        const onArrived = () => {
+            this.bodySystem.controls.enabled = true;
+            this.bodySystem.setTarget(movetoRenderable);
+        };
+
+        this.activePositionTween = cameraPosition;
+
+        if (isSameTarget && intent !== "reapply") {
+            // Camera is already pointed at the body — skip the long orientation tween, but still
+            // run a parallel tracker on controls.target so it follows the body's drift during the
+            // dolly. Otherwise target freezes (controls.enabled=false pauses followTarget) and
+            // OrbitControls ends up with a stale reference when the user resumes orbiting.
+            const targetTracker = new TWEEN
+                .Tween(this.bodySystem.controls.target)
+                .to(movetoRenderable.object3D.position, positionDisplacementTime)
+                .dynamic(true);
+
+            this.activeOrientationTween = targetTracker;
+            targetTracker.start();
+            cameraPosition.start().onComplete(onArrived);
+        } else {
+            // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
+            const rotationTime = Math.max(
+                currentTargetVector.angleTo(newTargetVector) / Math.PI * 2000,
+                1000);
+
+            const targetOrientation = new TWEEN
+                .Tween(this.bodySystem.controls.target)
+                .to(movetoRenderable.object3D.position, rotationTime)
+                .easing(TWEEN.Easing.Quintic.In)
+                .dynamic(true);
+
+            this.activeOrientationTween = targetOrientation;
+
+            targetOrientation
+                .chain(cameraPosition)
+                .start()
+                .onComplete(onArrived);
+        }
     }
 
     abstract followTarget(bodyObject3D: RenderableBody): void;
@@ -194,7 +233,7 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
 
     postTargetSet(bodyObject3D: RenderableBody) { }
 
-    moveToTarget(bodyObject3D: RenderableBody, force = false): void {
+    moveToTarget(bodyObject3D: RenderableBody, intent:MoveIntent="standard") {
 
         const bodySystem = this.bodySystem;
 

@@ -4,6 +4,7 @@ import { RenderableBody } from "../mesh/RenderableBody.ts";
 import { MOUSE_HOVER_OVER_BODY_TOPIC } from "../system/event-types";
 import { throttle } from "../system/throttle.ts";
 import { BodySystem } from "./BodySystem.ts";
+import { MoveIntent } from "./CameraTargetingState.ts";
 
 export type PickerEvent = {
     body: RenderableBody | null;
@@ -133,7 +134,7 @@ export class PointerInteraction {
         if (!body) return;
         // Pass force=true so a second click on the already-targeted body
         // re-fires the camera tween (moves closer to its standard distance).
-        this.picker.bodySystem.moveToTarget(body, true);
+        this.picker.bodySystem.moveToTarget(body, 0.5 as MoveIntent );
     }
 
 }

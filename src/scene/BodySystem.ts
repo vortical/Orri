@@ -20,7 +20,7 @@ import { RenderableStar } from '../mesh/RenderableStar.ts';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { LocationPin } from '../mesh/LocationPin.ts';
-import { CameraTargetingState, CameraMode, CameraModes } from './CameraTargetingState.ts';
+import { CameraTargetingState, CameraMode, CameraModes, MoveIntent } from './CameraTargetingState.ts';
 import { DataService } from '../services/dataservice.ts';
 import { BodiesAtTimeUpdater } from '../body/BodiesAtTimeUpdater.ts';
 import { CameraLayer } from './CameraLayer.ts';
@@ -29,6 +29,7 @@ import { OrbitLength, OrbitLengthType } from '../mesh/OrbitOutline.ts';
 import { OrbitOutlinesStateHandler } from './OrbitOutlinesStateHandler.ts';
 import { BodyActiveStateHandler } from './ObjectActiveStateHandler.ts';
 import { NBodySystemUpdater } from '../body/NBodySystemUpdater.ts';
+import { Move } from 'lucide-svelte';
 // import { OrbitPathUpdater } from '../body/OrbitOutliner.ts';
 // import { timePeriodToMs } from '../system/time.ts';
 // import { getworkerExecutorPool, NamedArrayBuffer, OrbitLength } from '../mesh/OrbitOutline.ts';
@@ -304,13 +305,14 @@ export class BodySystem {
             if (this.getLocationPin() == undefined) {
                 throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a surface location set.");
             }
+            
             if (this.target == this.getRenderableBody("earth")) {
                 throw new Error("To select 'ViewTargetFromSurface' camera mode, you must have a target other than Earth.");
             }
         }
 
         this.cameraTargetingState = cameraMode.stateBuilder(this);
-        this.cameraTargetingState.moveToTarget(this.getRenderableBodyTarget(), true);
+        this.cameraTargetingState.moveToTarget(this.getRenderableBodyTarget(), "reapply" as MoveIntent);
     }
 
     getLocation(): LatLon | undefined {
@@ -497,16 +499,17 @@ export class BodySystem {
         return this.target;
     }
 
-    moveToTarget(renderableBody: RenderableBody, forceMoveCloser = false) {
-        if (this.getRenderableBodyTarget() == renderableBody && !forceMoveCloser) {
-            return;
-        }
+    moveToTarget(renderableBody: RenderableBody, moveIntent: MoveIntent = "standard") {
+
+        // if (this.getRenderableBodyTarget() == renderableBody && moveIntent == "standard") {
+        //     return;
+        // }
 
         if (renderableBody == this.getRenderableBody("earth") && this.getCameraTargetingMode() == CameraModes.ViewTargetFromSurface) {
             throw new Error("Can't select Earth as target while viewing from Earth's surface.");
         }
 
-        this.cameraTargetingState.moveToTarget(renderableBody, forceMoveCloser);
+        this.cameraTargetingState.moveToTarget(renderableBody, moveIntent);
     }
 
 
