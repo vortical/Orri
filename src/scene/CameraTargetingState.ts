@@ -32,7 +32,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     abstract cameraMode: CameraMode;
     max_distance_ratio: number;
     private activeOrientationTween?: TWEEN.Tween<Vector3>;
-    private activePositionTween?: TWEEN.Tween<Vector3>;
+    private activePositionTween?: TWEEN.Tween<any>;
 
     constructor(bodySystem: BodySystem, max_distance_ratio: number = 50) {
         this.bodySystem = bodySystem;
