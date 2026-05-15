@@ -333,7 +333,7 @@
     "parentName": "Sun",
     "mass": 5.68e+26,
     "radius": 60268000,
-    "castShadow": false,
+    "castShadow": true,
     "receiveShadow": true,
     "obliquityToOrbit": 26.73,
     "sideralRotationPeriod": {
@@ -347,7 +347,9 @@
       "minRadius": 66900000,
       "maxRadius": 140220000,
       "colorMapUri": "/assets/textures/planets/saturn_ring_color.jpg",
-      "alphaMapUri": "/assets/textures/planets/saturn_ring_alpha.gif"
+      "alphaMapUri": "/assets/textures/planets/saturn_ring_alpha.gif",
+      "castShadow": true,
+      "receiveShadow": true
     },
     "textures": {
       "textureUri": "/assets/textures/planets/saturn_map.jpg"

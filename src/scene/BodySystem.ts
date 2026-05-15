@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, Camera, Color, DirectionalLightHelper, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { Dim } from "../system/Dim.ts";
 import { LatLon } from "../system/LatLon.ts";
 import { Body } from '../body/Body.ts';
@@ -779,7 +779,7 @@ function createCamera({ fov = 35, aspectRatio = 1.0, near = CAMERA_NEAR, far = C
 function createRenderer(): WebGLRenderer {
     const renderer = new WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = PCFShadowMap;
+    renderer.shadowMap.type = PCFSoftShadowMap;
     return renderer
 }
 

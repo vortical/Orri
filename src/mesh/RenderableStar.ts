@@ -31,6 +31,16 @@ const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
  */
 const SHADOW_DEPTH_MARGIN = 10_000_000;
 
+/**
+ * Maps the Sun's angular radius (as seen from the shadowed body) to a PCF soft-shadow
+ * blur radius — the shadow penumbra. Tuned so Earth (Sun angular radius ~0.0047 rad)
+ * lands near a blur of 3; outer planets see a smaller Sun and come out proportionally
+ * crisper. Clamped to keep the blur kernel sane.
+ */
+const SHADOW_SOFTNESS_SCALE = 650;
+const SHADOW_RADIUS_MIN = 0.5;
+const SHADOW_RADIUS_MAX = 8;
+
 
 /**
  * We can't use the pointlight as the source for shadows (space is too big for our 
@@ -119,7 +129,7 @@ export class RenderableStar extends RenderableBody {
         light.shadow.camera.right = shadowCameraSize;
 
         light.shadow.bias = 0.0001;
-        light.shadow.radius = 2;
+        // shadow.radius (penumbra softness) is set per-frame in #updateShadowCamera().
 
         light.shadow.mapSize.width = SHADOW_MAP_SIZE;
         light.shadow.mapSize.height = SHADOW_MAP_SIZE;
@@ -231,6 +241,14 @@ export class RenderableStar extends RenderableBody {
         shadowCamera.near = Math.max(distance - SHADOW_DEPTH_MARGIN, 1);
         shadowCamera.far = distance + SHADOW_DEPTH_MARGIN;
         shadowCamera.updateProjectionMatrix();
+
+        // Penumbra softness scales with the Sun's angular size at the target: outer
+        // planets see a smaller Sun and get crisper shadows, inner planets softer.
+        const sunAngularRadius = (this.body.radius / 1000) / distance;
+        light.shadow.radius = Math.min(
+            SHADOW_RADIUS_MAX,
+            Math.max(SHADOW_RADIUS_MIN, SHADOW_SOFTNESS_SCALE * sunAngularRadius)
+        );
     }
 
     setOrbitOutlineEnabled(value: boolean): void {

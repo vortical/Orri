@@ -88,6 +88,8 @@ export type RingProperties = {
     maxRadius: number;
     alphaMapUri?: string;
     colorMapUri?: string;
+    castShadow?: boolean;
+    receiveShadow?: boolean;
 };
 
 export type BodyType = "star" | "planet" | "moon" |"spacecraft";
