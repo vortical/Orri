@@ -5,6 +5,14 @@ import { Vector } from "../system/Vector";
 const DEFAULT_MAX_VERTICES = 360 * 50 * 4;
 
 /**
+ * How far (scene km) the camera target may drift from the buffer origin before the line
+ * is rebased. At a magnitude of 1e5 km the Float32 quantization step is ~12 m — well
+ * below a pixel — so this keeps near-camera segments jitter-free without rebasing (and
+ * re-uploading the buffer) every single frame.
+ */
+const REBASE_THRESHOLD_KM = 100_000;
+
+/**
  * Base class for any visual path tied to a RenderableBody — orbital paths,
  * spacecraft trajectories, etc. Owns the Three.js Line, the position buffer,
  * and the visibility/opacity/color surface. Subclasses implement
@@ -22,6 +30,13 @@ export abstract class TrajectoryOutline {
     p0!: Vector3;
     p1!: Vector3;
     bodyObject?: RenderableBody;
+
+    /**
+     * Scene-km offset the vertex buffer is stored relative to: worldVertex = buffer + origin.
+     * The Line's object3D.position mirrors this. Kept near the camera target so near-camera
+     * vertices stay small-magnitude and therefore Float32-precise.
+     */
+    origin: Vector3 = new Vector3();
 
     constructor(bodyObject?: RenderableBody, maxVertices = DEFAULT_MAX_VERTICES, enabled = false, _colorHue = 0.5, opacity = 0.7) {
         this.bodyObject = bodyObject;
@@ -54,8 +69,8 @@ export abstract class TrajectoryOutline {
     addPosition(position: Vector3, _maintainLength: boolean = false) {
         const positionAttributeBuffer: BufferAttribute = this.line.geometry.getAttribute('position') as BufferAttribute;
 
-        // Positions are in km in the scene...
-        position = position.clone().multiplyScalar(0.001);
+        // Positions are in km in the scene, stored relative to `origin` (see rebase()).
+        position = position.clone().multiplyScalar(0.001).sub(this.origin);
 
         if (this.endIndex == 0) {
             this.p0 = position;
@@ -127,6 +142,47 @@ export abstract class TrajectoryOutline {
         this.p0 = this.positionAtIndex(index - 2);
         this.p1 = this.positionAtIndex(index - 1);
         this.startIndex = 0;
+    }
+
+    /**
+     * Record the scene-km origin a freshly built buffer (worker / mission trajectory) was
+     * produced relative to, and move the Line's transform to match.
+     */
+    setOrigin(origin: Vector3) {
+        this.origin.copy(origin);
+        this.line.position.copy(origin);
+    }
+
+    /**
+     * Re-express the stored vertices relative to `newOrigin` (scene km) without changing
+     * their world position — `worldVertex = buffer + origin` and `line.position = origin`
+     * are both updated. Keeping the origin on the camera target keeps near-camera vertices
+     * small-magnitude and thus Float32-precise: the fix for orbit segments "skipping" up
+     * close. No-op until the target has drifted past REBASE_THRESHOLD_KM.
+     */
+    rebase(newOrigin: Vector3) {
+        if (this.origin.distanceToSquared(newOrigin) < REBASE_THRESHOLD_KM * REBASE_THRESHOLD_KM) return;
+
+        const deltaX = this.origin.x - newOrigin.x;
+        const deltaY = this.origin.y - newOrigin.y;
+        const deltaZ = this.origin.z - newOrigin.z;
+        const positionArray = this.getPositionAttribute().array as Float32Array;
+        for (let i = this.startIndex * 3; i < this.endIndex * 3; i += 3) {
+            positionArray[i] += deltaX;
+            positionArray[i + 1] += deltaY;
+            positionArray[i + 2] += deltaZ;
+        }
+
+        this.origin.copy(newOrigin);
+        this.line.position.copy(newOrigin);
+
+        if (this.endIndex > this.startIndex) {
+            if (this.endIndex - this.startIndex >= 2) {
+                this.p0 = this.positionAtIndex(this.endIndex - 2);
+                this.p1 = this.positionAtIndex(this.endIndex - 1);
+            }
+            this.needsUpdate();
+        }
     }
 
     needsUpdate() {

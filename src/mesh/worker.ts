@@ -35,10 +35,13 @@ onmessage = (event) => {
   const bodyProperties = data.bodies as BodyProperties[];
   const orbitLength = data.orbitLength as OrbitLength;
   const desiredOrbitBodyName = data.desiredOrbitBodyName;
- 
+  const origin = data.origin as { x: number, y: number, z: number };
+
   const orbitingBodyWithPositionAttribute = bodyProperties.map(b =>  new OrbitingBodyWithPositionAttribute(b, b.name == desiredOrbitBodyName));
   // set up hierarchy
   orbitingBodyWithPositionAttribute.forEach(b => b.parent = orbitingBodyWithPositionAttribute.find(o => o.name == b.parentName));
+  // Emit vertices relative to the camera-target origin so they stay Float32-precise.
+  orbitingBodyWithPositionAttribute.forEach(b => b.orbitalOutline?.origin.set(origin.x, origin.y, origin.z));
   const orbitingObjects = calculateOrbits(orbitLength, orbitingBodyWithPositionAttribute);
   // we are only interested with the arrayBuffers...
 

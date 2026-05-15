@@ -23,6 +23,14 @@ import PubSub from 'pubsub-js';
  */
 const SHADOW_LIGHT_TO_POINT_LIGHT_RATIO = 6;
 
+/**
+ * Half-depth (km) of the shadow camera frustum, centred on the Sun->target distance.
+ * Wide enough to enclose the target's major moons (Callisto, the outermost, orbits
+ * Jupiter at ~1.9e6 km), tight enough that the depth map keeps useful precision around
+ * the target instead of being smeared across the whole solar system.
+ */
+const SHADOW_DEPTH_MARGIN = 10_000_000;
+
 
 /**
  * We can't use the pointlight as the source for shadows (space is too big for our 
@@ -116,8 +124,8 @@ export class RenderableStar extends RenderableBody {
         light.shadow.mapSize.width = SHADOW_MAP_SIZE;
         light.shadow.mapSize.height = SHADOW_MAP_SIZE;
 
-        light.shadow.camera.near = this.bodySystem.camera.near;
-        light.shadow.camera.far = this.bodySystem.camera.far;
+        // near/far are not copied from the main camera anymore — they are bracketed
+        // tightly around the target every frame in #updateShadowCamera().
         this.shadowingLight = light;
         this.getObject3D().add(light);
 
@@ -190,6 +198,39 @@ export class RenderableStar extends RenderableBody {
     update(): void {
         super.update();
         this.flareEffect.update();
+        this.#updateShadowCamera();
+    }
+
+    /**
+     * Bracket the shadow camera tightly around the current target.
+     *
+     * The shadow light sits at the Sun and aims at the target; its (orthographic)
+     * shadow camera measures depth from the Sun. With near/far spanning the whole
+     * scene the depth map has almost no precision near the target, so bodies far
+     * behind it alias into the same depth and wrongly shadow it (Io behind Jupiter).
+     * Tracking the Sun->target distance concentrates the depth range where it matters.
+     */
+    #updateShadowCamera(): void {
+        const light = this.shadowingLight;
+        if (light === undefined) return;
+
+        const target = this.bodySystem.getRenderableBodyTarget();
+        if (target === undefined) return;
+
+        // object3Ds are direct scene children, so position is the world position.
+        const distance = this.getObject3D().position.distanceTo(target.object3D.position);
+
+        const shadowCamera = light.shadow.camera;
+        // Lateral extent: a few target radii covers the body, its rings, and moons
+        // transiting close to the Sun-target axis (the only ones that shadow it).
+        const frustumSize = Math.max((target.body.radius / 1000) * 4, 1);
+        shadowCamera.top = frustumSize;
+        shadowCamera.bottom = -frustumSize;
+        shadowCamera.left = -frustumSize;
+        shadowCamera.right = frustumSize;
+        shadowCamera.near = Math.max(distance - SHADOW_DEPTH_MARGIN, 1);
+        shadowCamera.far = distance + SHADOW_DEPTH_MARGIN;
+        shadowCamera.updateProjectionMatrix();
     }
 
     setOrbitOutlineEnabled(value: boolean): void {

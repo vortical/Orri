@@ -34,6 +34,9 @@ export class SpacecraftTrajectoryOutline extends TrajectoryOutline {
 
         const bodySystem = this.bodyObject.bodySystem;
 
+        // Store vertices relative to the camera target so near-camera segments stay
+        // Float32-precise; subsequent drift is handled per-frame by rebase().
+        this.setOrigin(bodySystem.getTargetSceneOrigin());
 
         // get the start and end date of the mission
 
