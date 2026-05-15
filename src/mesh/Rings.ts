@@ -5,6 +5,14 @@ import { textureLoader } from "../services/textureLoader.ts";
 import { Body } from '../body/Body.ts';
 import { DistanceUnits, convertDistance } from "../system/distance.ts";
 
+/**
+ * alphaTest threshold for the ring material. Above 0 it makes the depth/shadow pass
+ * discard transparent fragments, so the ring's cast shadow shows real structure (the
+ * Cassini division, faint zones) instead of a solid band. Tuned visually — too high a
+ * value erases the faint outer rings.
+ */
+const RING_ALPHA_TEST = 0.3;
+
 export class Rings extends Renderable {
 
     readonly mesh: Mesh;
@@ -23,12 +31,15 @@ export class Rings extends Renderable {
             map: colorMap,
             alphaMap: alphaMap,
             transparent: true,
+            alphaTest: RING_ALPHA_TEST,
             opacity: ringProperties.opacity,
             side: DoubleSide,
             wireframe: false
         });
 
         const mesh = new Mesh(geometry, material);
+        mesh.castShadow = ringProperties.castShadow || false;
+        mesh.receiveShadow = ringProperties.receiveShadow || false;
         this.mesh = mapRingTextureUV(mesh, (minRadius + maxRadius) / 2);
         // rotate rings to be on equatorial plane.
         this.mesh.rotation.set(-Math.PI / 2, 0, 0);

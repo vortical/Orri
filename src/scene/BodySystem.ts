@@ -499,6 +499,15 @@ export class BodySystem {
         return this.target;
     }
 
+    /**
+     * Current camera-target position in scene units (km). Orbit/trajectory lines rebase
+     * their vertex buffers to this origin so near-camera segments stay Float32-precise.
+     */
+    getTargetSceneOrigin(): Vector3 {
+        const position = this.getRenderableBodyTarget().body.position;
+        return new Vector3(position.x / 1000, position.y / 1000, position.z / 1000);
+    }
+
     moveToTarget(renderableBody: RenderableBody, moveIntent: MoveIntent = "standard") {
 
         // if (this.getRenderableBodyTarget() == renderableBody && moveIntent == "standard") {
@@ -768,7 +777,7 @@ function createCamera({ fov = 35, aspectRatio = 1.0, near = CAMERA_NEAR, far = C
 }
 
 function createRenderer(): WebGLRenderer {
-    const renderer = new WebGLRenderer({ antialias: true });
+    const renderer = new WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
     return renderer

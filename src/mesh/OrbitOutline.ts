@@ -36,16 +36,18 @@ class OrbitOutlinerWorker {
         });
     };
 
-    run(desiredOrbitBodyName: string, orbitLength: OrbitLength, orbitingBodies: BodyProperties[]): Promise<NamedArrayBuffer[]>{
+    run(desiredOrbitBodyName: string, orbitLength: OrbitLength, orbitingBodies: BodyProperties[], origin: OrbitOrigin): Promise<NamedArrayBuffer[]>{
         return new Promise<NamedArrayBuffer[]>((resolve) => {
             this.worker.onmessage = (event) => resolve(event.data.response);
-            this.worker.postMessage({desiredOrbitBodyName: desiredOrbitBodyName, orbitLength: orbitLength, bodies: orbitingBodies })
+            this.worker.postMessage({desiredOrbitBodyName: desiredOrbitBodyName, orbitLength: orbitLength, bodies: orbitingBodies, origin: origin })
         });
     }
 }
 
+/** Scene-km offset the worker stores the orbit vertices relative to (see TrajectoryOutline.origin). */
+export type OrbitOrigin = { x: number, y: number, z: number };
 
-type OrbitOutlineWorkerParams = {desiredOrbitBodyName: string, orbitLength: OrbitLength,  orbitingBodies: BodyProperties[]};
+type OrbitOutlineWorkerParams = {desiredOrbitBodyName: string, orbitLength: OrbitLength,  orbitingBodies: BodyProperties[], origin: OrbitOrigin};
 
 let workerPool: ExecutorPool<OrbitOutlineWorkerParams, NamedArrayBuffer[]>;
 
@@ -53,7 +55,7 @@ export function getworkerExecutorPool(): ExecutorPool<OrbitOutlineWorkerParams,N
     if(workerPool == undefined){
         const workers = Array.from({length: NB_WORKERS}).map(() => {
             const runner = new OrbitOutlinerWorker();
-            return (s: OrbitOutlineWorkerParams) => runner.run(s.desiredOrbitBodyName, s.orbitLength, s.orbitingBodies);
+            return (s: OrbitOutlineWorkerParams) => runner.run(s.desiredOrbitBodyName, s.orbitLength, s.orbitingBodies, s.origin);
         });
         workerPool = new ExecutorPool(workers);
     }
@@ -96,7 +98,11 @@ export class OrbitTrajectoryOutline extends TrajectoryOutline {
         const sun = bodySystem.getBody("Sun")!;
         orbitingBodies.forEach(body => body.velocity = Vector.substract(sun.velocity, body.velocity!));
 
-        getworkerExecutorPool().execute({desiredOrbitBodyName: this.bodyObject.getName(), orbitLength: this.orbitLength, orbitingBodies: orbitingBodies})
+        // The worker emits vertices relative to this origin (the camera target) so that
+        // near-camera segments are small-magnitude and Float32-precise.
+        const origin = bodySystem.getTargetSceneOrigin();
+
+        getworkerExecutorPool().execute({desiredOrbitBodyName: this.bodyObject.getName(), orbitLength: this.orbitLength, orbitingBodies: orbitingBodies, origin: {x: origin.x, y: origin.y, z: origin.z}})
             .then(namedOrbitArrayBuffers => {
                 namedOrbitArrayBuffers
                     .filter(o => o.buffer != undefined)
@@ -104,6 +110,7 @@ export class OrbitTrajectoryOutline extends TrajectoryOutline {
                         const bodyObject3D: RenderableBody = bodySystem.getRenderableBody(o.name);
                         bodyObject3D.trajectoryOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
                         bodyObject3D.trajectoryOutline.nbVertices = o.index;
+                        bodyObject3D.trajectoryOutline.setOrigin(origin);
                         bodyObject3D.trajectoryOutline.needsUpdate();
                     });
         });
