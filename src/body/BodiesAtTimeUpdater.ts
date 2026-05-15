@@ -1,7 +1,8 @@
 import { BodySystemUpdater } from './BodySystemUpdater.ts';
-import { Clock } from "../system/Clock.ts";
-import { BodyObject3D } from '../mesh/BodyObject3D.ts';
+import { Clock, TimeMark } from "../system/Clock.ts";
+import { RenderableBody } from '../mesh/RenderableBody.ts';
 import { KinematicObject } from '../domain/models.ts';
+import { hermiteSample } from './SpacecraftTrajectoryUpdater.ts';
 
 
 
@@ -12,27 +13,31 @@ import { KinematicObject } from '../domain/models.ts';
 export class BodiesAtTimeUpdater implements BodySystemUpdater {  
  
   kinematics: KinematicObject[];
-  datetime: Date;
+
   isOneTimeUpdate = true
   isEnabled = true;
 
-  constructor(kinematics: KinematicObject[], datetime: Date){
+
+  constructor(kinematics: KinematicObject[]){
     this.kinematics = kinematics; 
-    this.datetime = datetime;
+
   }
 
   /**
    * Update all: positions, velocities, rotations and the clock time!
    */
-  update(bodyObject3Ds: Map<string, BodyObject3D>, timestepMs: number, clock: Clock): Map<string, BodyObject3D> {
+  update(bodyObject3Ds: RenderableBody[], timeMark: TimeMark,  doInvalidate: boolean): void {
     // this updater is a 'OneTimeUpdate'. It disables itself once it starts to run.
     this.isEnabled = false;
+
+    const bodySystem = bodyObject3Ds[0].bodySystem;
     this.kinematics.forEach(kinematic => {
-      const bodyObject3d = bodyObject3Ds.get(kinematic.name)
-      bodyObject3d?.body.setKinematics(kinematic);
+      const body = bodySystem.getBody(kinematic.name)
+      // console.log(body.name);
+      body.setKinematics(kinematic);
     });
-    clock.setTime(this.datetime.getTime());
-    return bodyObject3Ds;
+
+    
 
   }
 }

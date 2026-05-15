@@ -1,5 +1,5 @@
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
-import { StarBodyObject3D } from './StarBodyObject3D';
+import { RenderableStar } from './RenderableStar';
 import { getObjectScreenSize } from '../system/geometry';
 import { Dim } from "../system/Dim.ts";
 import { textureLoader } from '../services/textureLoader.ts';
@@ -41,10 +41,10 @@ class ScaledLensflare {
 
 export class FlareEffect {
     flares: ScaledLensflare[] = [];
-    star: StarBodyObject3D;
+    star: RenderableStar;
     lensflare?: Lensflare;
 
-    constructor(star: StarBodyObject3D) {
+    constructor(star: RenderableStar) {
         this.star = star;
 
         // I think the log scale is better, we should ditch the linearSequenceGenerator.

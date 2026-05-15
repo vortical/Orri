@@ -1,13 +1,23 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
-
+import { RenderableBody } from "../mesh/RenderableBody";
+import { Body } from "../body/Body"
 export const SYSTEM_TIME_TOPIC = Symbol('Topic for time messages from a clock');
 export const MOUSE_HOVER_OVER_BODY_TOPIC = Symbol('Topic for mouse hovered over a body');
-export const MOUSE_CLICK_ON_BODY_TOPIC = Symbol('Topic for mouse clicked body');
 export const BODY_SELECT_TOPIC = Symbol('Topic from BodySystem when target changes');
+export const BODY_ACTIVE_TOPIC = Symbol('Topic from when an object becomes active/inactive (e.g. spacecraft) changes');
 export const TIME_SCALE_TOPIC = Symbol('Topic from BodySystem when time scale changes');
+export const TIME_DISPLAY_TOPIC = Symbol('Topic from BodySystem when time display (local/utc) changes');
+export const FOV_TOPIC = Symbol('Topic from BodySystem when FOV changes');
 
 
 
 export type BodySelectEventMessageType = {
-    body: BodyObject3D
+    body: RenderableBody
+}
+
+
+
+
+export type BodyActiveEventMessageType = {
+    body: Body;
+    isActive: boolean;
 }

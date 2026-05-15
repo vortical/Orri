@@ -14,6 +14,8 @@ export enum TimeUnit {
     Days
 }
 
+export type TimeDisplay = 'local' | 'utc';
+
 /**
  * Compares the dates based on the resolution. 
  * 

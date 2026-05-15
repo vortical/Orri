@@ -22,5 +22,5 @@
 
     "noImplicitThis": false
   },
-  "include": ["src"]
+  "include": ["src", "src/**/*.svelte"]
 }

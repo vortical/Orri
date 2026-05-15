@@ -4,7 +4,7 @@ import { Vector } from "../system/Vector.ts";
 import { timeMsToUnits, timePeriodToMs, TimeUnit, unitsToMs } from '../system/time.ts';
 // import { BufferAttribute, BufferGeometry, Float32BufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
 import { OrbitLength, OrbitLengthType } from './OrbitOutline.ts';
-import { OrbitalOutline } from './OrbitOutline.ts';
+import { OrbitTrajectoryOutline } from './OrbitOutline.ts';
 import { convertDistance, DistanceUnits } from '../system/distance.ts';
 import { toDeg } from '../system/geometry.ts';
 import { BodyProperties, BodyType } from '../domain/models.ts';
@@ -15,15 +15,15 @@ const UNIT_DISTANCE = DistanceUnits.au;
 const STEPS_PER_ORBIT = 360*4*10;
 
 class OrbitingBodyWithPositionAttribute extends Body {
-  orbitalOutline?: OrbitalOutline;
-  constructor(b: BodyProperties, withOrbitalOutline: boolean){
+  orbitalOutline?: OrbitTrajectoryOutline;
+  constructor(b: BodyProperties, withOrbitTrajectoryOutline: boolean){
     super(b);
-    if(withOrbitalOutline){
-      this.orbitalOutline =  new OrbitalOutline();
+    if(withOrbitTrajectoryOutline){
+      this.orbitalOutline =  new OrbitTrajectoryOutline();
     }
 
     // if(b.type == 'planet'){
-    //   this.orbitalOutline =  new OrbitalOutline();
+    //   this.orbitalOutline =  new OrbitTrajectoryOutline();
     // }
   }
 };
@@ -103,7 +103,7 @@ function iterationVariablesForTime(timePeriodMs: number, timeMs: number, type: B
 }
 
 function calculateOrbits(orbitLength: OrbitLength, orbittingBodies: OrbitingBodyWithPositionAttribute[]   ): OrbitingBodyWithPositionAttribute[] {
-  // Find smallest period.
+  // Find smallest period
   const timePeriod = orbittingBodies
     .filter(o => o.type == "planet" || o.type == "moon")
     .map(o => o.orbitPeriod? timePeriodToMs(o.orbitPeriod) : approximateOrbitalPeriod(o))

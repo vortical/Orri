@@ -1,15 +1,16 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
+import { RenderableBody } from "../mesh/RenderableBody";
 import { BodySystem } from "./BodySystem";
 import * as TWEEN from '@tweenjs/tween.js';
 import { Vector3 } from "three";
 
+export type MoveIntent = 'standard' | 'reapply' | number;
 
 export interface CameraTargetingState {
 
     cameraMode: CameraMode;
 
-    moveToTarget(bodyObject3D: BodyObject3D, force: boolean): void;
-    followTarget(bodyObject3D: BodyObject3D): void;
+    moveToTarget(bodyObject3D: RenderableBody, intent?:MoveIntent): void;
+    followTarget(bodyObject3D: RenderableBody): void;
 
     /**
      * Called after a new target is set. 
@@ -18,7 +19,7 @@ export interface CameraTargetingState {
      * 
      * @param bodyObject3D 
      */
-    postTargetSet(bodyObject3D: BodyObject3D): void;
+    postTargetSet(bodyObject3D: RenderableBody): void;
     computeDesiredCameraUp(): Vector3;
 }
 
@@ -30,6 +31,8 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     bodySystem: BodySystem;
     abstract cameraMode: CameraMode;
     max_distance_ratio: number;
+    private activeOrientationTween?: TWEEN.Tween<Vector3>;
+    private activePositionTween?: TWEEN.Tween<any>;
 
     constructor(bodySystem: BodySystem, max_distance_ratio: number = 50) {
         this.bodySystem = bodySystem;
@@ -51,7 +54,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         return this.bodySystem.getBody("earth").get_orbital_plane_normal()!;
     }
 
-    postTargetSet(bodyObject3D: BodyObject3D) {
+    postTargetSet(bodyObject3D: RenderableBody) {
         
         this.bodySystem.controls.minDistance = this.minCameraDistance(bodyObject3D);
         this.bodySystem.setCameraNear(bodyObject3D.body.radius / 1000);
@@ -65,7 +68,7 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
      * @param bodyObject3D 
      * @returns 
      */
-    minCameraDistance(bodyObject3D: BodyObject3D) {
+    minCameraDistance(bodyObject3D: RenderableBody) {
         const bodyRadius = bodyObject3D.body.radius / 1000
         return bodyRadius + (1.5 * bodyRadius);
     }
@@ -73,63 +76,135 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
 
 
     /**
-     * Pretty Lerp of the camera towards the target.     * 
+     * Pretty Lerp of the camera towards the target and sets it!   * 
      * 
-     * @param bodyObject3D 
+     * @param movetoRenderable 
      * @param force 
      * @returns 
      */
 
-    moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
+    moveToTarget(movetoRenderable: RenderableBody, intent:MoveIntent = "standard"): void {
 
         const bodySystem = this.bodySystem;
 
-        if (bodySystem.getBodyObject3DTarget() == bodyObject3D && !force) return;
+        const isSameTarget = bodySystem.getRenderableBodyTarget() == movetoRenderable;
+
+        if (isSameTarget && intent === 'standard'){
+          return;
+        }
+
+        this.activeOrientationTween?.stop();
+        this.activePositionTween?.stop();
 
         bodySystem.controls.enabled = false;
 
-        const currentBodyObject3d = bodySystem.getBodyObject3DTarget();
+        const currentTargetRenderable = bodySystem.getRenderableBodyTarget();
         const currentTargetPosition = this.bodySystem.controls.target.clone();
-        const newTargetPosition = bodyObject3D.object3D.position;
+        const newTargetPosition = movetoRenderable.object3D.position;  // live reference
         const currentCameraPosition = this.bodySystem.camera.position;
         const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition);
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition);
-        const newTargetVectorNormal = newTargetVector.clone().normalize();
-        const currentDistanceToSurface = currentBodyObject3d.cameraDistanceFromSurface();
-        const totalDistance = Math.max(Math.min(currentDistanceToSurface + bodyObject3D.body.radius / 1000, this.max_distance_ratio * bodyObject3D.body.radius / 1000), this.minCameraDistance(bodyObject3D));
-        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistance));
 
-        // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
-        const rotationTime = Math.max(
-            Math.max(currentTargetVector.angleTo(newTargetVector) / Math.PI) * 2000,
-            1000);
+        const bodyRadiusKm = movetoRenderable.body.radius / 1000;
+        const currentDistanceToSurface = currentTargetRenderable.cameraDistanceFromSurface();
+        const maxDesirableDistance = this.max_distance_ratio * bodyRadiusKm;
+        // minCameraDistance() is a from-CENTER distance; currentDistanceToSurface and
+        // totalDistanceToSurface are to-SURFACE — subtract the radius so the floor is
+        // a consistent to-surface value (endDistanceFromCenter adds it back below).
+        const minAcceptableDistance = this.minCameraDistance(movetoRenderable) - bodyRadiusKm;
 
-        // Orient the camera towards a different target; does not move the position of the camera.
-        const targetOrientation = new TWEEN
-            .Tween(this.bodySystem.controls.target)
-            .to(bodyObject3D.object3D.position, rotationTime)
-            .easing(TWEEN.Easing.Quintic.In)
-            .dynamic(true);
+        const totalDistanceToSurface = isSameTarget && typeof intent === 'number'?
+          Math.max(currentDistanceToSurface * intent, minAcceptableDistance):
+          Math.max(
+            Math.min(
+              currentDistanceToSurface,
+              maxDesirableDistance
+            ),
+            minAcceptableDistance
+          );
+        const endDistanceFromCenter = totalDistanceToSurface + bodyRadiusKm;
 
         const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
+        const minDisplacementTime = (isSameTarget && intent !== "reapply") ? 600 : 2500;
+        const positionDisplacementTime = Math.max(distanceToNewTarget / 3300000, minDisplacementTime);
 
-        // Reposition camera: travel at 1000 times the speed of light or slower for 2.5 seconds wich ever is the most.
-        const positionDisplacementTime = Math.max((distanceToNewTarget / 3300000), 2500);
+        // Body-tracked dolly: each frame, re-anchor the camera to the body's CURRENT
+        // position (via the live `newTargetPosition` reference) rather than the absolute
+        // point computed at click time. Critical for small fast-moving bodies (e.g. Deimos
+        // at high time scale) where the body moves thousands of km during the tween.
+        //
+        // approachDir/startDistanceFromCenter are captured synchronously HERE (click time),
+        // consistent with currentDistanceToSurface/endDistanceFromCenter. Capturing them in
+        // onStart instead would read state one frame later — by which point the body has
+        // drifted but the camera is frozen (controls.enabled=false pauses followTarget),
+        // giving a stale relationship that springs the camera on each click. The cross-body
+        // case re-captures in onStart below, because there the dolly genuinely begins after
+        // the orientation tween has run.
+        let approachDir = currentCameraPosition.clone().sub(newTargetPosition).normalize();
+        let startDistanceFromCenter = currentCameraPosition.distanceTo(newTargetPosition);
+        // Same-target zoom wants an immediate response (Out easing starts fast). Cross-body
+        // dolly comes AFTER the orientation tween, so a gentler InOut feels better there.
+        const easingFn = (isSameTarget && intent !== "reapply")
+            ? TWEEN.Easing.Quartic.Out
+            : TWEEN.Easing.Quintic.InOut;
         const cameraPosition = new TWEEN
-            .Tween(this.bodySystem.camera.position)
-            .to(newCameraPos, positionDisplacementTime) // this may be moving...
-            .easing(TWEEN.Easing.Quintic.InOut);
-
-        targetOrientation
-            .chain(cameraPosition)
-            .start()
-            .onComplete(() => {
-                this.bodySystem.controls.enabled = true;
-                this.bodySystem.setTarget(bodyObject3D);
+            .Tween({ p: 0 })
+            .to({ p: 1 }, positionDisplacementTime)
+            .easing(easingFn)
+            .onUpdate((obj) => {
+                const currentDistance = startDistanceFromCenter + (endDistanceFromCenter - startDistanceFromCenter) * obj.p;
+                this.bodySystem.camera.position.copy(newTargetPosition).addScaledVector(approachDir, currentDistance);
+                // Pin controls.target to the body's live position so the view direction
+                // stays radial (camera→body) even when the body moves fast. Replaces the
+                // parallel targetTracker tween which lagged behind the body's motion.
+                this.bodySystem.controls.target.copy(newTargetPosition);
+                // OrbitControls.update() ran earlier this frame and called camera.lookAt()
+                // against the PREVIOUS frame's target — re-aim now so the rendered frame
+                // shows position + orientation consistent with the body's current location.
+                this.bodySystem.camera.lookAt(this.bodySystem.controls.target);
             });
+
+        const onArrived = () => {
+            this.bodySystem.controls.enabled = true;
+            this.bodySystem.setTarget(movetoRenderable);
+        };
+
+        this.activePositionTween = cameraPosition;
+
+        if (isSameTarget && intent !== "reapply") {
+            // Camera is already pointed at the body — skip the orientation tween entirely.
+            // The cameraPosition tween's onUpdate pins controls.target to the live body
+            // position each frame, so OrbitControls has a fresh reference throughout.
+            cameraPosition.start().onComplete(onArrived);
+        } else {
+            // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
+            const rotationTime = Math.max(
+                currentTargetVector.angleTo(newTargetVector) / Math.PI * 2000,
+                1000);
+
+            const targetOrientation = new TWEEN
+                .Tween(this.bodySystem.controls.target)
+                .to(movetoRenderable.object3D.position, rotationTime)
+                .easing(TWEEN.Easing.Quintic.In)
+                .dynamic(true);
+
+            this.activeOrientationTween = targetOrientation;
+
+            // The dolly begins only after the orientation tween finishes — by then the
+            // body has drifted, so re-measure the camera↔body relationship at that point.
+            cameraPosition.onStart(() => {
+                approachDir = this.bodySystem.camera.position.clone().sub(newTargetPosition).normalize();
+                startDistanceFromCenter = this.bodySystem.camera.position.distanceTo(newTargetPosition);
+            });
+
+            targetOrientation
+                .chain(cameraPosition)
+                .start()
+                .onComplete(onArrived);
+        }
     }
 
-    abstract followTarget(bodyObject3D: BodyObject3D): void;
+    abstract followTarget(bodyObject3D: RenderableBody): void;
 
 }
 
@@ -140,7 +215,7 @@ export class FollowTargetCameraMode extends OrbitingCameraMode {
         super(bodySystem)
     }
 
-    followTarget(bodyObject3D: BodyObject3D): void {
+    followTarget(bodyObject3D: RenderableBody): void {
         const bodySystem = this.bodySystem;
 
         // keep same distance...
@@ -159,7 +234,7 @@ export class LookAtTargetCameraMode extends OrbitingCameraMode {
         super(bodySystem)
     }
 
-    followTarget(bodyObject3D: BodyObject3D): void {
+    followTarget(bodyObject3D: RenderableBody): void {
         this.bodySystem.controls.target.set(bodyObject3D.body.position.x / 1000, bodyObject3D.body.position.y / 1000, bodyObject3D.body.position.z / 1000);
     }
 }
@@ -182,9 +257,9 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
         return this.bodySystem.locationPin!.getLocationPinNormal();
     }
 
-    postTargetSet(bodyObject3D: BodyObject3D) { }
+    postTargetSet(bodyObject3D: RenderableBody) { }
 
-    moveToTarget(bodyObject3D: BodyObject3D, force = false): void {
+    moveToTarget(bodyObject3D: RenderableBody, intent:MoveIntent="standard") {
 
         const bodySystem = this.bodySystem;
 
@@ -216,7 +291,7 @@ export class ViewFromSurfaceLocationPinCameraMode implements CameraTargetingStat
             });
     }
 
-    followTarget(bodyObject3D: BodyObject3D): void {
+    followTarget(bodyObject3D: RenderableBody): void {
         const bodySystem = this.bodySystem;
 
         // body rotates, so need to adjust the up

@@ -1,11 +1,11 @@
 import { DoubleSide, Mesh, MeshLambertMaterial, Object3D, RingGeometry, Vector3 } from "three";
-import { CelestialBodyPart } from "./CelestialBodyPart.ts";
+import { Renderable } from "./Renderable.ts";
 import { RingProperties } from "../domain/models.ts";
 import { textureLoader } from "../services/textureLoader.ts";
 import { Body } from '../body/Body.ts';
 import { DistanceUnits, convertDistance } from "../system/distance.ts";
 
-export class Rings extends CelestialBodyPart {
+export class Rings extends Renderable {
 
     readonly mesh: Mesh;
 

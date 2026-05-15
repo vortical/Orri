@@ -13,6 +13,10 @@ import { Timer } from "./Timer";
  *
  */
 
+export interface TimeMark {
+  timeMs: number
+  deltaMs: number
+}
 
 export class Clock {
 
@@ -36,6 +40,11 @@ export class Clock {
     scale: number = 1;
     savedScale: number = 1;
     timers = new Map<string, Timer>();
+
+
+
+    private timeMark?: TimeMark;
+                                                       
 
     /**
      * references the pub/sub publisher once started, else indefined
@@ -75,22 +84,43 @@ export class Clock {
     }
 
     isPaused(): boolean {
-        return this._isPaused;
+      return this._isPaused;
     }
 
     setTime(timeMs: number) {
-        this.realTimestampMs = Date.now();
-        this.clockTimeMs = timeMs;
+      this.realTimestampMs = performance.now();
+      this.clockTimeMs = timeMs;
     }
 
     getTime(): number {
-        const realTimeDelta = Date.now() - this.realTimestampMs;
-        const clockTime = this.clockTimeMs + (realTimeDelta) * this.scale;
-        return clockTime;
+      const now = performance.now();        
+      return this.clockTimeMs + (now - this.realTimestampMs) * this.scale;        
+    }
+
+    mark(): TimeMark {
+      const now = this.getTime();
+
+    
+      if(this.timeMark){
+        this.timeMark = {timeMs: now, deltaMs: now - this.timeMark.timeMs};
+
+      }else{
+        this.timeMark = {timeMs: now, deltaMs: 0};
+      }
+
+      return this.timeMark;
+      
+    }
+
+    getMark(): TimeMark {
+      if(this.timeMark){
+        return this.timeMark;
+      }
+      return this.mark();
     }
 
     getScale(): number {
-        return this.isPaused() ? this.savedScale : this.scale;
+      return this.isPaused() ? this.savedScale : this.scale;
     }
 
     publishTimeScale = throttle(200, undefined, (scale: number) => PubSub.publish(TIME_SCALE_TOPIC, scale));

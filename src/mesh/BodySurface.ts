@@ -1,10 +1,10 @@
 import { Object3D } from "three";
-import { CelestialBodyPart } from "./CelestialBodyPart";
+import { Renderable } from "./Renderable";
 import { Body } from '../body/Body.ts';
 import { BodySystem } from "../scene/BodySystem.ts";
 
 
-export abstract class BodySurface extends CelestialBodyPart {
+export abstract class BodySurface extends Renderable {
 
     
     readonly object3D: Object3D;
@@ -28,7 +28,7 @@ export abstract class BodySurface extends CelestialBodyPart {
     /**
      * Calculate sideral rotation
      */
-    updatePart(): void {
+    updatePart(): void {      
         this.getObject3D().rotation.set(this.body.sideralRotation.x, this.body.sideralRotation.y, this.body.sideralRotation.z);
     }
 

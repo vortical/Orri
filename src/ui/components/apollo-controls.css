@@ -1,0 +1,400 @@
+/*
+ * Shared Apollo-aesthetic control chrome. Reused by Sidebar sections
+ * and any other place that needs a styled native form input with the
+ * recessed-dark + amber accent look.
+ */
+
+/* -------- Slider (styled native range input) -------------------------- */
+.apollo-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 24px;
+  cursor: pointer;
+}
+.apollo-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: linear-gradient(#1a1a1a, #2a2a2a);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.apollo-slider::-moz-range-track {
+  height: 4px;
+  background: linear-gradient(#1a1a1a, #2a2a2a);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.apollo-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 22px;
+  margin-top: -10px;
+  border-radius: 2px;
+  background: linear-gradient(#e8e8e8 0%, #b8b8b8 50%, #888 100%);
+  border: 1px solid #2a2a2a;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+.apollo-slider::-moz-range-thumb {
+  width: 14px;
+  height: 22px;
+  border-radius: 2px;
+  background: linear-gradient(#e8e8e8 0%, #b8b8b8 50%, #888 100%);
+  border: 1px solid #2a2a2a;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+.apollo-slider:focus { outline: none; }
+.apollo-slider:focus::-webkit-slider-thumb { border-color: #d4a04a; }
+.apollo-slider:focus::-moz-range-thumb { border-color: #d4a04a; }
+
+.slider-wrap {
+  position: relative;
+  width: 100%;
+}
+.slider-wrap .tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 10px;
+  border-radius: 1px;
+  background: #d4a04a;
+  opacity: 0.55;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 1px rgba(255, 255, 255, 0.18);
+  transition: opacity 0.15s ease;
+}
+.slider-wrap:hover .tick,
+.slider-wrap:focus-within .tick {
+  opacity: 0.9;
+}
+
+/* -------- Toggle (styled native checkbox as a switch) ------------------ */
+.apollo-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  background: linear-gradient(#1a1a1a, #2a2a2a);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+  margin: 0;
+}
+.apollo-toggle::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(#e8e8e8 0%, #b8b8b8 50%, #888 100%);
+  border: 1px solid #2a2a2a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.apollo-toggle:checked {
+  background: linear-gradient(#3a2a14, #2a1f0e);
+}
+.apollo-toggle:checked::before {
+  transform: translateX(16px);
+  border-color: #d4a04a;
+}
+.apollo-toggle:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 0 2px rgba(212, 160, 74, 0.5);
+}
+
+/* -------- Select (dropdown) -------------------------------------------- */
+.apollo-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #1a1a1a;
+  background-image:
+    linear-gradient(#1a1a1a, #2a2a2a),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23d4a04a' d='M0 0l5 6 5-6z'/></svg>");
+  background-repeat: no-repeat, no-repeat;
+  background-position: 0 0, right 8px center;
+  background-size: 100% 100%, 10px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 4px 24px 4px 8px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  min-height: 28px;
+}
+.apollo-select:focus {
+  outline: none;
+  border-color: #d4a04a;
+}
+.apollo-select option {
+  background: #1a1a1a;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* -------- Inline button (text + small actions inside panels) ----------- */
+.apollo-button {
+  background: linear-gradient(#2a2a2a, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  min-height: 32px;
+}
+.apollo-button:hover {
+  background: linear-gradient(#3a3a3a, #2a2a2a);
+}
+.apollo-button:active {
+  background: linear-gradient(#1a1a1a, #2a2a2a);
+}
+.apollo-button:focus-visible {
+  outline: none;
+  border-color: #d4a04a;
+}
+.apollo-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -------- Text input --------------------------------------------------- */
+.apollo-text {
+  background: linear-gradient(#1a1a1a, #2a2a2a);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 4px 8px;
+  min-height: 28px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.apollo-text:focus {
+  outline: none;
+  border-color: #d4a04a;
+}
+
+/* -------- Section header (non-interactive heading) -------------------- */
+.apollo-section-header {
+  margin: 0;
+  padding: 14px 12px 4px;
+  color: rgba(212, 160, 74, 0.9);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.apollo-section-header:first-child {
+  border-top: none;
+}
+
+/* Master-toggle variant: section header IS the master row. */
+.apollo-section-header-with-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 8px;
+}
+.apollo-section-header-with-controls .apollo-section-title {
+  color: rgba(212, 160, 74, 0.9);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.apollo-section-header-with-controls .apollo-toggle {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.apollo-section-header-with-controls .apollo-options-toggle {
+  flex-shrink: 0;
+}
+
+.apollo-section-body {
+  padding: 4px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.apollo-section-body.apollo-options-body {
+  /* When the options body sits directly under a master-toggle header (no
+     surrounding section-body wrapper), bump left padding so the sub-tree
+     border-line aligns under the title text. */
+  padding-left: 24px;
+}
+
+/* -------- Options disclosure (master toggle's sub-tree) --------------
+   Chevron-only icon button. Down (▾) when collapsed, up (▴) when expanded
+   — the standard accordion pattern. */
+.apollo-options-toggle {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.apollo-options-toggle:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+}
+.apollo-options-toggle:focus-visible {
+  outline: none;
+  color: #d4a04a;
+}
+.apollo-options-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+.apollo-options-toggle[aria-expanded='true'] .apollo-options-chevron {
+  transform: rotate(-135deg);
+}
+.apollo-options-body {
+  padding-left: 12px;
+  margin-left: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.apollo-options-body.is-disabled {
+  opacity: 0.45;
+}
+
+/* -------- Bottom "show debug tools" link ------------------------------ */
+.apollo-debug-toggle {
+  margin: 16px 12px;
+  align-self: flex-start;
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.apollo-debug-toggle:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* -------- Row + label layout helpers ---------------------------------- */
+.apollo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.apollo-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+.apollo-readout {
+  color: rgba(255, 255, 255, 0.85);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+/* -------- Top-row icon button (stateful via aria-pressed) ------------- */
+.apollo-icon-button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.apollo-icon-button:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+.apollo-icon-button[aria-pressed='true'] {
+  background: rgba(0, 0, 0, 0.6);
+  color: #d4a04a;
+  border-color: rgba(212, 160, 74, 0.55);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.apollo-icon-button:focus-visible {
+  outline: none;
+  border-color: #d4a04a;
+}
+
+/* Target indicator widens the icon button for icon + name + chevron. */
+.apollo-target-button {
+  padding: 0 10px;
+  gap: 8px;
+}
+
+/* -------- Sidebar (left-edge panel) -----------------------------------
+   Mount-controlled by the parent (App.svelte). When this element exists in
+   the DOM, the sidebar is open; when it doesn't, it's closed. No
+   slide-in animation today — Svelte's transition: directive would handle
+   that if we ever want one. */
+.sidebar {
+  position: fixed;
+  /* Start below the top-row strip (top-3 + 40px button + breathing) so the
+     date/target/spacecraft/share controls remain visible and interactive while
+     the sidebar is open. */
+  top: 64px;
+  bottom: 0;
+  left: 0;
+  width: min(92vw, 320px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.4);
+  z-index: 60;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+}

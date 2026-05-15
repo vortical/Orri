@@ -1,3 +1,5 @@
+export type Vec3 = [number, number, number];
+
 export interface VectorComponents {
     x: number;
     y: number;
@@ -17,19 +19,43 @@ export interface Axis {
     direction?: VectorComponents
 }
 
+
 export interface KinematicObject {
-    name: string;
-    ephemeris: Ephemeris;
-    axis?: Axis,
-    datetime: Date;
+  name: string;
+  ephemeris?: Ephemeris;
+  axis?: Axis,
+  datetime: Date;
+}
+
+export type MissionWindow = {
+    start: string;
+    end: string;
+    startMs: number;
+    endMs: number;
+    burnEvents?: BurnEvent[];
+    trajectory?: TrajectoryPoint[];
+}
+
+
+
+export type BurnEvent = {
+    startMs: number;
+    endMs: number;
+    accelerations: VectorComponents[]; // per-minute, m/s², coordinate-transformed
+}
+
+export type TrajectoryPoint = {
+    timeMs: number;
+    position: [number, number, number]; // m, app frame
+    velocity: [number, number, number]; // m/s, app frame
 }
 
 export type TimePeriod = {
-    days?: number
-    hours?: number
-    minutes?: number
-    seconds?: number
-    millis?: number
+    days?: number;
+    hours?: number;
+    minutes?: number;
+    seconds?: number;
+    millis?: number;
 };
 
 export type MaterialProperties = {
@@ -46,7 +72,7 @@ export type MaterialProperties = {
 
 export type GLTFModelProperties = {
     uri: string,
-    baseScale: number
+    credits?: string
 }
 
 export type LightProperties = {
@@ -64,7 +90,7 @@ export type RingProperties = {
     colorMapUri?: string;
 };
 
-export type BodyType = "star" | "planet" | "moon" ;
+export type BodyType = "star" | "planet" | "moon" |"spacecraft";
 
 
 export type BodyProperties = {
@@ -77,6 +103,12 @@ export type BodyProperties = {
     velocity?: VectorComponents;
     castShadow?: boolean;
     receiveShadow?: boolean;
+    missionWindow?: MissionWindow;
+    /**
+     * Short descriptive text for UI lists (search results, browsers).
+     * Will be populated by the spacefield API in the future; seeded in datasmall.json today.
+     */
+    summary?: string;
 
     /**
      * Obliquity to Orbit (degrees) - The angle in degrees of the axis of a body

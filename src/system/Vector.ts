@@ -1,5 +1,6 @@
 import { BufferAttribute, Vector3 } from "three";
 import { VectorComponents } from "../domain/models.ts";
+import { sub } from "three/examples/jsm/nodes/Nodes.js";
 
 
 export class Vector extends Vector3 implements VectorComponents {
@@ -16,6 +17,12 @@ export class Vector extends Vector3 implements VectorComponents {
         return new Vector(pos2.x + pos1.x, pos2.y + pos1.y, pos2.z + pos1.z);
     }
 
+    static average(vec1: VectorComponents, vec2: VectorComponents): VectorComponents {
+      return { x: (vec1.x + vec2.x) / 2, y: (vec1.y + vec2.y) / 2, z: (vec1.z + vec2.z) / 2 };
+    }
+
+
+
     static fromVectorComponents(v?: VectorComponents|Vector3): Vector {
         return v == undefined? new Vector():new Vector(v.x, v.y, v.z)
     }
@@ -24,6 +31,20 @@ export class Vector extends Vector3 implements VectorComponents {
         return new Vector().fromBufferAttribute(attribute, index);
         
     }
+
+    static fromV3(v3: [number, number, number]): Vector {
+        return new Vector(v3[0], v3[1], v3[2]);
+        
+    }
+
+
+    static lerp(a: Vector, b: Vector, ratio: number): Vector {
+      // go from a TO b / ratio
+      const diff = Vector.substract(a, b);
+      return new Vector(a.x + ratio* diff.x, a.y + ratio * diff.y, a.z + ratio * diff.z);
+
+        
+    }    
 
     toString(): string {
         return `[${this.x}, ${this.y}, ${this.z}]`;

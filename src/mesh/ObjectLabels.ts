@@ -1,29 +1,35 @@
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { BodyObject3D } from './BodyObject3D';
+import { RenderableBody } from './RenderableBody';
 import { BodySystem } from '../scene/BodySystem';
 import { CameraLayer } from '../scene/CameraLayer';
 import { AltitudeAzimuth } from "../system/AltitudeAzimuth";
 import { CameraModes } from '../scene/CameraTargetingState';
 import { LocationPin } from './LocationPin';
-import { MOUSE_CLICK_ON_BODY_TOPIC } from '../system/event-types';
 
 export class ObjectLabels {
     nameLabel: NameLabel;
     distanceLabel: DistanceLabel;
     altitudeAzimuthLabel: AltitudeAzimuthLabel;
-    bodyObject3D: BodyObject3D;
+    bodyObject3D: RenderableBody;
     isHighlighted?: boolean;
 
-    constructor(bodyObject3D: BodyObject3D) {
+    constructor(bodyObject3D: RenderableBody) {
         this.nameLabel = new NameLabel(createCSS2DObject(1, bodyObject3D.getName(), CameraLayer.NameLabel), CameraLayer.NameLabel, bodyObject3D);
         this.distanceLabel = new DistanceLabel(createCSS2DObject(0, "0", CameraLayer.DistanceLabel), CameraLayer.DistanceLabel, bodyObject3D);
         this.altitudeAzimuthLabel = new AltitudeAzimuthLabel(createCSS2DObject(-1, "23,23", CameraLayer.ElevationAzimuthLabel), CameraLayer.ElevationAzimuthLabel, bodyObject3D);
         this.bodyObject3D = bodyObject3D;
-        this.setupLabelClickHandler();
+
+        // Tag each label's DOM element with its body name so Picker.ts can
+        // resolve label clicks straight back to the right body — no raycaster,
+        // no offset-misses, one source of truth.
+        const name = bodyObject3D.getName();
+        for (const label of this.getLabels()) {
+            label.cssObject.element.dataset.bodyName = name;
+        }
     }
 
     getCSS2DObjects(): CSS2DObject[] {
-        return this.getLabels().map((l: Label) => l.cssObject);
+        return this.getLabels().map((label: Label) => label.cssObject);
     }
 
     getLabels(): Label[] {
@@ -37,53 +43,23 @@ export class ObjectLabels {
         }
     }
 
-    setupLabelClickHandler() {
-
-        // onpointerup event is not triggered from chrome on desktop (works on firefox),
-        // We workaround this by detecting a pointer down over a label then if
-        // the pointer does not move for 250ms then we trigger the handler for 
-        // the pointerUp event. 
-        // This helps mitigate users clicking on a label while using the orbit
-        // controls.
-
-
-        let timeoutId: number | undefined = undefined;
-        
-        // Invoke the uphandler 250ms if the timeout is not canceled by a 
-        // a pointer move
-        const downHandler = () => {
-            timeoutId = setTimeout(upHandler, 250);
-        };
-
-        const upHandler = () => {
-            PubSub.publish(MOUSE_CLICK_ON_BODY_TOPIC, {body: this.bodyObject3D});
-            timeoutId = undefined;
-        };
-        
-        // If the pointer moves and we have timeoutId (i.e.: pointer was pressed down)
-        // then cancel the press.
-        const moveHandler = () => {
-            if(timeoutId) {
-                clearTimeout(timeoutId);  
-                timeoutId = undefined;
-            } 
-        };        
-
-        this.nameLabel.cssObject.element.onpointerdown = downHandler;
-        this.distanceLabel.cssObject.element.onpointerdown = downHandler;
-        this.altitudeAzimuthLabel.cssObject.element.onpointerdown = downHandler;
-        window.addEventListener('pointermove', moveHandler);
-    }
-
     isPlanetarySystemSelected() {
-        const currentTarget = this.bodyObject3D.bodySystem.getBodyObject3DTarget();
+        const currentTarget = this.bodyObject3D.bodySystem.getRenderableBodyTarget();
         return this.bodyObject3D.body.planetarySystem() == currentTarget.body.planetarySystem()
     }
 
 
     clearBodyLabels() {
         // Probably better to use css properties...
-        this.getLabels().forEach((l: Label) => l.setValue(""));
+        this.getLabels().forEach((label: Label) => label.setValue(""));
+    }
+
+    setVisible(visible: boolean) {
+        const display = visible ? '' : 'none';
+        this.getCSS2DObjects().forEach((obj) => {
+            obj.visible = visible;
+            obj.element.style.display = display;
+        });
     }
 
     updateBodyLabels() {
@@ -97,7 +73,7 @@ export class ObjectLabels {
 
 
         this.setHighlighted(this.isPlanetarySystemSelected());
-        this.getLabels().forEach((l: Label) => l.update());
+        this.getLabels().forEach((label: Label) => label.update());
     };
 
     updateMoonLabels() {
@@ -108,7 +84,7 @@ export class ObjectLabels {
         const isSystemSelected = this.isPlanetarySystemSelected();
         const cameraDistance = this.bodyObject3D.cameraDistance();
 
-        if ((isSystemSelected && cameraDistance < 35e6) || cameraDistance < 1e6 || this.bodyObject3D.bodySystem.getBodyObject3DTarget() == this.bodyObject3D) {
+        if ((isSystemSelected && cameraDistance < 35e6) || cameraDistance < 1e6 || this.bodyObject3D.bodySystem.getRenderableBodyTarget() == this.bodyObject3D) {
             this.updateBodyLabels();
         } else {
             this.clearBodyLabels();
@@ -132,10 +108,10 @@ abstract class Label {
     cssObject: CSS2DObject;
     cameraLayer: CameraLayer;
     bodySystem: BodySystem;
-    bodyObject3D: BodyObject3D;
+    bodyObject3D: RenderableBody;
     abstract isHeader: boolean;
 
-    constructor(cssObject: CSS2DObject, cameraLayer: CameraLayer, bodyObject3D: BodyObject3D) {
+    constructor(cssObject: CSS2DObject, cameraLayer: CameraLayer, bodyObject3D: RenderableBody) {
         this.cssObject = cssObject;
         this.cameraLayer = cameraLayer;
         this.bodySystem = bodyObject3D.bodySystem;

@@ -1,5 +1,5 @@
-import { BodyObject3D } from "../mesh/BodyObject3D";
-import { Clock } from "../system/Clock";
+import { RenderableBody } from "../mesh/RenderableBody";
+import { Clock, TimeMark } from "../system/Clock";
 import { BodySystemUpdater } from "./BodySystemUpdater";
 
 
@@ -18,17 +18,17 @@ export class CompositeUpdater implements BodySystemUpdater {
         this.bodySystemUpdaters = Array.from(bodySystemUpdaters);
     }
 
-    update(bodyObjects3D: Map<string, BodyObject3D>, timeStepmS: number, clock: Clock): Map<string, BodyObject3D> {
+    update(renderableBodies: RenderableBody[], timeMark: TimeMark, doInvalidate: boolean): void{
 
         this.bodySystemUpdaters.forEach(updater => {
             if (updater.isEnabled) {
-                updater.update(bodyObjects3D, timeStepmS, clock);
+                updater.update(renderableBodies, timeMark, doInvalidate);
             }
         });
 
         // discard injected 'OneTimeUpdate' updaters.
         this.bodySystemUpdaters = this.bodySystemUpdaters.filter(updater => !updater.isOneTimeUpdate);
-        return bodyObjects3D;
+        
 
     }
 

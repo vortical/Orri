@@ -1,0 +1,136 @@
+import { BodySystemUpdater } from './BodySystemUpdater.ts';
+import { Clock, TimeMark } from '../system/Clock.ts';
+import { RenderableBody } from '../mesh/RenderableBody.ts';
+import { Vector } from '../system/Vector.ts';
+import { KinematicObject, TrajectoryPoint } from '../domain/models.ts';
+
+type Vec3 = [number, number, number];
+
+export class SpacecraftTrajectoryUpdater implements BodySystemUpdater {
+  isOneTimeUpdate = false;
+  isEnabled = true;
+
+  timeMs: number = 0;
+
+  constructor(){
+
+    console.log("construct: SpacecraftTrajectoryUpdate");
+
+
+  }
+
+  logDeltas(p1: Vector, p2: Vector, v1: Vector, v2: Vector, timestepMs: number, timeMs: number) {
+    const diff = (timeMs - this.timeMs)/1000;
+    console.log(`r:${Vector.substract(p1,p2).magnitude()/(timeMs - this.timeMs) }, calc:${v2.magnitude() * diff} v: ${v1.magnitude() - v2.magnitude()}}, step: ${timestepMs}, clock: ${timeMs - this.timeMs}`);
+    // console.log("--: "+timestepMs);
+    // console.log(`r0:${p1}, vo:${v1}`);
+    // console.log(`r1:${p2}, v1:${v2}`);
+    this.timeMs = timeMs;
+
+  }
+
+  update(renderableBodies: RenderableBody[], timemark: TimeMark):RenderableBody[] {
+    const timeMs = timemark.timeMs;
+
+    for (const o of renderableBodies) {
+      const b = o.body;
+      if (b.type !== 'spacecraft' || !b.useTrajectory || !b.isActive()) continue;
+
+      const pts = b.missionWindow?.trajectory;
+      if (!pts || pts.length < 2) continue;
+
+      const sample = hermiteSample(pts, timeMs);
+      if (!sample) continue;
+
+      const [p, v] = sample;
+      const p0 = b.position
+      const v0 =  b.velocity
+
+      b.position = p;
+      b.velocity = v;
+
+      // this.logDeltas(p0, b.position, v0, b.velocity, timestepMs, timeMs)
+
+      b.sideralRotation = b.rotationAtTime(timeMs);
+      // console.log(b.position,b.velocity,)
+      o.update();
+
+    }
+
+    return renderableBodies;
+  }
+}
+
+
+
+export function lerpSample(pts: TrajectoryPoint[], t: number): [Vector, Vector] | undefined {
+  const last = pts.length - 1;
+  if (t < pts[0].timeMs || t > pts[last].timeMs) return undefined;
+
+  const span = pts[1].timeMs - pts[0].timeMs;
+  let idx = Math.floor((t - pts[0].timeMs) / span);
+  if (idx < 0) idx = 0;
+  if (idx > last - 1) idx = last - 1;
+  
+  const a = pts[idx];
+  const b = pts[idx + 1];
+  console.log(`a:${a.position},b:${b.position}`);
+  
+  const dtMs = b.timeMs - a.timeMs;
+  const dt = dtMs / 1000; // seconds — velocities are m/s
+  const s = (t - a.timeMs) / dtMs;
+  // console.log("Index:"+idx+", dt: "+dt+", s"+s);
+
+  const p = Vector.lerp(Vector.fromV3(a.position), Vector.fromV3(b.position), s);
+  const v = Vector.lerp(Vector.fromV3(a.velocity), Vector.fromV3(b.velocity), s);
+
+  return [p, v];
+}
+
+
+/**
+ * Hermite cubic interpolation between two trajectory points.
+ *
+ * Returns interpolated [position, velocity] at time `t`, or undefined if `t` falls
+ * outside the trajectory's covered range.
+ */
+export function hermiteSample(pts: TrajectoryPoint[], timeMs: number): [Vector, Vector] | undefined {
+  const last = pts.length - 1;
+  if (timeMs < pts[0].timeMs || timeMs > pts[last].timeMs) return undefined;
+
+  const span = pts[1].timeMs - pts[0].timeMs;
+  let idx = Math.floor((timeMs - pts[0].timeMs) / span);
+  if (idx < 0) idx = 0;
+  if (idx > last - 1) idx = last - 1;
+
+  const a = pts[idx];
+  const b = pts[idx + 1];
+
+  const dtMs = b.timeMs - a.timeMs;
+  const dt = dtMs / 1000; // seconds — velocities are m/s
+  const s = (timeMs - a.timeMs) / dtMs;
+
+  const s2 = s * s;
+  const s3 = s2 * s;
+
+  const h00 = 2 * s3 - 3 * s2 + 1;
+  const h10 = s3 - 2 * s2 + s;
+  const h01 = -2 * s3 + 3 * s2;
+  const h11 = s3 - s2;
+
+  // dp/dt = (1/dt) * dp/ds
+  const dh00 = (6 * s2 - 6 * s) / dt;
+  const dh10 = 3 * s2 - 4 * s + 1;
+  const dh01 = (-6 * s2 + 6 * s) / dt;
+  const dh11 = 3 * s2 - 2 * s;
+
+  const p: Vec3 = [0, 0, 0];
+  const v: Vec3 = [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    p[i] = h00 * a.position[i] + h10 * dt * a.velocity[i] + h01 * b.position[i] + h11 * dt * b.velocity[i];
+    v[i] = dh00 * a.position[i] + dh10 * a.velocity[i] + dh01 * b.position[i] + dh11 * b.velocity[i];
+  }
+
+  return [Vector.fromV3(p), Vector.fromV3(v)];
+}
+

@@ -1,7 +1,7 @@
 import { Body } from "../body/Body.ts";
 import { BodySystem } from "../scene/BodySystem.ts";
 import { BodySurface } from "./BodySurface.ts";
-import { ModelBodySurface } from "./ModelBodyObject3D.ts";
+import { ModelBodySurface } from "./ModelBodySurface.ts";
 import { SphereBodySurface } from "./SphereBodySurface.ts";
 
 
