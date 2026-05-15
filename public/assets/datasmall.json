@@ -28,9 +28,6 @@
     "castShadow": false,
     "receiveShadow": true,
     "obliquityToOrbit": 275,
-    "sideralRotationPeriod": {
-      "days": 0.05
-    },
     "gltf": {
       "uri": "/assets/gltf/spacecraft/orion.fbx",
       "credits": "Orion Spacecraft (https://skfb.ly/pIroy) by WISEMANmods is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/)."
@@ -49,10 +46,7 @@
     "radius": 10,
     "castShadow": false,
     "receiveShadow": true,
-    "obliquityToOrbit": -90,
-    "sideralRotationPeriod": {
-      "days": 0.05
-    },
+    "obliquityToOrbit": 270,
     "gltf": {
       "uri": "/assets/gltf/spacecraft/orion.glb",
       "credits": "Orion Spacecraft (https://skfb.ly/pIroy) by WISEMANmods is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/). https://www.fab.com/listings/bfb731a9-34b5-4d6e-9cfc-2e4ead1be72e"

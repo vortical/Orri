@@ -100,42 +100,69 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
 
         const currentTargetRenderable = bodySystem.getRenderableBodyTarget();
         const currentTargetPosition = this.bodySystem.controls.target.clone();
-        const newTargetPosition = movetoRenderable.object3D.position;
+        const newTargetPosition = movetoRenderable.object3D.position;  // live reference
         const currentCameraPosition = this.bodySystem.camera.position;
         const currentTargetVector = currentTargetPosition.clone().sub(currentCameraPosition);
         const newTargetVector = newTargetPosition.clone().sub(currentCameraPosition);
-        const newTargetVectorNormal = newTargetVector.clone().normalize();
 
+        const bodyRadiusKm = movetoRenderable.body.radius / 1000;
         const currentDistanceToSurface = currentTargetRenderable.cameraDistanceFromSurface();
-        const maxDesirableDistance = this.max_distance_ratio * movetoRenderable.body.radius / 1000 ;
-        const minAcceptableDistance = this.minCameraDistance(movetoRenderable);
-        
+        const maxDesirableDistance = this.max_distance_ratio * bodyRadiusKm;
+        // minCameraDistance() is a from-CENTER distance; currentDistanceToSurface and
+        // totalDistanceToSurface are to-SURFACE — subtract the radius so the floor is
+        // a consistent to-surface value (endDistanceFromCenter adds it back below).
+        const minAcceptableDistance = this.minCameraDistance(movetoRenderable) - bodyRadiusKm;
 
-               
-        const totalDistanceToSurface = isSameTarget && typeof intent === 'number'? 
+        const totalDistanceToSurface = isSameTarget && typeof intent === 'number'?
           Math.max(currentDistanceToSurface * intent, minAcceptableDistance):
           Math.max(
             Math.min(
-              currentDistanceToSurface,  // 1000000 + radius
-              maxDesirableDistance  // 50 times the radius 
-            ), 
+              currentDistanceToSurface,
+              maxDesirableDistance
+            ),
             minAcceptableDistance
           );
-        const newCameraPos = newTargetPosition.clone().sub(newTargetVectorNormal.multiplyScalar(totalDistanceToSurface + movetoRenderable.body.radius / 1000 ));
+        const endDistanceFromCenter = totalDistanceToSurface + bodyRadiusKm;
 
-        
-        // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
-
-
-        const distanceToNewTarget = currentCameraPosition.distanceTo(movetoRenderable.object3D.position);
-        // Reposition camera: travel at 1000 times the speed of light or slower for 2.5 seconds wich ever is the most.
-        // Same-target dolly (zoom closer) uses a shorter minimum — no big traversal to mask.
+        const distanceToNewTarget = currentCameraPosition.distanceTo(newTargetPosition);
         const minDisplacementTime = (isSameTarget && intent !== "reapply") ? 600 : 2500;
         const positionDisplacementTime = Math.max(distanceToNewTarget / 3300000, minDisplacementTime);
+
+        // Body-tracked dolly: each frame, re-anchor the camera to the body's CURRENT
+        // position (via the live `newTargetPosition` reference) rather than the absolute
+        // point computed at click time. Critical for small fast-moving bodies (e.g. Deimos
+        // at high time scale) where the body moves thousands of km during the tween.
+        //
+        // approachDir/startDistanceFromCenter are captured synchronously HERE (click time),
+        // consistent with currentDistanceToSurface/endDistanceFromCenter. Capturing them in
+        // onStart instead would read state one frame later — by which point the body has
+        // drifted but the camera is frozen (controls.enabled=false pauses followTarget),
+        // giving a stale relationship that springs the camera on each click. The cross-body
+        // case re-captures in onStart below, because there the dolly genuinely begins after
+        // the orientation tween has run.
+        let approachDir = currentCameraPosition.clone().sub(newTargetPosition).normalize();
+        let startDistanceFromCenter = currentCameraPosition.distanceTo(newTargetPosition);
+        // Same-target zoom wants an immediate response (Out easing starts fast). Cross-body
+        // dolly comes AFTER the orientation tween, so a gentler InOut feels better there.
+        const easingFn = (isSameTarget && intent !== "reapply")
+            ? TWEEN.Easing.Quartic.Out
+            : TWEEN.Easing.Quintic.InOut;
         const cameraPosition = new TWEEN
-            .Tween(this.bodySystem.camera.position)
-            .to(newCameraPos, positionDisplacementTime)
-            .easing(TWEEN.Easing.Quintic.InOut);
+            .Tween({ p: 0 })
+            .to({ p: 1 }, positionDisplacementTime)
+            .easing(easingFn)
+            .onUpdate((obj) => {
+                const currentDistance = startDistanceFromCenter + (endDistanceFromCenter - startDistanceFromCenter) * obj.p;
+                this.bodySystem.camera.position.copy(newTargetPosition).addScaledVector(approachDir, currentDistance);
+                // Pin controls.target to the body's live position so the view direction
+                // stays radial (camera→body) even when the body moves fast. Replaces the
+                // parallel targetTracker tween which lagged behind the body's motion.
+                this.bodySystem.controls.target.copy(newTargetPosition);
+                // OrbitControls.update() ran earlier this frame and called camera.lookAt()
+                // against the PREVIOUS frame's target — re-aim now so the rendered frame
+                // shows position + orientation consistent with the body's current location.
+                this.bodySystem.camera.lookAt(this.bodySystem.controls.target);
+            });
 
         const onArrived = () => {
             this.bodySystem.controls.enabled = true;
@@ -145,17 +172,9 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
         this.activePositionTween = cameraPosition;
 
         if (isSameTarget && intent !== "reapply") {
-            // Camera is already pointed at the body — skip the long orientation tween, but still
-            // run a parallel tracker on controls.target so it follows the body's drift during the
-            // dolly. Otherwise target freezes (controls.enabled=false pauses followTarget) and
-            // OrbitControls ends up with a stale reference when the user resumes orbiting.
-            const targetTracker = new TWEEN
-                .Tween(this.bodySystem.controls.target)
-                .to(movetoRenderable.object3D.position, positionDisplacementTime)
-                .dynamic(true);
-
-            this.activeOrientationTween = targetTracker;
-            targetTracker.start();
+            // Camera is already pointed at the body — skip the orientation tween entirely.
+            // The cameraPosition tween's onUpdate pins controls.target to the live body
+            // position each frame, so OrbitControls has a fresh reference throughout.
             cameraPosition.start().onComplete(onArrived);
         } else {
             // we turn 180 degrees in 2 seconds or 1 second minimum which ever is the most
@@ -170,6 +189,13 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
                 .dynamic(true);
 
             this.activeOrientationTween = targetOrientation;
+
+            // The dolly begins only after the orientation tween finishes — by then the
+            // body has drifted, so re-measure the camera↔body relationship at that point.
+            cameraPosition.onStart(() => {
+                approachDir = this.bodySystem.camera.position.clone().sub(newTargetPosition).normalize();
+                startDistanceFromCenter = this.bodySystem.camera.position.distanceTo(newTargetPosition);
+            });
 
             targetOrientation
                 .chain(cameraPosition)
