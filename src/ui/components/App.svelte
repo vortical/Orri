@@ -8,6 +8,7 @@
   import Moon from 'lucide-svelte/icons/moon';
   import ChevronDown from 'lucide-svelte/icons/chevron-down';
   import { BodySystem } from '../../scene/BodySystem';
+  import { CameraModes, type CameraMode } from '../../scene/CameraTargetingState';
   import type { Body } from '../../body/Body';
   import { DataService } from '../../services/dataservice';
   import { SimulationEngine } from '../../body/SimulationEngine';
@@ -46,6 +47,13 @@
   let currentTargetName = $state('Earth');
   let currentTargetType = $state('planet');
 
+  // Camera-mode state owned by the page component. `cameraMode` holds only the
+  // Follow/Look-At choice (the View dropdown); `surfaceViewActive` is an
+  // orthogonal override (the Observer toggle). The effective BodySystem mode is
+  // ViewTargetFromSurface while the toggle is on, otherwise `cameraMode`.
+  let cameraMode = $state<CameraMode>(CameraModes.FollowTarget);
+  let surfaceViewActive = $state(false);
+
   let loading = $state(true);
   let error: string | undefined = $state(undefined);
 
@@ -72,6 +80,12 @@
         if (event.state) location.href = location.href;
       });
       bodySystem = system;
+      const bootMode = system.getCameraTargetingMode();
+      if (bootMode === CameraModes.ViewTargetFromSurface) {
+        surfaceViewActive = true;
+      } else {
+        cameraMode = bootMode;
+      }
       spacecraftList = system.bodies
         .filter((body) => body.type === 'spacecraft' && body.missionWindow)
         .sort((left, right) => left.missionWindow!.startMs - right.missionWindow!.startMs);
@@ -113,6 +127,28 @@
     if (!bodySystem) return;
     const renderable = bodySystem.getRenderableBody(name);
     if (renderable) bodySystem.moveToTarget(renderable);
+  }
+
+  function selectCameraMode(mode: CameraMode) {
+    if (!bodySystem) return;
+    try {
+      bodySystem.setCameraTargetingMode(mode);
+      cameraMode = mode;
+    } catch (caught) {
+      userNotify.showWarning('You tried something weird...', (caught as Error).message);
+    }
+  }
+
+  function setSurfaceView(active: boolean) {
+    if (!bodySystem) return;
+    try {
+      bodySystem.setCameraTargetingMode(
+        active ? CameraModes.ViewTargetFromSurface : cameraMode
+      );
+      surfaceViewActive = active;
+    } catch (caught) {
+      userNotify.showWarning('You tried something weird...', (caught as Error).message);
+    }
   }
 
   async function getLocation(): Promise<LatLon | undefined> {
@@ -218,7 +254,14 @@
     </div>
 
     {#if sidebarOpen}
-      <SidebarPanel {bodySystem} {targetIsEarth} />
+      <SidebarPanel
+        {bodySystem}
+        {targetIsEarth}
+        {cameraMode}
+        {surfaceViewActive}
+        onSelectCameraMode={selectCameraMode}
+        onSetSurfaceView={setSurfaceView}
+      />
     {/if}
 
     <SceneDateOverlay {bodySystem} />

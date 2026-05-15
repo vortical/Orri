@@ -68,6 +68,7 @@ export type MaterialProperties = {
     specularMapUri?: string;
     alphaUri?: string;
     color?: string;
+    credits?: string;
 }
 
 export type GLTFModelProperties = {

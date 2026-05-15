@@ -146,9 +146,10 @@
       "z": 0
     },
     "textures": {
-      "textureUri": "/assets/textures/planets/moon_map.jpg",
+      "textureUri": "/assets/textures/planets/moon_map_4k.jpg",
       "bumpMapUri": "/assets/textures/planets/moon_bump.jpg",
-      "bumpMapScale": 4
+      "bumpMapScale": 4,
+      "credits": "https://planetpixelemporium.com/planets.html"
     },
     "summary": "Earth's natural satellite"
   },

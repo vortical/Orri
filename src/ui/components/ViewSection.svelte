@@ -2,16 +2,20 @@
   import { onMount } from 'svelte';
   import type { BodySystem } from '../../scene/BodySystem';
   import { CameraModes, type CameraMode } from '../../scene/CameraTargetingState';
-  import { userNotify } from '../notify';
   import FOVControl from './FOVControl.svelte';
 
-  type Props = { bodySystem: BodySystem };
-  let { bodySystem }: Props = $props();
+  type Props = {
+    bodySystem: BodySystem;
+    cameraMode: CameraMode;
+    cameraLocked: boolean;
+    onSelectCameraMode: (mode: CameraMode) => void;
+  };
+  let { bodySystem, cameraMode, cameraLocked, onSelectCameraMode }: Props = $props();
 
   type CameraModeKey = keyof typeof CameraModes;
 
-  // Only Look-At and Follow are exposed; ViewTargetFromSurface is hidden
-  // until the multi-pin "view from pin" UX lands.
+  // Only Look-At and Follow are exposed in this dropdown; ViewTargetFromSurface
+  // is engaged from the Observer section, not here.
   const exposedCameraModeKeys: CameraModeKey[] = ['LookAtTarget', 'FollowTarget'];
 
   // Native range thumb width — the tick position is offset by half a thumb
@@ -32,12 +36,15 @@
 
   let sunIntensity = $state(1.5);
   let ambientLight = $state(0.025);
-  let cameraModeKey = $state<CameraModeKey>('FollowTarget');
+
+  // The dropdown reflects the camera mode owned by App.svelte. While surface
+  // view is active the prop is frozen at the pre-surface mode, so the select
+  // shows the right Follow/Look-At entry once it is re-enabled.
+  let cameraModeKey = $derived(keyForMode(cameraMode));
 
   onMount(() => {
     sunIntensity = bodySystem.getSunLightIntensity();
     ambientLight = bodySystem.getAmbiantLightLevel();
-    cameraModeKey = currentCameraModeKey();
   });
 
   function onSunIntensityInput(event: Event) {
@@ -46,10 +53,9 @@
     bodySystem.setSunLightIntensity(value);
   }
 
-  function currentCameraModeKey(): CameraModeKey {
-    const current = bodySystem.getCameraTargetingMode();
+  function keyForMode(mode: CameraMode): CameraModeKey {
     for (const key of exposedCameraModeKeys) {
-      if (CameraModes[key] === current) return key;
+      if (CameraModes[key] === mode) return key;
     }
     return 'FollowTarget';
   }
@@ -62,15 +68,7 @@
 
   function onCameraMode(event: Event) {
     const key = (event.target as HTMLSelectElement).value as CameraModeKey;
-    const previous = cameraModeKey;
-    const mode: CameraMode = CameraModes[key];
-    try {
-      bodySystem.setCameraTargetingMode(mode);
-      cameraModeKey = key;
-    } catch (error) {
-      userNotify.showWarning('You tried something weird...', (error as Error).message);
-      cameraModeKey = previous;
-    }
+    onSelectCameraMode(CameraModes[key]);
   }
 </script>
 
@@ -129,7 +127,13 @@
 
   <label class="apollo-row">
     <span class="apollo-label">Camera mode</span>
-    <select class="apollo-select" value={cameraModeKey} onchange={onCameraMode}>
+    <select
+      class="apollo-select"
+      value={cameraModeKey}
+      onchange={onCameraMode}
+      disabled={cameraLocked}
+      title={cameraLocked ? 'Disabled while viewing from a surface location' : undefined}
+    >
       {#each exposedCameraModeKeys as key}
         <option value={key}>{CameraModes[key].name}</option>
       {/each}

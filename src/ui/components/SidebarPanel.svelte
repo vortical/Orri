@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { BodySystem } from '../../scene/BodySystem';
+  import type { CameraMode } from '../../scene/CameraTargetingState';
   import PreferencesSection from './PreferencesSection.svelte';
   import ViewSection from './ViewSection.svelte';
   import ObserverSection from './ObserverSection.svelte';
@@ -11,9 +12,20 @@
   type Props = {
     bodySystem: BodySystem;
     targetIsEarth: boolean;
+    cameraMode: CameraMode;
+    surfaceViewActive: boolean;
+    onSelectCameraMode: (mode: CameraMode) => void;
+    onSetSurfaceView: (active: boolean) => void;
   };
 
-  let { bodySystem, targetIsEarth }: Props = $props();
+  let {
+    bodySystem,
+    targetIsEarth,
+    cameraMode,
+    surfaceViewActive,
+    onSelectCameraMode,
+    onSetSurfaceView,
+  }: Props = $props();
 
   // Debug-tools is a section-internal disclosure, not an app-level open state.
   let toolsOpen = $state(false);
@@ -24,13 +36,18 @@
 
   <h3 class="apollo-section-header">View</h3>
   <div class="apollo-section-body">
-    <ViewSection {bodySystem} />
+    <ViewSection
+      {bodySystem}
+      {cameraMode}
+      cameraLocked={surfaceViewActive}
+      {onSelectCameraMode}
+    />
   </div>
 
   {#if !targetIsEarth}
     <h3 class="apollo-section-header">Observer</h3>
     <div class="apollo-section-body">
-      <ObserverSection {bodySystem} />
+      <ObserverSection {bodySystem} {surfaceViewActive} {onSetSurfaceView} />
     </div>
   {/if}
 
