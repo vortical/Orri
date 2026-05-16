@@ -6,12 +6,14 @@ import { Body } from '../body/Body.ts';
 import { DistanceUnits, convertDistance } from "../system/distance.ts";
 
 /**
- * alphaTest threshold for the ring material. Above 0 it makes the depth/shadow pass
- * discard transparent fragments, so the ring's cast shadow shows real structure (the
- * Cassini division, faint zones) instead of a solid band. Tuned visually — too high a
- * value erases the faint outer rings.
+ * alphaTest for the ring material. Kept low: a visible ring fragment's alpha is
+ * `opacity · alphaMap` (opacity only ~0.3–0.4), so anything higher erases the faint
+ * rings. At this value only the truly-empty gap fragments are discarded. three.js copies
+ * this onto the auto-derived shadow depth material, so the ring's cast shadow discards
+ * the same gaps — a structured shadow can't use a higher threshold without losing the
+ * faint visible rings (the two share one alphaTest).
  */
-const RING_ALPHA_TEST = 0.3;
+const RING_ALPHA_TEST = 0.01;
 
 export class Rings extends Renderable {
 
