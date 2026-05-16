@@ -84,7 +84,7 @@ export class OrbitOutlinesStateHandler {
       // these are managed elswhere
       this.bodySystem.renderableBodies
         .filter(b => b.body.type == "spacecraft")
-        .forEach(b => b.setOrbitOutlineEnabled(false));
+        .forEach(b => b.setOrbitOutlineEnabled(value));
 
 
         this.bodySystem.renderableBodies

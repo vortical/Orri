@@ -69,7 +69,7 @@ export abstract class RenderableBody extends Renderable {
     }
 
     setOrbitOutlineEnabled(value: boolean): void {
-        if(this.getOrbitOutlineEnabled() == value){
+        if(this.getOrbitOutlineEnabled() == value && this.isActive()){
             return;
         }
         this.trajectoryOutline.enabled = value;
