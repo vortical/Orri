@@ -55,9 +55,10 @@ abstract class OrbitingCameraMode implements CameraTargetingState {
     }
 
     postTargetSet(bodyObject3D: RenderableBody) {
-        
-        this.bodySystem.controls.minDistance = this.minCameraDistance(bodyObject3D);
-        this.bodySystem.setCameraNear(bodyObject3D.body.radius / 1000);
+        const min =   this.minCameraDistance(bodyObject3D);
+        this.bodySystem.controls.minDistance = min;
+      
+        this.bodySystem.setCameraNear(min);
     }
 
     /**

@@ -119,8 +119,8 @@
     if (!bodySystem || !craft.missionWindow) return;
     bodySystem.setSystemTime(new Date(craft.missionWindow.startMs));
     const renderable = bodySystem.getRenderableBody(craft.name);
-    bodySystem.setTarget(renderable);
-    // bodySystem.moveToTarget(renderable, true);
+    // bodySystem.setTarget(renderable);
+    bodySystem.moveToTarget(renderable);
   }
 
   function onBodyTargetSelect(name: string) {
@@ -236,9 +236,10 @@
             aria-pressed={spacecraftBrowserOpen}
             aria-label="Browse spacecraft"
             title="Browse spacecraft"
-            class="apollo-icon-button"
+            class="apollo-icon-button apollo-target-button"
           >
             <Rocket size={16} strokeWidth={2} />
+            <span class="font-mono text-xs tracking-wide">Spacecraft</span>
           </button>
 
           {#if spacecraftBrowserOpen}

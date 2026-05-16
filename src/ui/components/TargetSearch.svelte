@@ -19,6 +19,13 @@
 
   function buildRows(): Row[] {
     const out: Row[] = [];
+    // Spacecraft first — they aren't always present, so keep them where
+    // they're easy to spot rather than buried below the solar system.
+    for (const body of bodies) {
+      if (body.type === 'spacecraft' && body.isActiveAt(currentTimeMs)) {
+        out.push({ body, depth: 0, section: 'spacecraft' });
+      }
+    }
     for (const body of bodies) {
       if (body.type === 'star') out.push({ body, depth: 0, section: 'celestial' });
     }
@@ -29,11 +36,6 @@
         if (moon.type === 'moon' && moon.parentName === planet.name) {
           out.push({ body: moon, depth: 1, section: 'celestial' });
         }
-      }
-    }
-    for (const body of bodies) {
-      if (body.type === 'spacecraft' && body.isActiveAt(currentTimeMs)) {
-        out.push({ body, depth: 0, section: 'spacecraft' });
       }
     }
     return out;

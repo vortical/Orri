@@ -52,7 +52,7 @@ export class SpacecraftTrajectoryOutline extends TrajectoryOutline {
           this.nbVertices = trajectory?.length;
           let index = 0;
           while(index < trajectory.length && trajectory[index].timeMs <= timeMs) {
-            // positions are in km
+            // positions are in metres (TrajectoryPoint — see models.ts); addPosition converts
             const point = trajectory[index].position;
             this.addPosition(new Vector(point[0], point[1], point[2]), false);
             index++;

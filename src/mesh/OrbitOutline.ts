@@ -108,9 +108,11 @@ export class OrbitTrajectoryOutline extends TrajectoryOutline {
                     .filter(o => o.buffer != undefined)
                     .forEach(o => {
                         const bodyObject3D: RenderableBody = bodySystem.getRenderableBody(o.name);
+                        // setOrigin first: setPositionAttributeBuffer rebuilds the float64
+                        // master as `buffer + origin`, so the origin must already be set.
+                        bodyObject3D.trajectoryOutline.setOrigin(origin);
                         bodyObject3D.trajectoryOutline.setPositionAttributeBuffer(new Float32Array(o.buffer!), o.index);
                         bodyObject3D.trajectoryOutline.nbVertices = o.index;
-                        bodyObject3D.trajectoryOutline.setOrigin(origin);
                         bodyObject3D.trajectoryOutline.needsUpdate();
                     });
         });

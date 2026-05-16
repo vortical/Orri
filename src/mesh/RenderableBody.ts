@@ -182,9 +182,9 @@ export abstract class RenderableBody extends Renderable {
       // // does not belong here, this should be completely seperate from the body?
 
       if(this.trajectoryOutline.enabled){
-          // Keep the line's vertex buffer rebased near the camera target so near-camera
-          // segments stay Float32-precise (no-op until the target drifts far enough).
-          this.trajectoryOutline.rebase(this.bodySystem.getTargetSceneOrigin());
+          // Re-express the line's vertices relative to the camera target every frame, so the
+          // float32 modelView matrix stays small-magnitude and the line doesn't shake up close.
+          this.trajectoryOutline.recenter(this.bodySystem.getTargetSceneOrigin());
           if(this.isPlanetarySystemSelected()){
               this.trajectoryOutline.addPosition(this.body.position, true);
               this.updateOrbitsInvoker();

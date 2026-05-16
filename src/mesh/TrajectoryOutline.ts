@@ -1,16 +1,8 @@
-import { BufferAttribute, BufferGeometry, Float32BufferAttribute, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
+import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Float32BufferAttribute, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
 import { RenderableBody } from "./RenderableBody";
 import { Vector } from "../system/Vector";
 
 const DEFAULT_MAX_VERTICES = 360 * 50 * 4;
-
-/**
- * How far (scene km) the camera target may drift from the buffer origin before the line
- * is rebased. At a magnitude of 1e5 km the Float32 quantization step is ~12 m — well
- * below a pixel — so this keeps near-camera segments jitter-free without rebasing (and
- * re-uploading the buffer) every single frame.
- */
-const REBASE_THRESHOLD_KM = 100_000;
 
 /**
  * Base class for any visual path tied to a RenderableBody — orbital paths,
@@ -33,20 +25,33 @@ export abstract class TrajectoryOutline {
 
     /**
      * Scene-km offset the vertex buffer is stored relative to: worldVertex = buffer + origin.
-     * The Line's object3D.position mirrors this. Kept near the camera target so near-camera
-     * vertices stay small-magnitude and therefore Float32-precise.
+     * The Line's object3D.position mirrors this. `recenter()` keeps it on the camera target
+     * every frame so near-camera vertices — and the float32 modelView matrix — stay
+     * small-magnitude and therefore precise.
      */
     origin: Vector3 = new Vector3();
+
+    /**
+     * Float64 source of truth: the same vertices as the GPU buffer but in true scene-km
+     * world coords. `recenter()` derives the float32 buffer from this fresh each frame, so
+     * re-expressing the line against a moving origin never accumulates rounding error.
+     */
+    master: Float64Array;
 
     constructor(bodyObject?: RenderableBody, maxVertices = DEFAULT_MAX_VERTICES, enabled = false, _colorHue = 0.5, opacity = 0.7) {
         this.bodyObject = bodyObject;
 
         const geometry = new BufferGeometry();
         const positionAttribute = new Float32BufferAttribute(new Float32Array(maxVertices * 3), 3);
+        positionAttribute.setUsage(DynamicDrawUsage);
         geometry.setAttribute('position', positionAttribute);
+        this.master = new Float64Array(maxVertices * 3);
 
         this.material = new LineBasicMaterial({ color: 0xffffff, opacity: opacity, transparent: true });
         this.line = new Line(geometry, this.material);
+        // The line is recentred to the camera every frame, so its bounding sphere is never
+        // computed; skip frustum culling rather than maintain a stale sphere.
+        this.line.frustumCulled = false;
         this.maxVertices = maxVertices;
 
         this.enabled = enabled;
@@ -67,33 +72,36 @@ export abstract class TrajectoryOutline {
     }
 
     addPosition(position: Vector3, _maintainLength: boolean = false) {
-        const positionAttributeBuffer: BufferAttribute = this.line.geometry.getAttribute('position') as BufferAttribute;
-
-        // Positions are in km in the scene, stored relative to `origin` (see rebase()).
-        position = position.clone().multiplyScalar(0.001).sub(this.origin);
+        // Incoming position is in metres. The master holds true scene-km world coords; the
+        // GPU buffer holds them relative to `origin` (see recenter()).
+        // The decimation anchors p0/p1 and the angle test are kept in WORLD km — origin-
+        // independent, so they stay precise and are never invalidated when recenter()
+        // moves the origin each frame.
+        const worldKm = position.clone().multiplyScalar(0.001);
+        const relative = worldKm.clone().sub(this.origin);
 
         if (this.endIndex == 0) {
-            this.p0 = position;
-            positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);
+            this.p0 = worldKm;
+            this.writeVertex(this.endIndex++, relative, worldKm);
         } else if (this.endIndex == 1) {
-            if (position.equals(this.p0)) {
+            if (worldKm.equals(this.p0)) {
                 return;
             }
-            this.p1 = position;
-            positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);
+            this.p1 = worldKm;
+            this.writeVertex(this.endIndex++, relative, worldKm);
         } else {
-            if (position.equals(this.p1)) {
+            if (worldKm.equals(this.p1)) {
                 return;
             }
             const v1 = Vector.substract(this.p0, this.p1);
-            const v2 = Vector.substract(this.p1, position);
+            const v2 = Vector.substract(this.p1, worldKm);
             const angle = Math.abs(v1.angleTo(v2));
 
             if (angle > Math.PI / 1440) {
                 this.totalAngle += angle;
                 this.p0 = this.p1.clone();
-                this.p1 = position;
-                positionAttributeBuffer.setXYZ(this.endIndex++, position.x, position.y, position.z);
+                this.p1 = worldKm;
+                this.writeVertex(this.endIndex++, relative, worldKm);
                 if (this.endIndex - this.startIndex > this.nbVertices) {
                     this.startIndex++;
                     if (this.endIndex >= this.maxVertices) {
@@ -101,21 +109,32 @@ export abstract class TrajectoryOutline {
                     }
                 }
             } else {
-                this.p1 = position;
-                positionAttributeBuffer.setXYZ(this.endIndex - 1, position.x, position.y, position.z);
+                this.p1 = worldKm;
+                this.writeVertex(this.endIndex - 1, relative, worldKm);
             }
         }
     }
 
-    positionAtIndex(i: number): Vector {
-        const sourcePositionArray: Float32Array = this.getPositionAttribute().array as Float32Array;
-        const arrayIndex = i * 3;
-        return new Vector(sourcePositionArray[arrayIndex], sourcePositionArray[arrayIndex + 1], sourcePositionArray[arrayIndex + 2]);
+    /** Write one vertex to both the float32 GPU buffer (origin-relative) and the master (world km). */
+    private writeVertex(index: number, relative: Vector3, worldKm: Vector3) {
+        const buffer = this.getPositionAttribute() as BufferAttribute;
+        buffer.setXYZ(index, relative.x, relative.y, relative.z);
+        const offset = index * 3;
+        this.master[offset] = worldKm.x;
+        this.master[offset + 1] = worldKm.y;
+        this.master[offset + 2] = worldKm.z;
+    }
+
+    /** The world scene-km position of vertex `i`, read from the float64 master. */
+    worldVertexAt(i: number): Vector3 {
+        const offset = i * 3;
+        return new Vector3(this.master[offset], this.master[offset + 1], this.master[offset + 2]);
     }
 
     shiftPositionBufferAttribute() {
         const sourcePositionArray: Float32Array = this.getPositionAttribute().array as Float32Array;
         sourcePositionArray.copyWithin(0, this.startIndex * 3, this.endIndex * 3);
+        this.master.copyWithin(0, this.startIndex * 3, this.endIndex * 3);
         this.endIndex = this.endIndex - this.startIndex;
         this.startIndex = 0;
     }
@@ -136,11 +155,21 @@ export abstract class TrajectoryOutline {
         return this.line.geometry.attributes['position'];
     }
 
+    /**
+     * Install a freshly built (worker / mission) float32 buffer. The buffer is expressed
+     * relative to the current `origin`, so call `setOrigin` first; the float64 master is
+     * rebuilt here as `buffer + origin`.
+     */
     setPositionAttributeBuffer(positionAttribute: Float32Array, index: number) {
         this.line.geometry.attributes['position'].array.set(positionAttribute);
+        for (let i = 0; i < index * 3; i += 3) {
+            this.master[i] = positionAttribute[i] + this.origin.x;
+            this.master[i + 1] = positionAttribute[i + 1] + this.origin.y;
+            this.master[i + 2] = positionAttribute[i + 2] + this.origin.z;
+        }
         this.endIndex = index;
-        this.p0 = this.positionAtIndex(index - 2);
-        this.p1 = this.positionAtIndex(index - 1);
+        this.p0 = this.worldVertexAt(index - 2);
+        this.p1 = this.worldVertexAt(index - 1);
         this.startIndex = 0;
     }
 
@@ -154,42 +183,40 @@ export abstract class TrajectoryOutline {
     }
 
     /**
-     * Re-express the stored vertices relative to `newOrigin` (scene km) without changing
-     * their world position — `worldVertex = buffer + origin` and `line.position = origin`
-     * are both updated. Keeping the origin on the camera target keeps near-camera vertices
-     * small-magnitude and thus Float32-precise: the fix for orbit segments "skipping" up
-     * close. No-op until the target has drifted past REBASE_THRESHOLD_KM.
+     * Re-express the stored vertices relative to `newOrigin` (scene km), derived fresh from
+     * the float64 `master` (so no incremental re-quantization), without changing their world
+     * position. `line.position` mirrors the origin. Called every frame with the camera
+     * target: keeps the origin — and thus the float32 modelView matrix — small-magnitude,
+     * which is what stops the line shaking when viewed up close.
      */
-    rebase(newOrigin: Vector3) {
-        if (this.origin.distanceToSquared(newOrigin) < REBASE_THRESHOLD_KM * REBASE_THRESHOLD_KM) return;
-
-        const deltaX = this.origin.x - newOrigin.x;
-        const deltaY = this.origin.y - newOrigin.y;
-        const deltaZ = this.origin.z - newOrigin.z;
-        const positionArray = this.getPositionAttribute().array as Float32Array;
-        for (let i = this.startIndex * 3; i < this.endIndex * 3; i += 3) {
-            positionArray[i] += deltaX;
-            positionArray[i + 1] += deltaY;
-            positionArray[i + 2] += deltaZ;
-        }
-
+    recenter(newOrigin: Vector3) {
         this.origin.copy(newOrigin);
         this.line.position.copy(newOrigin);
 
-        if (this.endIndex > this.startIndex) {
-            if (this.endIndex - this.startIndex >= 2) {
-                this.p0 = this.positionAtIndex(this.endIndex - 2);
-                this.p1 = this.positionAtIndex(this.endIndex - 1);
-            }
-            this.needsUpdate();
+        if (this.endIndex <= this.startIndex) {
+            return;
         }
+
+        const positionArray = this.getPositionAttribute().array as Float32Array;
+        for (let i = this.startIndex * 3; i < this.endIndex * 3; i += 3) {
+            positionArray[i] = this.master[i] - newOrigin.x;
+            positionArray[i + 1] = this.master[i + 1] - newOrigin.y;
+            positionArray[i + 2] = this.master[i + 2] - newOrigin.z;
+        }
+
+        // p0/p1 are world-km (origin-independent) — the moving origin does not affect them.
+
+        this.needsUpdate();
     }
 
     needsUpdate() {
-        const positionAttributeBuffer = this.line.geometry.getAttribute('position') as BufferAttribute;
-        this.line.geometry.setDrawRange(this.startIndex, this.endIndex - this.startIndex);
+        const positionAttributeBuffer = this.getPositionAttribute() as BufferAttribute;
+        const count = this.endIndex - this.startIndex;
+        this.line.geometry.setDrawRange(this.startIndex, count);
+        // Upload only the used range, not the (over-allocated) whole buffer.
+        positionAttributeBuffer.clearUpdateRanges();
+        positionAttributeBuffer.addUpdateRange(this.startIndex * 3, count * 3);
         positionAttributeBuffer.needsUpdate = true;
-        this.line.geometry.computeBoundingSphere();
     }
 
     set opacity(value: number) {
