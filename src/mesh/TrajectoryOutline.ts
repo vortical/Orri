@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Float32BufferAttribute, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
+import { BufferAttribute, BufferGeometry, Color, DynamicDrawUsage, Float32BufferAttribute, InterleavedBufferAttribute, Line, LineBasicMaterial, Object3D, SRGBColorSpace, Vector3 } from "three";
 import { RenderableBody } from "./RenderableBody";
 import { Vector } from "../system/Vector";
 
@@ -38,6 +38,19 @@ export abstract class TrajectoryOutline {
      */
     master: Float64Array;
 
+    /**
+     * Optional per-vertex RGB attribute, enabled via `enableVertexColors()`. Subclasses that
+     * need varying colour along the line (spacecraft trajectories — thrust segments) opt in;
+     * orbits leave it undefined and render with the single uniform material colour.
+     */
+    colorAttribute?: BufferAttribute;
+    /** Fallback colour for vertices added via `addPosition` without an explicit colour. */
+    protected defaultColor: Color = new Color(1, 1, 1);
+    /** Colours of the decimation anchors p0 / p1 — used to keep colour runs as solid segments. */
+    private anchorColor: Color = new Color();
+    private tailColor: Color = new Color();
+    private colorsDirty = false;
+
     constructor(bodyObject?: RenderableBody, maxVertices = DEFAULT_MAX_VERTICES, enabled = false, _colorHue = 0.5, opacity = 0.7) {
         this.bodyObject = bodyObject;
 
@@ -71,7 +84,16 @@ export abstract class TrajectoryOutline {
         this.nbVertices = 0;
     }
 
-    addPosition(position: Vector3, _maintainLength: boolean = false) {
+    /** Opt in to per-vertex colours: allocate the RGB attribute and switch the material to it. */
+    protected enableVertexColors() {
+        const colorAttribute = new Float32BufferAttribute(new Float32Array(this.maxVertices * 3), 3);
+        this.line.geometry.setAttribute('color', colorAttribute);
+        this.colorAttribute = colorAttribute;
+        this.material.vertexColors = true;
+        this.material.needsUpdate = true;
+    }
+
+    addPosition(position: Vector3, _maintainLength: boolean = false, color?: Color) {
         // Incoming position is in metres. The master holds true scene-km world coords; the
         // GPU buffer holds them relative to `origin` (see recenter()).
         // The decimation anchors p0/p1 and the angle test are kept in WORLD km — origin-
@@ -79,16 +101,19 @@ export abstract class TrajectoryOutline {
         // moves the origin each frame.
         const worldKm = position.clone().multiplyScalar(0.001);
         const relative = worldKm.clone().sub(this.origin);
+        const vertexColor = color ?? this.defaultColor;
 
         if (this.endIndex == 0) {
             this.p0 = worldKm;
-            this.writeVertex(this.endIndex++, relative, worldKm);
+            this.anchorColor = vertexColor;
+            this.writeVertex(this.endIndex++, relative, worldKm, vertexColor);
         } else if (this.endIndex == 1) {
             if (worldKm.equals(this.p0)) {
                 return;
             }
             this.p1 = worldKm;
-            this.writeVertex(this.endIndex++, relative, worldKm);
+            this.tailColor = vertexColor;
+            this.writeVertex(this.endIndex++, relative, worldKm, vertexColor);
         } else {
             if (worldKm.equals(this.p1)) {
                 return;
@@ -97,11 +122,19 @@ export abstract class TrajectoryOutline {
             const v2 = Vector.substract(this.p1, worldKm);
             const angle = Math.abs(v1.angleTo(v2));
 
-            if (angle > Math.PI / 1440) {
+            // Commit on a colour change, AND while the live segment p0→p1 still straddles a
+            // colour boundary — that forces a second commit right after a change, so each
+            // colour run becomes its own solid segment instead of one creeping gradient.
+            const colorBoundary = this.colorAttribute !== undefined
+                && (!vertexColor.equals(this.tailColor) || !this.tailColor.equals(this.anchorColor));
+
+            if (angle > Math.PI / 1440 || colorBoundary) {
                 this.totalAngle += angle;
                 this.p0 = this.p1.clone();
                 this.p1 = worldKm;
-                this.writeVertex(this.endIndex++, relative, worldKm);
+                this.anchorColor = this.tailColor;
+                this.tailColor = vertexColor;
+                this.writeVertex(this.endIndex++, relative, worldKm, vertexColor);
                 if (this.endIndex - this.startIndex > this.nbVertices) {
                     this.startIndex++;
                     if (this.endIndex >= this.maxVertices) {
@@ -110,19 +143,24 @@ export abstract class TrajectoryOutline {
                 }
             } else {
                 this.p1 = worldKm;
-                this.writeVertex(this.endIndex - 1, relative, worldKm);
+                this.tailColor = vertexColor;
+                this.writeVertex(this.endIndex - 1, relative, worldKm, vertexColor);
             }
         }
     }
 
-    /** Write one vertex to both the float32 GPU buffer (origin-relative) and the master (world km). */
-    private writeVertex(index: number, relative: Vector3, worldKm: Vector3) {
+    /** Write one vertex to the float32 GPU buffer (origin-relative), the master (world km), and the colour attribute. */
+    private writeVertex(index: number, relative: Vector3, worldKm: Vector3, color: Color) {
         const buffer = this.getPositionAttribute() as BufferAttribute;
         buffer.setXYZ(index, relative.x, relative.y, relative.z);
         const offset = index * 3;
         this.master[offset] = worldKm.x;
         this.master[offset + 1] = worldKm.y;
         this.master[offset + 2] = worldKm.z;
+        if (this.colorAttribute) {
+            this.colorAttribute.setXYZ(index, color.r, color.g, color.b);
+            this.colorsDirty = true;
+        }
     }
 
     /** The world scene-km position of vertex `i`, read from the float64 master. */
@@ -135,6 +173,10 @@ export abstract class TrajectoryOutline {
         const sourcePositionArray: Float32Array = this.getPositionAttribute().array as Float32Array;
         sourcePositionArray.copyWithin(0, this.startIndex * 3, this.endIndex * 3);
         this.master.copyWithin(0, this.startIndex * 3, this.endIndex * 3);
+        if (this.colorAttribute) {
+            (this.colorAttribute.array as Float32Array).copyWithin(0, this.startIndex * 3, this.endIndex * 3);
+            this.colorsDirty = true;
+        }
         this.endIndex = this.endIndex - this.startIndex;
         this.startIndex = 0;
     }
@@ -217,6 +259,15 @@ export abstract class TrajectoryOutline {
         positionAttributeBuffer.clearUpdateRanges();
         positionAttributeBuffer.addUpdateRange(this.startIndex * 3, count * 3);
         positionAttributeBuffer.needsUpdate = true;
+
+        // Colours change only when vertices are added/shifted, not every frame — upload
+        // them only when actually dirty (recenter() calls needsUpdate every frame).
+        if (this.colorAttribute && this.colorsDirty) {
+            this.colorAttribute.clearUpdateRanges();
+            this.colorAttribute.addUpdateRange(this.startIndex * 3, count * 3);
+            this.colorAttribute.needsUpdate = true;
+            this.colorsDirty = false;
+        }
     }
 
     set opacity(value: number) {
